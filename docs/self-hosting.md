@@ -37,7 +37,7 @@ Local URLs cannot be reached by cloud providers. Choose one supported mode:
 Read [External access](external-access.md) for DNS, Cloudflare, firewall, tunnel and troubleshooting
 instructions.
 
-Release `v0.3.5` gives the worker outbound access for Monitor, Protect and outgoing alerts while
+Release `v0.3.6` gives the worker outbound access for Monitor, Protect and outgoing alerts while
 keeping PostgreSQL and Redis on the internal data network.
 
 ## First useful trial

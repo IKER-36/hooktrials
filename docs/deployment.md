@@ -14,7 +14,7 @@ ghcr.io/<owner>/<repo>-web:<version>
 ghcr.io/<owner>/<repo>-server:<version>
 ```
 
-The current tagged release is `v0.3.5`. Self-hosted Compose intentionally builds the checked-out
+The current tagged release is `v0.3.6`. Self-hosted Compose intentionally builds the checked-out
 source so local modifications remain auditable. Managed deployments pin immutable registry or
 preloaded images without changing persisted database/Redis volumes.
 

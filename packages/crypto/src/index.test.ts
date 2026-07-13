@@ -8,6 +8,14 @@ describe('encrypted values', () => {
     expect(decryptValue(encrypted, 'test-secret-at-least-32-characters')).toEqual(original);
   });
 
+  it('round-trips an empty payload', () => {
+    const secret = 'test-secret-at-least-32-characters';
+    const encrypted = encryptValue(Buffer.alloc(0), secret);
+
+    expect(encrypted.endsWith('.')).toBe(true);
+    expect(decryptValue(encrypted, secret)).toEqual(Buffer.alloc(0));
+  });
+
   it('uses a random IV for every encryption', () => {
     const secret = 'test-secret-at-least-32-characters';
     expect(encryptValue('same payload', secret)).not.toBe(encryptValue('same payload', secret));

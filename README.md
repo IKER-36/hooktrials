@@ -5,7 +5,7 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.3.5** (14 July 2026). The managed sandbox is available at
+Current public release: **v0.3.6** (14 July 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
 
 ## Run locally

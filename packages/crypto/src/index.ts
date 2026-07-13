@@ -20,7 +20,11 @@ export function decryptValue(value: string, secret: string): Buffer {
   const parts = value.split('.');
   if (parts.length !== 3) throw new Error('Invalid encrypted value');
   const [ivValue, tagValue, encryptedValue] = parts;
-  if (!ivValue || !tagValue || !encryptedValue) throw new Error('Invalid encrypted value');
+  // AES-GCM legitimately produces an empty ciphertext for an empty plaintext. The IV and
+  // authentication tag are still mandatory and authenticate that empty value.
+  if (!ivValue || !tagValue || encryptedValue === undefined) {
+    throw new Error('Invalid encrypted value');
+  }
   const decipher = createDecipheriv(
     'aes-256-gcm',
     encryptionKey(secret),

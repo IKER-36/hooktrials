@@ -25,7 +25,7 @@ Add the endpoint as an Actions secret named `HOOKTRIALS_ENDPOINT_URL`; never com
 token. Copy `examples/github-action.yml` into your own workflow or call the published action:
 
 ```yaml
-- uses: IKER-36/hooktrials@v0.3.5
+- uses: IKER-36/hooktrials@v0.3.6
   with:
     config: examples/payment-webhook.trial.yml
     endpoint: ${{ secrets.HOOKTRIALS_ENDPOINT_URL }}

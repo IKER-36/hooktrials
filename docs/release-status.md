@@ -2,7 +2,7 @@
 
 Updated: 14 July 2026.
 
-## Release `v0.3.5`
+## Release `v0.3.6`
 
 The current public release includes the complete Integration Reliability Control Plane:
 
@@ -15,7 +15,7 @@ The current public release includes the complete Integration Reliability Control
 - a full Demo Lab for Trial, Observe, Protect, Monitor and Operations evidence;
 - a terminal CLI and bundled GitHub Action for exact response-sequence checks in CI.
 
-The quality gate passes formatting, ESLint, strict TypeScript, 111 automated tests and all
+The quality gate passes formatting, ESLint, strict TypeScript, 112 automated tests and all
 production builds. A clean self-hosted E2E passed outgoing alert delivery, monitor incident and
 recovery, Protect dead-letter and manual recovery, and Operations reconciliation.
 
@@ -27,11 +27,11 @@ JSON plus JUnit evidence.
 
 ## Self-host worker correction
 
-The source `compose.yml` attaches `worker` only to the internal `data` network. This prevents active
+Public release `v0.3.3` attached `worker` only to the internal `data` network. That prevented active
 monitors, Protect deliveries and outgoing alert webhooks from reaching external destinations even
-though application-level SSRF controls are working. Trial and Observe remain functional.
+though application-level SSRF controls were working. Trial and Observe remained functional.
 
-The correction is included in `v0.3.5`. Self-hosted `v0.3.3` operators can either update or add the
+The correction is included in `v0.3.6`. Self-hosted `v0.3.3` operators can either update or add the
 egress-capable `edge` network to the worker service:
 
 ```yaml
@@ -47,8 +47,8 @@ Then apply the change with:
 ```
 
 Keep `data` internal and never publish PostgreSQL or Redis ports. The Cloud deployment already uses
-this dual-network topology. Release `v0.3.4` is not described as live there until its backup-first
-promotion and authenticated post-deploy journey pass.
+this dual-network topology. Release `v0.3.6` was promoted to the managed sandbox through a
+backup-first deployment and passed its authenticated post-deploy journey on 14 July 2026.
 
 ## Cloud availability
 
@@ -59,3 +59,10 @@ promotion and authenticated post-deploy journey pass.
 
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
+
+The live release has verified the complete Demo Lab loop: deterministic Trial recovery, Observe
+capture, durable Protect delivery, Monitor incident recovery, outgoing alerts and the unified
+Operations state. The public landing is running its matching `v0.2.0` product narrative.
+
+Patch `v0.3.6` also accepts authenticated empty payload ciphertext during report analysis. Empty
+webhook bodies now produce normal deterministic evidence instead of a failed background job.
