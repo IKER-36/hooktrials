@@ -8,16 +8,16 @@ by self-hosted installations.
 
 ## Services
 
-| Service  | Responsibility                             | Public exposure           |
-| -------- | ------------------------------------------ | ------------------------- |
-| gateway  | One HTTP origin and path routing           | host port 3000 by default |
-| web      | Static React dashboard                     | internal                  |
-| api      | Auth, routes, monitors, incidents and SSE  | `/api/*` through gateway  |
-| ingestor | Intake, validation and Observe forwarding  | `/i/*` through gateway    |
-| worker   | Monitor checks, Protect delivery, alerts   | none                      |
-| postgres | Source of truth                            | none                      |
-| redis    | Queue and live-event channel               | none                      |
-| migrate  | One-shot schema migration                  | none                      |
+| Service  | Responsibility                            | Public exposure           |
+| -------- | ----------------------------------------- | ------------------------- |
+| gateway  | One HTTP origin and path routing          | host port 3000 by default |
+| web      | Static React dashboard                    | internal                  |
+| api      | Auth, routes, monitors, incidents and SSE | `/api/*` through gateway  |
+| ingestor | Intake, validation and Observe forwarding | `/i/*` through gateway    |
+| worker   | Monitor checks, Protect delivery, alerts  | none                      |
+| postgres | Source of truth                           | none                      |
+| redis    | Queue and live-event channel              | none                      |
+| migrate  | One-shot schema migration                 | none                      |
 
 ```text
 browser ── / ───────> dashboard
