@@ -1,5 +1,8 @@
 # Guided competition demonstration
 
+This guide covers the focused provider-retry simulator on one endpoint. For the complete
+Test → Observe → Protect → Monitor → Recover journey, use [Demo Lab](demo-lab.md).
+
 HookTrials is the webhook receiver. It does not retry outgoing requests: it returns controlled HTTP
 responses so a webhook provider can demonstrate its own retry behavior. HookTrials correlates
 deliveries carrying the same event identifier into one timeline.

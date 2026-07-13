@@ -191,6 +191,7 @@ export function AppLayout() {
         <NavLink to="/app/scenarios">Scenarios</NavLink>
         <NavLink to="/app/monitor">Monitor</NavLink>
         <NavLink to="/app/operations">Operations</NavLink>
+        <NavLink to="/app/demo">Demo Lab</NavLink>
         <a href="https://github.com/IKER-36/hooktrials" target="_blank" rel="noreferrer">
           Source
         </a>
@@ -216,6 +217,9 @@ export function AppLayout() {
           </NavLink>
           <NavLink to="/app/operations">
             <span>05</span> Operations
+          </NavLink>
+          <NavLink to="/app/demo">
+            <span>06</span> Demo Lab
           </NavLink>
         </nav>
         <div className="ht-sidebar-foot">

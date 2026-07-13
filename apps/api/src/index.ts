@@ -52,6 +52,7 @@ const logger = createLogger(config.LOG_LEVEL);
 const database = createDatabase(config.DATABASE_URL);
 const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: null });
 const deliveryQueue = new Queue('destination-deliveries', { connection: redis });
+const monitorQueue = new Queue('monitor-checks', { connection: redis });
 
 const builtInScenarioIds = {
   inspection: '00000000-0000-4000-8000-000000000001',
@@ -697,19 +698,37 @@ app.post('/v1/monitors/:id/run', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   const { id } = request.params as { id: string };
-  const updated = await database.db
+  const owned = (
+    await database.db
+      .select({
+        id: monitors.id,
+        intervalSeconds: monitors.intervalSeconds,
+        state: monitors.state,
+        active: integrationResources.active,
+      })
+      .from(monitors)
+      .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .limit(1)
+  )[0];
+  if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
+  if (!owned.active || owned.state === 'paused') {
+    return reply.code(409).send({ error: 'monitor_paused' });
+  }
+  const queuedAt = Date.now();
+  await database.db
     .update(monitors)
-    .set({ nextCheckAt: new Date() })
-    .from(integrationResources)
-    .where(
-      and(
-        eq(monitors.id, id),
-        eq(monitors.resourceId, integrationResources.id),
-        eq(integrationResources.userId, user.id),
-      ),
-    )
-    .returning({ id: monitors.id });
-  if (!updated[0]) return reply.code(404).send({ error: 'monitor_not_found' });
+    .set({ nextCheckAt: new Date(queuedAt + owned.intervalSeconds * 1_000) })
+    .where(eq(monitors.id, id));
+  await monitorQueue.add(
+    'manual-check',
+    { monitorId: id },
+    {
+      jobId: `monitor-manual-${id}-${queuedAt}`,
+      removeOnComplete: 100,
+      removeOnFail: 100,
+    },
+  );
   return reply.code(202).send({ queued: true });
 });
 
@@ -1165,6 +1184,158 @@ app.get('/v1/endpoints', async (request, reply) => {
     }),
     limits: { endpoints: config.ENDPOINTS_LIMIT, dailyEvents: config.DAILY_EVENTS_LIMIT },
   };
+});
+
+app.post('/v1/demo/setup', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const userId = user.id;
+  const existing = await database.db
+    .select({ value: count() })
+    .from(endpoints)
+    .where(eq(endpoints.userId, user.id));
+  if (config.ENDPOINTS_LIMIT > 0 && (existing[0]?.value ?? 0) + 2 > config.ENDPOINTS_LIMIT) {
+    return reply.code(403).send({ error: 'demo_endpoint_capacity_required' });
+  }
+
+  const runId = nanoid(16);
+  const sourceToken = `ht_${nanoid(32)}`;
+  const targetToken = `ht_${nanoid(32)}`;
+  const sourceIngestUrl = `${config.INGEST_ORIGIN}/i/${sourceToken}`;
+  const targetIngestUrl = `${config.INGEST_ORIGIN}/i/${targetToken}`;
+  const targetWorkerUrl =
+    config.DEPLOYMENT_MODE === 'selfhost'
+      ? `http://ingestor:3002/i/${targetToken}`
+      : targetIngestUrl;
+  const privateNetwork = config.DEPLOYMENT_MODE === 'selfhost';
+  const privateCidrs = privateNetwork ? ['172.16.0.0/12'] : [];
+
+  const created = await database.db.transaction(async (tx) => {
+    async function createDemoEndpoint(kind: 'source' | 'target', token: string) {
+      const name = kind === 'source' ? 'Demo Lab · provider' : 'Demo Lab · destination';
+      const resource = (
+        await tx
+          .insert(integrationResources)
+          .values({
+            userId,
+            type: 'webhook_route',
+            name,
+            environment: 'test',
+            metadata: { demoRunId: runId, demoKind: kind },
+          })
+          .returning({ id: integrationResources.id })
+      )[0];
+      if (!resource) throw new Error('Demo resource creation returned no record');
+      const endpoint = (
+        await tx
+          .insert(endpoints)
+          .values({
+            userId,
+            resourceId: resource.id,
+            scenarioId: builtInScenarioIds.temporaryOutage,
+            name,
+            publicTokenHash: sha256(token),
+            publicTokenPrefix: token.slice(0, 12),
+            encryptedToken: encryptValue(token, config.PAYLOAD_ENCRYPTION_KEY),
+          })
+          .returning({ id: endpoints.id, resourceId: endpoints.resourceId })
+      )[0];
+      if (!endpoint) throw new Error('Demo endpoint creation returned no record');
+      await tx
+        .update(integrationResources)
+        .set({ metadata: { demoRunId: runId, demoKind: kind, endpointId: endpoint.id } })
+        .where(eq(integrationResources.id, resource.id));
+      return endpoint;
+    }
+
+    const source = await createDemoEndpoint('source', sourceToken);
+    const target = await createDemoEndpoint('target', targetToken);
+    const monitorResource = (
+      await tx
+        .insert(integrationResources)
+        .values({
+          userId: user.id,
+          type: 'webhook_destination',
+          name: 'Demo Lab · recovery monitor',
+          environment: 'test',
+          active: false,
+          metadata: {
+            demoRunId: runId,
+            demoKind: 'monitor',
+            displayUrl: targetIngestUrl,
+          },
+        })
+        .returning({ id: integrationResources.id })
+    )[0];
+    if (!monitorResource) throw new Error('Demo monitor resource creation returned no record');
+    const monitor = (
+      await tx
+        .insert(monitors)
+        .values({
+          resourceId: monitorResource.id,
+          encryptedUrl: encryptValue(targetWorkerUrl, config.PAYLOAD_ENCRYPTION_KEY),
+          displayHost: new URL(targetIngestUrl).host,
+          method: 'POST',
+          intervalSeconds: 900,
+          timeoutMs: 10_000,
+          expectedMinStatus: 200,
+          expectedMaxStatus: 299,
+          consecutiveFailuresToOpen: 1,
+          allowPrivateNetworks: privateNetwork,
+          allowedPrivateCidrs: privateCidrs,
+          state: 'paused',
+        })
+        .returning({ id: monitors.id, resourceId: monitors.resourceId })
+    )[0];
+    if (!monitor) throw new Error('Demo monitor creation returned no record');
+    return { source, target, monitor };
+  });
+
+  return reply.code(201).send({
+    demo: {
+      runId,
+      source: { ...created.source, ingestUrl: sourceIngestUrl },
+      target: { ...created.target, ingestUrl: targetIngestUrl },
+      monitor: created.monitor,
+      destination: {
+        url: targetWorkerUrl,
+        allowPrivateNetworks: privateNetwork,
+        allowedPrivateCidrs: privateCidrs,
+      },
+    },
+  });
+});
+
+app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  deliveryActionInputSchema.parse(request.body);
+  const { runId } = request.params as { runId: string };
+  const owned = await database.db
+    .select({ id: integrationResources.id })
+    .from(integrationResources)
+    .where(
+      and(
+        eq(integrationResources.userId, user.id),
+        sql`${integrationResources.metadata} ->> 'demoRunId' = ${runId}`,
+      ),
+    );
+  if (owned.length === 0) return { removed: 0 };
+  const resourceIds = owned.map((resource) => resource.id);
+  await database.db.transaction(async (tx) => {
+    await tx
+      .delete(endpoints)
+      .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
+    await tx
+      .delete(integrationResources)
+      .where(
+        and(
+          eq(integrationResources.userId, user.id),
+          inArray(integrationResources.id, resourceIds),
+        ),
+      );
+  });
+  return { removed: resourceIds.length };
 });
 
 app.post('/v1/endpoints', async (request, reply) => {
@@ -1772,7 +1943,7 @@ app.get('/v1/endpoints/:id/stream', async (request, reply) => {
 });
 
 app.addHook('onClose', async () => {
-  await deliveryQueue.close();
+  await Promise.all([deliveryQueue.close(), monitorQueue.close()]);
   redis.disconnect();
   await database.close();
 });

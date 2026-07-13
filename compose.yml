@@ -125,7 +125,9 @@ services:
     command: ['node', 'apps/worker/dist/index.js']
     restart: unless-stopped
     environment: *app-environment
-    networks: [data]
+    # Monitor checks, protected deliveries and outgoing alerts require egress.
+    # PostgreSQL and Redis remain isolated on the internal data network.
+    networks: [edge, data]
     depends_on:
       migrate: { condition: service_completed_successfully }
       redis: { condition: service_healthy }

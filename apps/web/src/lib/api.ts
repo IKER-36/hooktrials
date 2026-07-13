@@ -47,6 +47,8 @@ export function readableError(error: unknown): string {
     scenario_not_found: 'That custom scenario no longer exists.',
     scenario_in_use: 'Move endpoints away from this scenario before deleting it.',
     monitor_not_found: 'That monitor no longer exists.',
+    monitor_paused: 'Resume this monitor before running an immediate check.',
+    demo_endpoint_capacity_required: 'The Demo Lab needs capacity for two temporary endpoints.',
     target_blocked: error.detail ?? 'Target blocked by outbound network safety policy.',
     destination_required: 'Add a destination URL before enabling Observe or Protect.',
     production_confirmation_required: 'Confirm the production traffic impact before saving.',
