@@ -1,57 +1,17 @@
 # VPS bootstrap
 
-This guide prepares a clean Ubuntu 24.04 LTS VPS for HookTrials. Keep an existing SSH session open
-while changing firewall or SSH settings.
+This guide prepares a clean Ubuntu 24.04 LTS server for the public self-hosted distribution. Keep an
+existing SSH session open while changing firewall or SSH settings.
 
-## 1. Provision the server
+## 1. Provision and secure the server
 
-Create the CubePath Micro VPS with Ubuntu 24.04 LTS, a public IPv4 address and SSH-key
-authentication. In the CubePath firewall, temporarily restrict SSH to the operator IP.
-
-## 2. Point DNS
-
-Create three A records pointing to the VPS:
-
-```text
-app.example.com
-api.example.com
-hooks.example.com
-```
-
-Use a short TTL while commissioning. Disable any HTTP proxy at the DNS provider until Caddy obtains
-the initial certificates and direct access works.
-
-## 3. Create the deployment account
-
-```bash
-ssh root@SERVER_IP
-adduser hooktrials
-usermod -aG sudo hooktrials
-install -d -m 700 -o hooktrials -g hooktrials /home/hooktrials/.ssh
-```
-
-Copy the operator public key to /home/hooktrials/.ssh/authorized_keys, then apply:
-
-```bash
-chown hooktrials:hooktrials /home/hooktrials/.ssh/authorized_keys
-chmod 600 /home/hooktrials/.ssh/authorized_keys
-```
-
-Verify access from a second terminal before changing SSH policy:
-
-```bash
-ssh hooktrials@SERVER_IP
-```
-
-After verification, disable password authentication and direct root login in an SSH configuration
-drop-in. Run sshd -t before reloading SSH.
-
-## 4. Update and configure the host firewall
+Recommended baseline: 2 CPU, 4 GB RAM and 20 GB free disk. Use SSH-key authentication, create a
+non-root operator and verify a second session before disabling password/root login.
 
 ```bash
 sudo apt update
 sudo apt full-upgrade -y
-sudo apt install -y ca-certificates curl git ufw unattended-upgrades
+sudo apt install -y ca-certificates curl git openssl ufw unattended-upgrades
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 sudo ufw allow OpenSSH
@@ -59,30 +19,14 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw allow 443/udp
 sudo ufw enable
-sudo ufw status verbose
 ```
 
-Only Caddy publishes host ports in the supplied Compose configuration. Never publish PostgreSQL or
-Redis ports.
+Only the HookTrials gateway should publish HTTP/HTTPS. Never expose PostgreSQL or Redis.
 
-## 5. Install Docker from its official repository
+## 2. Install Docker
 
-```bash
-sudo apt remove -y docker.io docker-compose docker-compose-v2 podman-docker containerd runc || true
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo systemctl enable --now docker
-sudo usermod -aG docker hooktrials
-```
-
-Log out and back in, then verify:
+Install Docker Engine and the Compose v2 plugin from Docker's official Ubuntu repository, then
+verify:
 
 ```bash
 docker version
@@ -90,103 +34,77 @@ docker compose version
 docker run --rm hello-world
 ```
 
-The Docker group grants root-equivalent control. Do not add unrelated users.
+Membership in the Docker group is root-equivalent. Grant it only to the deployment operator.
 
-## 6. Clone the repository
+## 3. Create one public hostname
+
+Self-hosted HookTrials uses a single origin for dashboard, API and ingestion paths. Create one `A`
+record such as `trials.example.com` pointing to the VPS. Add `AAAA` only when IPv6 is correctly
+routed. Keep any CDN proxy disabled until Caddy obtains the first certificate.
+
+Required public paths:
+
+```text
+/            dashboard
+/api/*       authenticated API and event stream
+/i/*         public webhook ingestion
+```
+
+## 4. Install HookTrials
 
 ```bash
-sudo install -d -m 0755 -o hooktrials -g hooktrials /opt/hooktrials
-sudo -u hooktrials git clone REPOSITORY_URL /opt/hooktrials
+sudo install -d -m 0755 -o "$USER" -g "$USER" /opt/hooktrials
+git clone https://github.com/IKER-36/hooktrials.git /opt/hooktrials
 cd /opt/hooktrials
+git checkout v0.3.3
+./hooktrials doctor
+./hooktrials configure domain trials.example.com operator@example.com
+./hooktrials up
+./hooktrials doctor --external
 ```
 
-## 7. Create the server-only runtime environment
+The helper generates `.hooktrials/runtime.env` once with mode `0600`, builds the application, runs
+migrations and starts Caddy with automatic HTTPS. Preserve this file: it contains the encryption key
+required to read retained payloads.
 
-Persistent variables live outside the repository:
+Release `v0.3.3` needs the worker egress adjustment described in
+[Current release status](release-status.md) before Monitor, Protect or outgoing alerts can contact
+destinations.
+
+## 5. Verify outside the VPS
 
 ```bash
-sudo install -d -m 0700 /etc/hooktrials
-sudo install -m 0600 /dev/null /etc/hooktrials/runtime.env
-sudoedit /etc/hooktrials/runtime.env
+curl --fail https://trials.example.com/api/healthz
+curl --head https://trials.example.com/
+./hooktrials status
 ```
 
-Define every required variable from configuration.md. Generate independent URL-safe secrets with:
+From a browser, create the first owner account, run a template Trial and confirm an external webhook
+can reach `/i/*`. Then test Monitor/Protect only after applying the release networking note.
+
+If Cloudflare proxies the hostname, enable it after origin validation and use `Full (strict)` TLS;
+never use `Flexible`.
+
+## 6. Operations
 
 ```bash
-openssl rand -hex 32
+./hooktrials logs
+./hooktrials backup
+./hooktrials update
+./hooktrials doctor --external
 ```
 
-Use a different value for PostgreSQL, Redis, sessions and payload encryption. Never paste real
-values into issues, chat, screenshots, Git history or command arguments.
+Copy the compressed database backup and `.hooktrials/runtime.env` to an encrypted off-host location.
+Test restoration after schema changes. `./hooktrials reset --yes` permanently deletes all data and
+generated secrets.
 
-## 8. Validate and start manually
+## Launch checklist
 
-```bash
-sudo -i
-set -a
-. /etc/hooktrials/runtime.env
-set +a
-cd /opt/hooktrials
-docker compose config --quiet
-docker compose build
-docker compose up -d
-docker compose ps
-exit
-```
-
-## 9. Add systemd supervision
-
-Create /etc/systemd/system/hooktrials.service:
-
-```ini
-[Unit]
-Description=HookTrials Docker Compose stack
-Requires=docker.service
-After=docker.service network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/opt/hooktrials
-EnvironmentFile=/etc/hooktrials/runtime.env
-ExecStart=/usr/bin/docker compose up -d
-ExecReload=/usr/bin/docker compose up -d --build
-ExecStop=/usr/bin/docker compose down
-TimeoutStartSec=0
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now hooktrials
-sudo systemctl status hooktrials
-```
-
-Systemd reads the protected environment and passes it to Compose. It never enters the Git working
-tree.
-
-## 10. Verify the deployment
-
-```bash
-curl --fail "https://api.example.com/healthz"
-curl --fail "https://hooks.example.com/healthz"
-curl --head "https://app.example.com"
-docker compose ps
-docker compose logs --tail=100 caddy api ingestor worker
-```
-
-Also test registration, endpoint creation and a webhook from outside the VPS.
-
-## 11. Complete before public traffic
-
-- Configure encrypted PostgreSQL backups outside the VPS.
-- Test a full restore.
-- Enable CubePath backups if available.
-- Configure disk, memory and health alerts.
-- Enable GitHub private vulnerability reporting.
-- Keep the dashboard source-code offer visible as required by AGPL-3.0.
-- Verify repository and documentation links before each release.
-- Publish the privacy and retention policy.
+- SSH key access and firewall verified.
+- One HTTPS origin passes `doctor --external`.
+- PostgreSQL/Redis have no published ports.
+- First-user registration closes after the owner account is created.
+- Backup and restore procedure tested.
+- Disk, memory and health alerts configured.
+- Synthetic payloads used for demonstrations.
+- Source-code offer remains visible as required by AGPL-3.0-only.

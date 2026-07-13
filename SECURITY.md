@@ -4,8 +4,8 @@ HookTrials processes untrusted webhook content and may handle sensitive payloads
 
 ## Supported versions
 
-Security fixes are applied to the current main branch until the first stable release defines a
-longer support policy.
+Security fixes are applied to the current `main` branch and latest tagged `0.x` release. Pre-1.0
+releases may contain breaking changes; operators should update promptly.
 
 ## Reporting a vulnerability
 

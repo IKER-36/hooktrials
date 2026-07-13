@@ -7,12 +7,16 @@ exposes one configured origin.
 Managed HookTrials Cloud is deployed separately using immutable application images. Managed
 hosting details and production secrets are not part of this repository.
 
-Tagged releases will publish:
+Tagged releases publish versioned multi-architecture images:
 
 ```text
 ghcr.io/<owner>/<repo>-web:<version>
 ghcr.io/<owner>/<repo>-server:<version>
 ```
 
-Self-hosted Compose can move from source builds to these images after first public release without
-changing persisted volumes.
+The current tagged release is `v0.3.3`. Self-hosted Compose intentionally builds the checked-out
+source so local modifications remain auditable. Managed deployments pin immutable registry or
+preloaded images without changing persisted database/Redis volumes.
+
+Before promoting a release, read [Release status](release-status.md), back up PostgreSQL and the
+runtime encryption key, validate Compose configuration and run an authenticated smoke test.

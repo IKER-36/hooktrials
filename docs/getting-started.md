@@ -16,7 +16,7 @@ webhook traffic and monitor HTTP dependencies from one dashboard.
 
 1. Open **Endpoints** and create an endpoint from a template.
 2. Keep the endpoint in **Trial** and choose `Temporary outage then recovery`.
-3. Click **Send provider simulation**. No external provider is required.
+3. Click **Run 3-attempt demo**. No external provider is required.
 4. Open the generated event. Inspect inbound attempts, payload stability and the resilience score.
 5. Open **Monitor** and create a public HTTP check, or use a self-host allowlist for an internal
    destination.

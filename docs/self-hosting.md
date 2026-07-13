@@ -37,6 +37,10 @@ Local URLs cannot be reached by cloud providers. Choose one supported mode:
 Read [External access](external-access.md) for DNS, Cloudflare, firewall, tunnel and troubleshooting
 instructions.
 
+Before enabling Monitor, Protect or outgoing alerts on release `v0.3.3`, read the self-host worker
+egress note in [Release status](release-status.md). Trial and Observe are unaffected by that Compose
+networking limitation.
+
 ## First useful trial
 
 1. Open **Endpoints** and choose a starter template.

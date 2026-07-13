@@ -5,6 +5,11 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
+Current public release: **v0.3.3** (13 July 2026). The managed sandbox is available at
+[app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
+Self-hosted `v0.3.3` operators using Monitor, Protect or outgoing alerts must apply the documented
+[worker-network workaround](docs/release-status.md#known-self-host-limitation-in-v033).
+
 ## Run locally
 
 Requirements: Docker Engine, Docker Compose v2 and OpenSSL.
@@ -76,6 +81,7 @@ the marketing website are outside its scope and are not required to run HookTria
 - [Configuration](docs/configuration.md)
 - [Development](docs/development.md)
 - [Security](docs/security.md)
+- [Current release status](docs/release-status.md)
 
 ## Source development
 

@@ -32,6 +32,11 @@ provider ─ /i/* ────> ingestor ────────┼─> Postgre
 PostgreSQL and Redis use internal Docker network. API and ingestor remain separate trust boundaries.
 Payloads are encrypted before persistence. Endpoint/session tokens are stored as hashes.
 
+The worker needs both the internal data network and an egress-capable application network to run
+public monitors, protected deliveries and outgoing alerts. Release `v0.3.3` has a self-host Compose
+networking limitation documented in [Release status](release-status.md); Cloud already uses the
+correct dual-network topology.
+
 ## Product data paths
 
 - **Trial:** ingestor returns deterministic scenario responses; no destination call.

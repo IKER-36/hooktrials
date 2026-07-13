@@ -53,5 +53,5 @@ integrations.
 
 ## Reporting
 
-Security reports should follow the process that will be published in SECURITY.md before the first
-public release. Do not post exploitable production details in public issues.
+Security reports must follow [`SECURITY.md`](../SECURITY.md). Do not post exploitable production
+details, real payloads or credentials in public issues.
