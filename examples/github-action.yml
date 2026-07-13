@@ -1,0 +1,14 @@
+name: Webhook reliability
+on:
+  workflow_dispatch:
+
+jobs:
+  trial:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: IKER-36/hooktrials@v0.3.4
+        with:
+          config: examples/payment-webhook.trial.yml
+          endpoint: ${{ secrets.HOOKTRIALS_ENDPOINT_URL }}
+          junit: hooktrials-junit.xml

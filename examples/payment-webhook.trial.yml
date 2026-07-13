@@ -1,0 +1,14 @@
+name: Payment provider temporary outage
+# Keep the private URL out of source control. Set HOOKTRIALS_ENDPOINT_URL locally
+# or pass the endpoint input to the GitHub Action from a repository secret.
+attempts:
+  - expect: 500
+    waitMs: 250
+  - expect: 500
+    waitMs: 250
+  - expect: 200
+payload:
+  type: invoice.payment_failed
+  source: hooktrials-ci
+  synthetic: true
+timeoutMs: 15000

@@ -1,0 +1,33 @@
+{
+  "name": "@hooktrials/cli",
+  "version": "0.3.4",
+  "description": "Run deterministic webhook reliability trials from a terminal or CI.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "bin": {
+    "hooktrials-trial": "dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/core.ts",
+      "default": "./dist/core.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --config vitest.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "yaml": "2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

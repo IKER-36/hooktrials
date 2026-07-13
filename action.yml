@@ -1,0 +1,28 @@
+name: HookTrials reliability trial
+description: Run a deterministic webhook failure and recovery sequence in CI.
+author: HookTrials contributors
+branding:
+  icon: activity
+  color: green
+inputs:
+  config:
+    description: Path to the trial YAML file.
+    required: false
+    default: examples/payment-webhook.trial.yml
+  endpoint:
+    description: Private HookTrials endpoint URL. Prefer a repository secret.
+    required: false
+  json:
+    description: Optional JSON result file.
+    required: false
+  junit:
+    description: Optional JUnit result file.
+    required: false
+outputs:
+  passed:
+    description: Whether every response matched.
+  summary:
+    description: Compact attempt summary.
+runs:
+  using: node20
+  main: action/dist/index.cjs

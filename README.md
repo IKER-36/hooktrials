@@ -5,10 +5,8 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.3.3** (13 July 2026). The managed sandbox is available at
+Current public release: **v0.3.4** (14 July 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
-Self-hosted `v0.3.3` operators using Monitor, Protect or outgoing alerts must apply the documented
-[worker-network workaround](docs/release-status.md#known-self-host-limitation-in-v033).
 
 ## Run locally
 
@@ -50,6 +48,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - React dashboard, login and first-run setup. No marketing landing.
 - First-entry product tour with a permanent restart control.
 - Unified Control Center, integration inventory and Operations recovery queue.
+- Demo Lab proving Test, Observe, Protect, Monitor and recovery with isolated synthetic resources.
 - Fastify API and isolated public ingestion service.
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
@@ -61,6 +60,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Durable retries, dead-letter recovery, incidents, outgoing alerts and redacted evidence links.
 - Active API/HTTP monitoring with explainable availability, latency and integrity scores.
 - Single-origin self-hosting through Docker Compose.
+- Terminal CLI and reusable GitHub Action for deterministic reliability trials in CI.
 
 ## Repository model
 
@@ -76,6 +76,9 @@ the marketing website are outside its scope and are not required to run HookTria
 - [Incidents, alerts and evidence](docs/incidents-alerts-evidence.md)
 - [Architecture](docs/architecture.md)
 - [Guided demonstration](docs/guided-demo.md)
+- [Full Demo Lab](docs/demo-lab.md)
+- [CLI and GitHub Actions](docs/cli-and-ci.md)
+- [Competition demonstration script](docs/competition-demo.md)
 - [Scenario Studio](docs/scenario-studio.md)
 - [Self-hosting](docs/self-hosting.md)
 - [Configuration](docs/configuration.md)

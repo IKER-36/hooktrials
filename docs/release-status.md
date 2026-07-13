@@ -1,8 +1,8 @@
 # Current release status
 
-Updated: 13 July 2026.
+Updated: 14 July 2026.
 
-## Release `v0.3.3`
+## Release `v0.3.4`
 
 The current public release includes the complete Integration Reliability Control Plane:
 
@@ -11,21 +11,28 @@ The current public release includes the complete Integration Reliability Control
 - active HTTP monitoring, incidents and explainable scores;
 - contracts, GitHub/Stripe signatures, dead letters, alerts and redacted evidence links;
 - unified Control Center, Monitor inventory, Operations queue and persisted seven-step onboarding;
-- one-command self-hosting with local, existing-proxy and direct-domain modes.
+- one-command self-hosting with local, existing-proxy and direct-domain modes;
+- a full Demo Lab for Trial, Observe, Protect, Monitor and Operations evidence;
+- a terminal CLI and bundled GitHub Action for exact response-sequence checks in CI.
 
-The quality gate passes formatting, ESLint, strict TypeScript, 109 automated tests and all
-production builds. The managed Cloud flow has also passed registration, onboarding, endpoint CRUD,
-`500 -> 500 -> 200` recovery, event inspection, monitor incident/recovery, Operations and relogin in
-a real browser.
+The quality gate passes formatting, ESLint, strict TypeScript, 111 automated tests and all
+production builds. A clean self-hosted E2E passed outgoing alert delivery, monitor incident and
+recovery, Protect dead-letter and manual recovery, and Operations reconciliation.
 
-## Known self-host limitation in `v0.3.3`
+The Demo Lab then passed direct API and browser execution: Trial `500 -> 500 -> 200`, Observe
+destination failure, Protect `202` plus three-attempt durable recovery, three immediate Monitor
+checks, recovered incident, Operations summary and cleanup of exactly the three run-owned resources.
+The CLI and bundled Action independently passed the same `500 -> 500 -> 200` scenario and emitted
+JSON plus JUnit evidence.
+
+## Self-host worker correction
 
 The source `compose.yml` attaches `worker` only to the internal `data` network. This prevents active
 monitors, Protect deliveries and outgoing alert webhooks from reaching external destinations even
 though application-level SSRF controls are working. Trial and Observe remain functional.
 
-Until the next patch release, self-hosted operators can add the egress-capable `edge` network to the
-worker service:
+The correction is included in `v0.3.4`. Self-hosted `v0.3.3` operators can either update or add the
+egress-capable `edge` network to the worker service:
 
 ```yaml
 services:
@@ -40,7 +47,8 @@ Then apply the change with:
 ```
 
 Keep `data` internal and never publish PostgreSQL or Redis ports. The Cloud deployment already uses
-this dual-network topology and passed an external monitor recovery test.
+this dual-network topology. Release `v0.3.4` is not described as live there until its backup-first
+promotion and authenticated post-deploy journey pass.
 
 ## Cloud availability
 
