@@ -4,7 +4,6 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 RUNTIME_DIR="$ROOT/.hooktrials"
 RUNTIME_ENV="$RUNTIME_DIR/runtime.env"
-COMPOSE="docker compose --project-directory $ROOT --env-file $RUNTIME_ENV -f $ROOT/compose.yml"
 
 die() {
   printf '%s\n' "error: $*" >&2
@@ -13,6 +12,37 @@ die() {
 
 require() {
   command -v "$1" >/dev/null 2>&1 || die "$1 is required"
+}
+
+env_value() {
+  key=$1
+  [ -f "$RUNTIME_ENV" ] || return 0
+  sed -n "s/^${key}=//p" "$RUNTIME_ENV" | tail -n 1
+}
+
+set_env() {
+  key=$1
+  value=$2
+  temp="$RUNTIME_ENV.tmp"
+  awk -v key="$key" -v value="$value" '
+    BEGIN { found = 0 }
+    index($0, key "=") == 1 { print key "=" value; found = 1; next }
+    { print }
+    END { if (!found) print key "=" value }
+  ' "$RUNTIME_ENV" >"$temp"
+  chmod 600 "$temp"
+  mv "$temp" "$RUNTIME_ENV"
+}
+
+valid_domain() {
+  printf '%s' "$1" | grep -Eq '^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$'
+}
+
+valid_https_origin() {
+  case "$1" in
+    https://*) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 generate_runtime() {
@@ -29,9 +59,12 @@ generate_runtime() {
 
   cat >"$RUNTIME_ENV" <<EOF
 HOOKTRIALS_PROJECT=hooktrials-selfhost
-HOOKTRIALS_BIND=${HOOKTRIALS_BIND:-0.0.0.0}
+HOOKTRIALS_MODE=${HOOKTRIALS_MODE:-local}
+HOOKTRIALS_BIND=${HOOKTRIALS_BIND:-127.0.0.1}
 HOOKTRIALS_PORT=$port
 HOOKTRIALS_ORIGIN=$origin
+HOOKTRIALS_DOMAIN=
+ACME_EMAIL=
 DEPLOYMENT_MODE=selfhost
 REGISTRATION_MODE=first-user
 COOKIE_SECURE=${COOKIE_SECURE:-false}
@@ -51,8 +84,119 @@ EOF
 }
 
 compose() {
-  # shellcheck disable=SC2086
-  $COMPOSE "$@"
+  mode=$(env_value HOOKTRIALS_MODE)
+  case "${mode:-local}" in
+    domain) overlay="$ROOT/compose.domain.yml" ;;
+    local | proxy) overlay="$ROOT/compose.local.yml" ;;
+    *) die "unknown HOOKTRIALS_MODE: $mode" ;;
+  esac
+  docker compose \
+    --project-directory "$ROOT" \
+    --env-file "$RUNTIME_ENV" \
+    -f "$ROOT/compose.yml" \
+    -f "$overlay" \
+    "$@"
+}
+
+show_access() {
+  mode=$(env_value HOOKTRIALS_MODE)
+  origin=$(env_value HOOKTRIALS_ORIGIN)
+  case "${mode:-local}" in
+    local) printf '%s\n' "Access: local only ($origin)" ;;
+    proxy) printf '%s\n' "Access: existing HTTPS proxy ($origin)" ;;
+    domain) printf '%s\n' "Access: direct public HTTPS ($origin)" ;;
+  esac
+}
+
+configure_access() {
+  generate_runtime
+  mode=${1:-}
+  if [ -z "$mode" ]; then
+    printf '%s\n' "Choose how HookTrials is reached:"
+    printf '%s\n' "  1) local  - this machine only"
+    printf '%s\n' "  2) proxy  - your existing HTTPS reverse proxy"
+    printf '%s\n' "  3) domain - direct public domain with automatic HTTPS"
+    printf 'Mode [local/proxy/domain]: '
+    read -r mode
+  fi
+
+  case "$mode" in
+    1 | local)
+      port=${2:-3000}
+      printf '%s' "$port" | grep -Eq '^[0-9]{1,5}$' || die "port must be numeric"
+      [ "$port" -ge 1 ] && [ "$port" -le 65535 ] || die "port must be between 1 and 65535"
+      set_env HOOKTRIALS_MODE local
+      set_env HOOKTRIALS_BIND 127.0.0.1
+      set_env HOOKTRIALS_PORT "$port"
+      set_env HOOKTRIALS_ORIGIN "http://localhost:$port"
+      set_env HOOKTRIALS_DOMAIN ""
+      set_env ACME_EMAIL ""
+      set_env COOKIE_SECURE false
+      ;;
+    2 | proxy)
+      origin=${2:-}
+      if [ -z "$origin" ]; then
+        printf 'Public HTTPS origin (example: https://trials.example.com): '
+        read -r origin
+      fi
+      valid_https_origin "$origin" || die "proxy origin must start with https://"
+      port=${3:-3000}
+      printf '%s' "$port" | grep -Eq '^[0-9]{1,5}$' || die "port must be numeric"
+      [ "$port" -ge 1 ] && [ "$port" -le 65535 ] || die "port must be between 1 and 65535"
+      set_env HOOKTRIALS_MODE proxy
+      set_env HOOKTRIALS_BIND 127.0.0.1
+      set_env HOOKTRIALS_PORT "$port"
+      set_env HOOKTRIALS_ORIGIN "${origin%/}"
+      set_env HOOKTRIALS_DOMAIN ""
+      set_env ACME_EMAIL ""
+      set_env COOKIE_SECURE true
+      ;;
+    3 | domain)
+      domain=${2:-}
+      email=${3:-}
+      if [ -z "$domain" ]; then
+        printf 'Public domain (example: trials.example.com): '
+        read -r domain
+      fi
+      if [ -z "$email" ]; then
+        printf 'ACME email for certificate notices: '
+        read -r email
+      fi
+      valid_domain "$domain" || die "invalid public domain"
+      case "$email" in
+        *@*.*) ;;
+        *) die "invalid ACME email" ;;
+      esac
+      set_env HOOKTRIALS_MODE domain
+      set_env HOOKTRIALS_BIND 0.0.0.0
+      set_env HOOKTRIALS_PORT 443
+      set_env HOOKTRIALS_ORIGIN "https://$domain"
+      set_env HOOKTRIALS_DOMAIN "$domain"
+      set_env ACME_EMAIL "$email"
+      set_env COOKIE_SECURE true
+      ;;
+    *) die "mode must be local, proxy or domain" ;;
+  esac
+
+  compose config --quiet
+  printf '%s\n' "Access configuration saved without rotating runtime secrets."
+  show_access
+  printf '%s\n' "Run ./hooktrials up to apply it."
+}
+
+external_doctor() {
+  mode=$(env_value HOOKTRIALS_MODE)
+  origin=$(env_value HOOKTRIALS_ORIGIN)
+  if [ "${mode:-local}" = "local" ]; then
+    printf '%s\n' "External access: disabled (local-only mode)."
+    printf '%s\n' "Run ./hooktrials configure proxy or ./hooktrials configure domain."
+    return 0
+  fi
+  require curl
+  valid_https_origin "$origin" || die "public origin must use HTTPS"
+  curl --fail --silent --show-error --max-time 15 "$origin/api/healthz" >/dev/null ||
+    die "external API probe failed: $origin/api/healthz"
+  printf '%s\n' "External HTTPS probe: OK ($origin)"
 }
 
 require docker
@@ -63,8 +207,9 @@ case "${1:-up}" in
     generate_runtime
     compose up -d --build
     compose ps
-    printf '\nHookTrials: %s\n' "$(sed -n 's/^HOOKTRIALS_ORIGIN=//p' "$RUNTIME_ENV")"
-    printf '%s\n' "Create first account to become installation owner."
+    printf '\nHookTrials: %s\n' "$(env_value HOOKTRIALS_ORIGIN)"
+    show_access
+    printf '%s\n' "Create the first account to become installation owner."
     ;;
   down)
     [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
@@ -81,11 +226,16 @@ case "${1:-up}" in
   status)
     [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
     compose ps
+    show_access
     ;;
   doctor)
     generate_runtime
     compose config --quiet
     printf '%s\n' "Docker, Compose and configuration: OK"
+    if [ "${2:-}" = "--external" ]; then external_doctor; else show_access; fi
+    ;;
+  configure)
+    configure_access "${2:-}" "${3:-}" "${4:-}"
     ;;
   update)
     [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
@@ -108,8 +258,11 @@ case "${1:-up}" in
     rm -f "$RUNTIME_ENV"
     printf '%s\n' "HookTrials data and runtime secrets removed."
     ;;
+  help | -h | --help)
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update|backup|reset --yes}"
+    ;;
   *)
-    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor|update|backup|reset --yes}" >&2
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update|backup|reset --yes}" >&2
     exit 2
     ;;
 esac

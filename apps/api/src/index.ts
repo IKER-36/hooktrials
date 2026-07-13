@@ -7,6 +7,7 @@ import {
   createEndpointInputSchema,
   loginInputSchema,
   registerInputSchema,
+  scenarioInputSchema,
   updateEndpointInputSchema,
 } from '@hooktrials/contracts';
 import { decryptValue, encryptValue, sha256 } from '@hooktrials/crypto';
@@ -142,6 +143,10 @@ app.get('/v1/setup', async () => {
       config.REGISTRATION_MODE === 'open' ||
       (config.REGISTRATION_MODE === 'first-user' && setupRequired),
     setupRequired,
+    publicOrigin: config.APP_ORIGIN,
+    externalAccess: !['localhost', '127.0.0.1', '::1'].includes(
+      new URL(config.APP_ORIGIN).hostname,
+    ),
   };
 });
 
@@ -248,6 +253,60 @@ app.get('/v1/scenarios', async (request, reply) => {
     .where(or(eq(scenarios.builtIn, true), eq(scenarios.userId, user.id)))
     .orderBy(desc(scenarios.builtIn), scenarios.name);
   return { scenarios: items };
+});
+
+app.post('/v1/scenarios', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const input = scenarioInputSchema.parse(request.body);
+  const definition = { name: input.name, steps: input.steps, repeatLastStep: input.repeatLastStep };
+  const created = await database.db
+    .insert(scenarios)
+    .values({ userId: user.id, name: input.name, definition })
+    .returning({
+      id: scenarios.id,
+      name: scenarios.name,
+      definition: scenarios.definition,
+      builtIn: scenarios.builtIn,
+    });
+  return reply.code(201).send({ scenario: created[0] });
+});
+
+app.put('/v1/scenarios/:id', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const input = scenarioInputSchema.parse(request.body);
+  const definition = { name: input.name, steps: input.steps, repeatLastStep: input.repeatLastStep };
+  const updated = await database.db
+    .update(scenarios)
+    .set({ name: input.name, definition, updatedAt: new Date() })
+    .where(and(eq(scenarios.id, id), eq(scenarios.userId, user.id), eq(scenarios.builtIn, false)))
+    .returning({
+      id: scenarios.id,
+      name: scenarios.name,
+      definition: scenarios.definition,
+      builtIn: scenarios.builtIn,
+    });
+  if (!updated[0]) return reply.code(404).send({ error: 'scenario_not_found' });
+  return { scenario: updated[0] };
+});
+
+app.delete('/v1/scenarios/:id', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const usage = await database.db
+    .select({ value: count() })
+    .from(endpoints)
+    .where(and(eq(endpoints.userId, user.id), eq(endpoints.scenarioId, id)));
+  if ((usage[0]?.value ?? 0) > 0) return reply.code(409).send({ error: 'scenario_in_use' });
+  const removed = await database.db
+    .delete(scenarios)
+    .where(and(eq(scenarios.id, id), eq(scenarios.userId, user.id), eq(scenarios.builtIn, false)))
+    .returning({ id: scenarios.id });
+  if (!removed[0]) return reply.code(404).send({ error: 'scenario_not_found' });
+  return reply.code(204).send();
 });
 
 app.get('/v1/endpoints', async (request, reply) => {

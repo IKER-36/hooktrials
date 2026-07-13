@@ -1,0 +1,4 @@
+services:
+  gateway:
+    ports:
+      - '127.0.0.1:${HOOKTRIALS_PORT:-3000}:8080'

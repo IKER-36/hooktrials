@@ -3,6 +3,7 @@ import { AppLayout } from './layouts/AppLayout';
 import { AuthPage } from './pages/AuthPage';
 import { EndpointsPage } from './pages/app/EndpointsPage';
 import { OverviewPage } from './pages/app/OverviewPage';
+import { ScenariosPage } from './pages/app/ScenariosPage';
 import { useAuth } from './context/AuthContext';
 
 function RootRedirect() {
@@ -21,6 +22,7 @@ export function App() {
       <Route path="/app" element={<AppLayout />}>
         <Route index element={<OverviewPage />} />
         <Route path="endpoints" element={<EndpointsPage />} />
+        <Route path="scenarios" element={<ScenariosPage />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />

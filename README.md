@@ -25,6 +25,18 @@ then closes. Self-hosted mode has no endpoint or daily-event quota by default.
 ./hooktrials update
 ```
 
+To receive webhooks from external providers, configure your existing HTTPS proxy or let the
+included Caddy profile manage a public domain:
+
+```bash
+./hooktrials configure proxy https://trials.example.com 3000
+# or: ./hooktrials configure domain trials.example.com operator@example.com
+./hooktrials up
+./hooktrials doctor --external
+```
+
+See [External access](docs/external-access.md) for DNS, Cloudflare, firewall and tunnel guidance.
+
 Runtime secrets are generated once inside ignored `.hooktrials/runtime.env` with restrictive file
 permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted payloads exist.
 
@@ -35,6 +47,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
 - Deterministic `500`, `503`, `429` and recovery scenarios.
+- Scenario Studio for custom multi-step status, delay, header and body recipes.
 - Guided endpoint templates and an integrated provider simulator.
 - Live event stream, retry timeline and encrypted payload inspector.
 - Single-origin self-hosting through Docker Compose.
@@ -48,6 +61,7 @@ the marketing website are outside its scope and are not required to run HookTria
 
 - [Architecture](docs/architecture.md)
 - [Guided demonstration](docs/guided-demo.md)
+- [Scenario Studio](docs/scenario-studio.md)
 - [Self-hosting](docs/self-hosting.md)
 - [Configuration](docs/configuration.md)
 - [Development](docs/development.md)

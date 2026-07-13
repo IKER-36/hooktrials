@@ -17,6 +17,8 @@ export interface DashboardContext {
   createEndpoint(name: string, scenarioId: string): Promise<Endpoint>;
   toggleEndpoint(endpoint: Endpoint): Promise<void>;
   deleteEndpoint(endpoint: Endpoint): Promise<void>;
+  saveScenario(input: Omit<Scenario, 'id' | 'builtIn'>, id?: string): Promise<Scenario>;
+  deleteScenario(scenario: Scenario): Promise<void>;
   reportError(error: unknown): void;
 }
 
@@ -113,6 +115,29 @@ export function AppLayout() {
           return remaining;
         });
       },
+      async saveScenario(input, id) {
+        const response = await apiRequest<{ scenario: Scenario }>(
+          id ? `/v1/scenarios/${id}` : '/v1/scenarios',
+          { method: id ? 'PUT' : 'POST', body: JSON.stringify(input.definition) },
+        );
+        setScenarios((items) =>
+          id
+            ? items.map((item) => (item.id === id ? response.scenario : item))
+            : [...items, response.scenario],
+        );
+        setEndpoints((items) =>
+          items.map((endpoint) =>
+            endpoint.scenarioId === response.scenario.id
+              ? { ...endpoint, scenarioName: response.scenario.name }
+              : endpoint,
+          ),
+        );
+        return response.scenario;
+      },
+      async deleteScenario(scenario) {
+        await apiRequest(`/v1/scenarios/${scenario.id}`, { method: 'DELETE' });
+        setScenarios((items) => items.filter((item) => item.id !== scenario.id));
+      },
       reportError,
     }),
     [endpoints, scenarios, limits, loading, selectedId, selectEndpoint, reportError],
@@ -141,6 +166,7 @@ export function AppLayout() {
           Overview
         </NavLink>
         <NavLink to="/app/endpoints">Endpoints</NavLink>
+        <NavLink to="/app/scenarios">Scenarios</NavLink>
         <a href="https://github.com/IKER-36/hooktrials" target="_blank" rel="noreferrer">
           Source
         </a>
@@ -158,6 +184,9 @@ export function AppLayout() {
           <NavLink to="/app/endpoints">
             <span>02</span> Endpoints <small>{endpoints.length}</small>
           </NavLink>
+          <NavLink to="/app/scenarios">
+            <span>03</span> Scenario Studio <small>{scenarios.length}</small>
+          </NavLink>
         </nav>
         <div className="ht-sidebar-foot">
           <div className="ht-runtime-state">
@@ -165,7 +194,7 @@ export function AppLayout() {
               <i /> API online
             </span>
             <span>
-              <i /> event stream ready
+              <i /> {setup?.externalAccess ? 'external webhooks ready' : 'local-only endpoints'}
             </span>
           </div>
           <div className="ht-account">

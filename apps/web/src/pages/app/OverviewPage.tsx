@@ -4,6 +4,7 @@ import { AttemptSequence, OutcomeBadge } from '../../components/app/AttemptSeque
 import { EventInspector } from '../../components/app/EventInspector';
 import { GuidedDemo } from '../../components/app/GuidedDemo';
 import { CopyButton } from '../../components/ui/CopyButton';
+import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { useEventStream } from '../../hooks/useEventStream';
 import type { StreamStatus } from '../../hooks/useEventStream';
@@ -27,6 +28,7 @@ function curlSnippet(url: string): string {
 }
 
 export function OverviewPage() {
+  const { setup } = useAuth();
   const { endpoints, scenarios, selected, selectEndpoint, toggleEndpoint, loading, reportError } =
     useDashboard();
   const [events, setEvents] = useState<EventSummary[]>([]);
@@ -175,6 +177,23 @@ export function OverviewPage() {
             {toggling ? 'Working…' : selected.active ? 'Pause' : 'Resume'}
           </button>
         </div>
+
+        {!setup?.externalAccess ? (
+          <div className="ht-external-warning">
+            <strong>LOCAL ONLY</strong>
+            <span>
+              Cloud providers cannot reach this URL. Configure an HTTPS proxy or public domain
+              before using a real integration.
+            </span>
+            <a
+              href="https://github.com/IKER-36/hooktrials/blob/main/docs/external-access.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open setup guide →
+            </a>
+          </div>
+        ) : null}
 
         {selected.ingestUrl ? (
           <>

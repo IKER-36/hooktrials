@@ -1,0 +1,17 @@
+services:
+  gateway:
+    environment:
+      HOOKTRIALS_DOMAIN: ${HOOKTRIALS_DOMAIN:?Configure a public domain with ./hooktrials configure}
+      ACME_EMAIL: ${ACME_EMAIL:?Configure an ACME email with ./hooktrials configure}
+    ports:
+      - '${HOOKTRIALS_BIND:-0.0.0.0}:80:80'
+      - '${HOOKTRIALS_BIND:-0.0.0.0}:443:443'
+      - '${HOOKTRIALS_BIND:-0.0.0.0}:443:443/udp'
+    volumes:
+      - ./deploy/caddy/Caddyfile.domain:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -8,6 +8,7 @@ export interface ScenarioStep {
   statusCode: number;
   delayMs: number;
   headers: Record<string, string>;
+  body?: string;
 }
 export interface Scenario {
   id: string;
@@ -34,6 +35,8 @@ export interface SetupState {
   deploymentMode: 'cloud' | 'selfhost';
   registrationOpen: boolean;
   setupRequired: boolean;
+  publicOrigin: string;
+  externalAccess: boolean;
 }
 export interface AttemptSummary {
   sequence: number;

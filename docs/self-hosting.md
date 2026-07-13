@@ -6,7 +6,7 @@
 - OpenSSL.
 - Approximately 2 CPU, 4 GB RAM and 20 GB free disk for source builds.
 
-## Install
+## Install locally
 
 ```bash
 git clone https://github.com/IKER-36/hooktrials.git
@@ -15,23 +15,35 @@ cd hooktrials
 ./hooktrials up
 ```
 
-Visit `http://localhost:3000` and create owner account. Fresh volumes contain no users, endpoints or
-events. Built-in deterministic scenarios are seeded automatically.
+Visit `http://localhost:3000`. The first account becomes installation owner and registration then
+closes. Fresh volumes contain no users, endpoints or events. Built-in scenarios are seeded
+automatically.
 
-## Public domain and HTTPS
+## Receive external webhooks
 
-Recommended: place HookTrials behind existing HTTPS reverse proxy and start with:
+Local URLs cannot be reached by cloud providers. Choose one supported mode:
 
 ```bash
-HOOKTRIALS_BIND=127.0.0.1 \
-HOOKTRIALS_PORT=3000 \
-HOOKTRIALS_ORIGIN=https://trials.example.com \
-COOKIE_SECURE=true \
+# Existing HTTPS reverse proxy
+./hooktrials configure proxy https://trials.example.com 3000
+
+# Dedicated VPS; automatic HTTPS on ports 80/443
+./hooktrials configure domain trials.example.com operator@example.com
+
 ./hooktrials up
+./hooktrials doctor --external
 ```
 
-Proxy all paths, including `/api/*` and `/i/*`, to `127.0.0.1:3000`. Preserve streaming and disable
-response buffering for `/api/v1/endpoints/*/stream`.
+Read [External access](external-access.md) for DNS, Cloudflare, firewall, tunnel and troubleshooting
+instructions.
+
+## First useful trial
+
+1. Open **Endpoints** and choose a starter template.
+2. Copy the generated ingestion URL.
+3. Use the integrated simulator with synthetic data, or configure that URL in your webhook sender.
+4. Watch attempts arrive in **Overview** and inspect the retry timeline.
+5. Open **Scenario Studio** to create the exact failure/recovery sequence needed by your system.
 
 ## Operations
 
@@ -43,9 +55,9 @@ response buffering for `/api/v1/endpoints/*/stream`.
 ./hooktrials down
 ```
 
-`./hooktrials reset --yes` permanently deletes database, Redis data and generated runtime secrets.
+`./hooktrials reset --yes` permanently deletes PostgreSQL, Redis data and generated runtime secrets.
 
 ## Backups
 
 `./hooktrials backup` creates a mode-`0600` compressed PostgreSQL dump under `backups/`. Copy it and
-encrypted runtime configuration off-host. Redis is operational state, not database backup.
+the encrypted runtime configuration off-host. Redis is operational state, not a database backup.

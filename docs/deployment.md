@@ -1,11 +1,11 @@
 # Deployment profiles
 
-Public repository supports self-hosted profile only. Run `./hooktrials up`; it builds local images,
-runs migrations and exposes one origin.
+Public repository supports self-hosted deployment. Run `./hooktrials configure` to choose local,
+existing-proxy or direct-domain mode, then `./hooktrials up`. It builds images, runs migrations and
+exposes one configured origin.
 
-Managed HookTrials Cloud is deployed separately using immutable
-dashboard, server and landing images. Production secrets, CubePath topology and landing source are
-not part of this repository.
+Managed HookTrials Cloud is deployed separately using immutable application images. Managed
+hosting details and production secrets are not part of this repository.
 
 Tagged releases will publish:
 
