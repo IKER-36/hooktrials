@@ -18,7 +18,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
     return <Navigate to="/login" replace />;
   }
 
-  const ownerSetup = registerMode && setup?.setupRequired;
+  const ownerSetup = registerMode && setup?.deploymentMode === 'selfhost' && setup.setupRequired;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

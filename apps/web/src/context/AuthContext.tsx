@@ -42,7 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         setUser(response.user);
         setSetup((current) =>
-          current ? { ...current, setupRequired: false, registrationOpen: false } : current,
+          current
+            ? {
+                ...current,
+                setupRequired: false,
+                registrationOpen: current.deploymentMode === 'cloud',
+              }
+            : current,
         );
       },
       async register(displayName, email, password) {
@@ -51,6 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({ displayName, email, password }),
         });
         setUser(response.user);
+        setSetup((current) =>
+          current
+            ? {
+                ...current,
+                setupRequired: false,
+                registrationOpen: current.deploymentMode === 'cloud',
+              }
+            : current,
+        );
       },
       async logout() {
         await apiRequest('/v1/auth/logout', { method: 'POST' });
