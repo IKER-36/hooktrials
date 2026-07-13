@@ -3,6 +3,7 @@ import { apiRequest, readableError } from '../../lib/api';
 import { clockTime, shortDate, shortHash } from '../../lib/format';
 import type { AttemptDetail, EventDetail } from '../../lib/types';
 import { CopyButton } from '../ui/CopyButton';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { statusTone } from '../ui/StatusChip';
 
 function isRedacted(value: unknown): boolean {
@@ -91,6 +92,14 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
   const [error, setError] = useState('');
   const [selectedAttempt, setSelectedAttempt] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
+  const [pendingDeliveryAction, setPendingDeliveryAction] = useState<{
+    id: string;
+    kind: 'retry' | 'replay';
+  } | null>(null);
+  const [deliveryActionBusy, setDeliveryActionBusy] = useState(false);
+  const [sharePending, setSharePending] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [share, setShare] = useState<{ shareUrl: string; expiresAt: string } | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
 
@@ -126,11 +135,57 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
   }, [eventId, reloadKey]);
 
   const attempt = detail?.attempts[selectedAttempt] ?? null;
+  const directDeliveries = attempt
+    ? (detail?.deliveries ?? []).filter((delivery) => delivery.inboundAttemptId === attempt.id)
+    : [];
+  const deliveries = directDeliveries.length > 0 ? directDeliveries : (detail?.deliveries ?? []);
+  const deduplicatedAttempt = Boolean(
+    attempt && directDeliveries.length === 0 && (detail?.deliveries.length ?? 0) > 0,
+  );
   const headerEntries = attempt ? Object.entries(attempt.headers ?? {}) : [];
   const hasRedactions = headerEntries.some(([, value]) => isRedacted(value));
 
+  async function confirmDeliveryAction() {
+    if (!pendingDeliveryAction) return;
+    setDeliveryActionBusy(true);
+    try {
+      await apiRequest(`/v1/deliveries/${pendingDeliveryAction.id}/${pendingDeliveryAction.kind}`, {
+        method: 'POST',
+        body: JSON.stringify({ confirm: true }),
+      });
+      setPendingDeliveryAction(null);
+      setReloadKey((key) => key + 1);
+    } catch (requestError) {
+      setError(readableError(requestError));
+    } finally {
+      setDeliveryActionBusy(false);
+    }
+  }
+
+  async function createShareLink() {
+    setShareBusy(true);
+    try {
+      const response = await apiRequest<{ shareUrl: string; expiresAt: string }>(
+        `/v1/events/${eventId}/share`,
+        { method: 'POST', body: JSON.stringify({ expiresInHours: 24, confirm: true }) },
+      );
+      setShare(response);
+      setSharePending(false);
+    } catch (requestError) {
+      setError(readableError(requestError));
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
   return (
-    <div className="ht-backdrop" role="presentation" onMouseDown={onClose}>
+    <div
+      className="ht-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
       <aside
         ref={dialogRef}
         className="ht-inspector"
@@ -181,6 +236,23 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
                 <dd>{detail.attempts.length}</dd>
               </div>
             </dl>
+
+            <section className="ht-share-evidence">
+              <div>
+                <b>Redacted evidence</b>
+                <span>No payload, secret headers, credentials or destination URL.</span>
+              </div>
+              {share ? (
+                <div className="ht-share-result">
+                  <code>{share.shareUrl}</code>
+                  <CopyButton value={share.shareUrl} label="Copy 24h link" />
+                </div>
+              ) : (
+                <button type="button" onClick={() => setSharePending(true)}>
+                  Create 24h share link
+                </button>
+              )}
+            </section>
 
             {detail.report ? (
               <section className="ht-report-card" aria-label="Resilience report">
@@ -240,7 +312,104 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
                     <dt>Response delay</dt>
                     <dd>{attempt.responseDelayMs} ms</dd>
                   </div>
+                  <div>
+                    <dt>Signature</dt>
+                    <dd>
+                      {attempt.signatureProvider === 'none'
+                        ? 'Not configured'
+                        : `${attempt.signatureProvider} · ${attempt.signatureStatus}`}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Contract</dt>
+                    <dd>
+                      {attempt.contractResult.configured
+                        ? attempt.contractResult.passed
+                          ? 'Passed'
+                          : 'Failed'
+                        : 'Not configured'}
+                    </dd>
+                  </div>
                 </dl>
+
+                {attempt.contractResult.configured && attempt.contractResult.checks ? (
+                  <section className="ht-contract-evidence">
+                    <h3>Contract evidence</h3>
+                    {attempt.contractResult.checks.map((check, index) => (
+                      <div
+                        key={`${check.kind}-${check.target}-${index}`}
+                        className={check.passed ? 'passed' : 'failed'}
+                      >
+                        <b>
+                          {check.passed ? 'PASS' : 'FAIL'} · {check.kind}
+                        </b>
+                        <code>{check.target}</code>
+                        <span>{check.message}</span>
+                      </div>
+                    ))}
+                  </section>
+                ) : null}
+
+                {deliveries.length > 0 ? (
+                  <section className="ht-webhook-journey" aria-label="Webhook journey">
+                    <h3>Webhook journey</h3>
+                    <div className="ht-journey-step ok">
+                      <b>01 Provider → HookTrials</b>
+                      <span>Received and stored · {clockTime(attempt.receivedAt)}</span>
+                    </div>
+                    <div className="ht-journey-step ok">
+                      <b>02 Validation</b>
+                      <span>
+                        {deduplicatedAttempt
+                          ? 'Duplicate correlated to the existing event; no second downstream delivery created'
+                          : 'Route accepted the inbound delivery'}
+                      </span>
+                    </div>
+                    {deliveries.map((delivery) => (
+                      <div
+                        key={delivery.id}
+                        className={`ht-journey-step ${delivery.state === 'succeeded' ? 'ok' : 'failed'}`}
+                      >
+                        <b>03 HookTrials → Destination · {delivery.kind.toUpperCase()}</b>
+                        <span>
+                          {delivery.state.toUpperCase()}
+                          {delivery.statusCode ? ` · HTTP ${delivery.statusCode}` : ''}
+                          {delivery.latencyMs !== null ? ` · ${delivery.latencyMs} ms` : ''}
+                          {delivery.errorCategory ? ` · ${delivery.errorCategory}` : ''}
+                        </span>
+                        {delivery.errorMessage ? <small>{delivery.errorMessage}</small> : null}
+                        <span className="ht-delivery-actions">
+                          {['failed', 'dead_letter'].includes(delivery.state) ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPendingDeliveryAction({ id: delivery.id, kind: 'retry' })
+                              }
+                            >
+                              Retry from dead-letter
+                            </button>
+                          ) : null}
+                          {['succeeded', 'failed', 'dead_letter'].includes(delivery.state) ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPendingDeliveryAction({ id: delivery.id, kind: 'replay' })
+                              }
+                            >
+                              Replay event
+                            </button>
+                          ) : null}
+                        </span>
+                      </div>
+                    ))}
+                    <div
+                      className={`ht-journey-step ${attempt.responseStatus < 500 ? 'ok' : 'failed'}`}
+                    >
+                      <b>04 HookTrials → Provider</b>
+                      <span>Mirrored HTTP {attempt.responseStatus}</span>
+                    </div>
+                  </section>
+                ) : null}
 
                 <h3>Headers</h3>
                 {headerEntries.length === 0 ? (
@@ -270,6 +439,32 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
           </div>
         )}
       </aside>
+      <ConfirmDialog
+        open={pendingDeliveryAction !== null}
+        title={
+          pendingDeliveryAction?.kind === 'replay'
+            ? 'Replay this event?'
+            : 'Retry this dead-letter delivery?'
+        }
+        body={
+          pendingDeliveryAction?.kind === 'replay'
+            ? 'This sends the original encrypted payload to the current destination again. The action is explicitly labelled REPLAY and audit metadata is recorded.'
+            : 'This requeues the original protected event and starts a fresh bounded retry cycle. Audit metadata records who requested it.'
+        }
+        confirmLabel={pendingDeliveryAction?.kind === 'replay' ? 'Replay event' : 'Retry delivery'}
+        busy={deliveryActionBusy}
+        onConfirm={() => void confirmDeliveryAction()}
+        onCancel={() => setPendingDeliveryAction(null)}
+      />
+      <ConfirmDialog
+        open={sharePending}
+        title="Create a public evidence link?"
+        body="Anyone with the link can view redacted delivery evidence for 24 hours. Payloads, captured headers, signing secrets, authentication data and destination URLs are excluded. Creating a new link replaces the previous one."
+        confirmLabel="Create redacted link"
+        busy={shareBusy}
+        onConfirm={() => void createShareLink()}
+        onCancel={() => setSharePending(false)}
+      />
     </div>
   );
 }

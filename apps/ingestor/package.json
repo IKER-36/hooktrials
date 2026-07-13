@@ -17,6 +17,8 @@
     "@hooktrials/crypto": "workspace:*",
     "@hooktrials/database": "workspace:*",
     "@hooktrials/logger": "workspace:*",
+    "@hooktrials/integration-engine": "workspace:*",
+    "@hooktrials/network-policy": "workspace:*",
     "@hooktrials/scenario-engine": "workspace:*",
     "bullmq": "5.80.2",
     "drizzle-orm": "0.45.2",

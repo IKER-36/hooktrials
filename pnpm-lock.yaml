@@ -59,15 +59,27 @@ importers:
       '@hooktrials/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@hooktrials/integration-engine':
+        specifier: workspace:*
+        version: link:../../packages/integration-engine
       '@hooktrials/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@hooktrials/monitor-engine':
+        specifier: workspace:*
+        version: link:../../packages/monitor-engine
+      '@hooktrials/network-policy':
+        specifier: workspace:*
+        version: link:../../packages/network-policy
       '@hooktrials/scenario-engine':
         specifier: workspace:*
         version: link:../../packages/scenario-engine
       argon2:
         specifier: 0.44.0
         version: 0.44.0
+      bullmq:
+        specifier: 5.80.2
+        version: 5.80.2
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2(postgres@3.4.9)
@@ -111,9 +123,15 @@ importers:
       '@hooktrials/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@hooktrials/integration-engine':
+        specifier: workspace:*
+        version: link:../../packages/integration-engine
       '@hooktrials/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@hooktrials/network-policy':
+        specifier: workspace:*
+        version: link:../../packages/network-policy
       '@hooktrials/scenario-engine':
         specifier: workspace:*
         version: link:../../packages/scenario-engine
@@ -185,9 +203,21 @@ importers:
       '@hooktrials/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@hooktrials/delivery-engine':
+        specifier: workspace:*
+        version: link:../../packages/delivery-engine
+      '@hooktrials/integration-engine':
+        specifier: workspace:*
+        version: link:../../packages/integration-engine
       '@hooktrials/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@hooktrials/monitor-engine':
+        specifier: workspace:*
+        version: link:../../packages/monitor-engine
+      '@hooktrials/network-policy':
+        specifier: workspace:*
+        version: link:../../packages/network-policy
       bullmq:
         specifier: 5.80.2
         version: 5.80.2
@@ -265,6 +295,30 @@ importers:
         specifier: 6.0.3
         version: 6.0.3
 
+  packages/delivery-engine:
+    devDependencies:
+      '@types/node':
+        specifier: 26.1.1
+        version: 26.1.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@26.1.1)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(tsx@4.23.0))
+
+  packages/integration-engine:
+    devDependencies:
+      '@types/node':
+        specifier: 26.1.1
+        version: 26.1.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@26.1.1)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(tsx@4.23.0))
+
   packages/logger:
     dependencies:
       pino:
@@ -274,6 +328,30 @@ importers:
       typescript:
         specifier: 6.0.3
         version: 6.0.3
+
+  packages/monitor-engine:
+    devDependencies:
+      '@types/node':
+        specifier: 26.1.1
+        version: 26.1.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@26.1.1)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(tsx@4.23.0))
+
+  packages/network-policy:
+    devDependencies:
+      '@types/node':
+        specifier: 26.1.1
+        version: 26.1.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@26.1.1)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(tsx@4.23.0))
 
   packages/scenario-engine:
     dependencies:

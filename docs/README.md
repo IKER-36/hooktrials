@@ -1,5 +1,15 @@
 # HookTrials documentation
 
+## Product guides
+
+- [Getting started](getting-started.md)
+- [Trial mode](trial-mode.md)
+- [Observe mode](observe-mode.md)
+- [Protect mode](protect-mode.md)
+- [Monitoring APIs and HTTP integrations](monitoring.md)
+- [Contracts and signatures](contracts-and-signatures.md)
+- [Incidents, alerts and evidence](incidents-alerts-evidence.md)
+
 This directory contains documentation intended to be published with the source code.
 
 | Document                              | Purpose                                     |

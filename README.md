@@ -1,7 +1,7 @@
 # HookTrials
 
-Open-source webhook resilience and contract-testing lab. HookTrials captures deliveries, runs
-deterministic failure scenarios, correlates retries and shows evidence about recovery behavior.
+Open-source integration reliability control plane. HookTrials tests failure behavior, safely
+operates webhook delivery and monitors APIs, HTTP routes and destinations from one dashboard.
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
@@ -43,6 +43,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 ## Included
 
 - React dashboard, login and first-run setup. No marketing landing.
+- First-entry product tour with a permanent restart control.
 - Fastify API and isolated public ingestion service.
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
@@ -50,6 +51,9 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Scenario Studio for custom multi-step status, delay, header and body recipes.
 - Guided endpoint templates and an integrated provider simulator.
 - Live event stream, retry timeline and encrypted payload inspector.
+- Trial, Observe and Protect route modes with contracts and GitHub/Stripe signatures.
+- Durable retries, dead-letter recovery, incidents, outgoing alerts and redacted evidence links.
+- Active API/HTTP monitoring with explainable availability, latency and integrity scores.
 - Single-origin self-hosting through Docker Compose.
 
 ## Repository model
@@ -59,6 +63,11 @@ the marketing website are outside its scope and are not required to run HookTria
 
 ## Documentation
 
+- [Getting started](docs/getting-started.md)
+- [Trial, Observe and Protect](docs/trial-mode.md)
+- [Monitoring](docs/monitoring.md)
+- [Contracts and signatures](docs/contracts-and-signatures.md)
+- [Incidents, alerts and evidence](docs/incidents-alerts-evidence.md)
 - [Architecture](docs/architecture.md)
 - [Guided demonstration](docs/guided-demo.md)
 - [Scenario Studio](docs/scenario-studio.md)

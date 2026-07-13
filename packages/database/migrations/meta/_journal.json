@@ -22,6 +22,41 @@
       "when": 1783940561824,
       "tag": "0002_smooth_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783961221114,
+      "tag": "0003_workable_eternals",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783962440238,
+      "tag": "0004_youthful_martin_li",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1783963125431,
+      "tag": "0005_black_whiplash",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783963850797,
+      "tag": "0006_small_the_executioner",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783965086775,
+      "tag": "0007_fuzzy_dagger",
+      "breakpoints": true
     }
   ]
 }

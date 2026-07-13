@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AttemptSequence, OutcomeBadge } from '../../components/app/AttemptSequence';
 import { EventInspector } from '../../components/app/EventInspector';
 import { GuidedDemo } from '../../components/app/GuidedDemo';
+import { RouteConfiguration } from '../../components/app/RouteConfiguration';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
@@ -166,7 +167,7 @@ export function OverviewPage() {
             {selected.active ? 'LISTENING' : 'PAUSED'}
           </span>
           <span className="ht-scenario-label">
-            scenario: <b>{selected.scenarioName ?? 'Basic inspection'}</b>
+            mode: <b>{selected.mode}</b> · environment: <b>{selected.environment}</b>
           </span>
           <button
             type="button"
@@ -193,6 +194,16 @@ export function OverviewPage() {
               Open setup guide →
             </a>
           </div>
+        ) : null}
+
+        {selected.mode === 'trial' ? (
+          <p className="ht-muted-line">
+            Scenario: <b>{selected.scenarioName ?? 'Basic inspection'}</b>
+          </p>
+        ) : selected.destinationHost ? (
+          <p className="ht-muted-line">
+            Destination: <code>{selected.destinationHost}</code> · URL encrypted
+          </p>
         ) : null}
 
         {selected.ingestUrl ? (
@@ -224,13 +235,17 @@ export function OverviewPage() {
         )}
       </section>
 
-      <GuidedDemo
-        endpoint={selected}
-        scenario={selectedScenario}
-        onComplete={async () => {
-          await loadEvents(selected.id);
-        }}
-      />
+      <RouteConfiguration endpoint={selected} />
+
+      {selected.mode === 'trial' ? (
+        <GuidedDemo
+          endpoint={selected}
+          scenario={selectedScenario}
+          onComplete={async () => {
+            await loadEvents(selected.id);
+          }}
+        />
+      ) : null}
 
       <section className="ht-metrics" aria-label="Endpoint metrics">
         <article>
@@ -283,9 +298,9 @@ export function OverviewPage() {
                     <strong>{event.correlationKey}</strong>
                     <small>{timeAgo(event.lastSeenAt)}</small>
                   </span>
-                  <AttemptSequence attempts={event.attempts} />
+                  <AttemptSequence attempts={event.attempts} deliveries={event.deliveries} />
                   <span className="ht-event-tail">
-                    <OutcomeBadge attempts={event.attempts} />
+                    <OutcomeBadge attempts={event.attempts} deliveries={event.deliveries} />
                     <span className="ht-inspect-hint" aria-hidden="true">
                       inspect →
                     </span>

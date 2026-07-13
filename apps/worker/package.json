@@ -14,7 +14,11 @@
     "@hooktrials/config": "workspace:*",
     "@hooktrials/crypto": "workspace:*",
     "@hooktrials/database": "workspace:*",
+    "@hooktrials/delivery-engine": "workspace:*",
     "@hooktrials/logger": "workspace:*",
+    "@hooktrials/integration-engine": "workspace:*",
+    "@hooktrials/monitor-engine": "workspace:*",
+    "@hooktrials/network-policy": "workspace:*",
     "bullmq": "5.80.2",
     "drizzle-orm": "0.45.2",
     "ioredis": "5.10.1"

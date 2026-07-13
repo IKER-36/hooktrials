@@ -26,6 +26,14 @@ a product requirement, not a deployment option.
 - Automatic expired-event and expired-session cleanup.
 - Containers run without published database or Redis ports.
 - Non-root application runtime image.
+- One outbound network policy for monitors, Observe/Protect delivery and alert webhooks.
+- DNS and every resolved IPv4/IPv6 address validated before connecting.
+- Loopback, private, link-local, metadata and special-use targets blocked by default.
+- Redirects disabled, DNS lookup pinned, response bytes bounded and request phases timed out.
+- Self-host private access requires explicit CIDR allowlists; Cloud always blocks private targets.
+- Destination headers, monitor headers and signature secrets encrypted and write-only.
+- Manual retry/replay requires confirmation and stores user/source audit metadata.
+- Public evidence uses a hashed expiring token and excludes bodies, headers, credentials and URLs.
 
 ## Rules for rendering captured content
 
@@ -35,11 +43,13 @@ a product requirement, not a deployment option.
 - Do not render remote SVG as trusted markup.
 - Preserve raw bytes for signature verification without treating them as executable content.
 
-## Deferred high-risk feature
+## Outbound request boundary
 
-Arbitrary webhook forwarding is intentionally excluded from the foundation. Before it is added, it
-requires comprehensive SSRF defenses, repeated DNS validation, private-address blocking, redirect
-limits, response-size limits and strict timeouts.
+Webhook destinations, monitor targets and alert channels are untrusted outbound inputs. All use the
+same network-policy package. Validation and connection use the same pinned DNS result, redirects are
+not followed and response bodies are never retained by Monitor. An operator should still isolate the
+containers from sensitive networks and grant only the minimum private CIDRs required by self-hosted
+integrations.
 
 ## Reporting
 

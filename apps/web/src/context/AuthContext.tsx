@@ -9,6 +9,7 @@ interface AuthContextValue {
   login(email: string, password: string): Promise<void>;
   register(displayName: string, email: string, password: string): Promise<void>;
   logout(): Promise<void>;
+  completeOnboarding(): Promise<void>;
   /** Drops the local session state without calling the API (e.g. after a 401). */
   clearSession(): void;
 }
@@ -54,6 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async logout() {
         await apiRequest('/v1/auth/logout', { method: 'POST' });
         setUser(null);
+      },
+      async completeOnboarding() {
+        const response = await apiRequest<{ onboardingCompletedAt: string }>('/v1/me/onboarding', {
+          method: 'PATCH',
+          body: JSON.stringify({ completed: true }),
+        });
+        setUser((current) =>
+          current ? { ...current, onboardingCompletedAt: response.onboardingCompletedAt } : current,
+        );
       },
       clearSession() {
         setUser(null);

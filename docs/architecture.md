@@ -12,22 +12,40 @@ by self-hosted installations.
 | -------- | ------------------------------------------ | ------------------------- |
 | gateway  | One HTTP origin and path routing           | host port 3000 by default |
 | web      | Static React dashboard                     | internal                  |
-| api      | Auth, endpoints, scenarios, events and SSE | `/api/*` through gateway  |
-| ingestor | Untrusted webhook intake                   | `/i/*` through gateway    |
-| worker   | Analysis and retention                     | none                      |
+| api      | Auth, routes, monitors, incidents and SSE  | `/api/*` through gateway  |
+| ingestor | Intake, validation and Observe forwarding  | `/i/*` through gateway    |
+| worker   | Monitor checks, Protect delivery, alerts   | none                      |
 | postgres | Source of truth                            | none                      |
 | redis    | Queue and live-event channel               | none                      |
 | migrate  | One-shot schema migration                  | none                      |
 
 ```text
 browser ── / ───────> dashboard
-        └─ /api/* ──> API ─────┐
-provider ─ /i/* ────> ingestor ├─> PostgreSQL
-                               └─> Redis/BullMQ ─> worker
+        └─ /api/* ──> API ─────────────┐
+provider ─ /i/* ────> ingestor ────────┼─> PostgreSQL
+                         │              └─> Redis/BullMQ ─> worker
+                         └─ Observe ──────────────────────> destination
+                                        Protect worker ──> destination
+                                        Monitor worker ──> HTTP resource
 ```
 
 PostgreSQL and Redis use internal Docker network. API and ingestor remain separate trust boundaries.
 Payloads are encrypted before persistence. Endpoint/session tokens are stored as hashes.
+
+## Product data paths
+
+- **Trial:** ingestor returns deterministic scenario responses; no destination call.
+- **Observe:** ingestor validates, forwards once and mirrors the destination response.
+- **Protect:** ingestor validates and persists before returning `202`; the worker owns retries,
+  dead-letter and recovery.
+- **Monitor:** the worker runs bounded active checks; it never proxies normal API traffic.
+
+Inbound provider attempts and outbound destination deliveries are separate records. This prevents a
+backend `503` from being mistaken for failure to receive the provider request.
+
+Shared packages enforce outbound network policy, delivery backoff, monitor state and deterministic
+signature/contract scoring. PostgreSQL is the durable source of truth; BullMQ coordinates bounded
+work and per-destination concurrency.
 
 ## Deployment modes
 

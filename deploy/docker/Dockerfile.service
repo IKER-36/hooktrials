@@ -14,7 +14,11 @@ COPY packages/config/package.json packages/config/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/crypto/package.json packages/crypto/package.json
 COPY packages/database/package.json packages/database/package.json
+COPY packages/delivery-engine/package.json packages/delivery-engine/package.json
+COPY packages/integration-engine/package.json packages/integration-engine/package.json
 COPY packages/logger/package.json packages/logger/package.json
+COPY packages/monitor-engine/package.json packages/monitor-engine/package.json
+COPY packages/network-policy/package.json packages/network-policy/package.json
 COPY packages/scenario-engine/package.json packages/scenario-engine/package.json
 RUN pnpm install --frozen-lockfile
 

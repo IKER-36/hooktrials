@@ -45,7 +45,13 @@ export async function getAuthenticatedUser(db: Database, request: FastifyRequest
   if (!token) return null;
 
   const result = await db
-    .select({ id: users.id, email: users.email, displayName: users.displayName, role: users.role })
+    .select({
+      id: users.id,
+      email: users.email,
+      displayName: users.displayName,
+      role: users.role,
+      onboardingCompletedAt: users.onboardingCompletedAt,
+    })
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
     .where(and(eq(sessions.tokenHash, hashToken(token)), gt(sessions.expiresAt, new Date())))

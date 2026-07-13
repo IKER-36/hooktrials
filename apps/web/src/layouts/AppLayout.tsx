@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Outlet, useOutletContext } from 'react-router-dom';
 import { Brand } from '../components/Brand';
+import { OnboardingTour } from '../components/app/OnboardingTour';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest, isAuthError, readableError } from '../lib/api';
 import type { AccountLimits, Endpoint, Scenario } from '../lib/types';
@@ -16,6 +17,7 @@ export interface DashboardContext {
   selectEndpoint(id: string): void;
   createEndpoint(name: string, scenarioId: string): Promise<Endpoint>;
   toggleEndpoint(endpoint: Endpoint): Promise<void>;
+  updateEndpoint(endpoint: Endpoint, input: Record<string, unknown>): Promise<Endpoint>;
   deleteEndpoint(endpoint: Endpoint): Promise<void>;
   saveScenario(input: Omit<Scenario, 'id' | 'builtIn'>, id?: string): Promise<Scenario>;
   deleteScenario(scenario: Scenario): Promise<void>;
@@ -27,7 +29,7 @@ export function useDashboard(): DashboardContext {
 }
 
 export function AppLayout() {
-  const { user, loading: authLoading, setup, logout, clearSession } = useAuth();
+  const { user, loading: authLoading, setup, logout, clearSession, completeOnboarding } = useAuth();
   const [endpoints, setEndpoints] = useState<Endpoint[]>([]);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [limits, setLimits] = useState<AccountLimits | null>(null);
@@ -36,6 +38,14 @@ export function AppLayout() {
     localStorage.getItem(SELECTED_KEY),
   );
   const [banner, setBanner] = useState('');
+  const [tourOpen, setTourOpen] = useState(false);
+  const [tourDecided, setTourDecided] = useState(false);
+
+  useEffect(() => {
+    if (authLoading || !user || tourDecided) return;
+    setTourOpen(!user.onboardingCompletedAt);
+    setTourDecided(true);
+  }, [authLoading, tourDecided, user]);
 
   const reportError = useCallback(
     (error: unknown) => {
@@ -105,6 +115,15 @@ export function AppLayout() {
           items.map((item) => (item.id === endpoint.id ? { ...item, ...response.endpoint } : item)),
         );
       },
+      async updateEndpoint(endpoint, input) {
+        const response = await apiRequest<{ endpoint: Endpoint }>(`/v1/endpoints/${endpoint.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(input),
+        });
+        const merged = { ...endpoint, ...response.endpoint };
+        setEndpoints((items) => items.map((item) => (item.id === endpoint.id ? merged : item)));
+        return merged;
+      },
       async deleteEndpoint(endpoint) {
         await apiRequest(`/v1/endpoints/${endpoint.id}`, { method: 'DELETE' });
         setEndpoints((items) => {
@@ -157,6 +176,9 @@ export function AppLayout() {
     <div className="ht-shell">
       <header className="ht-mobilebar">
         <Brand />
+        <button type="button" className="ht-mobile-tour" onClick={() => setTourOpen(true)}>
+          Tour
+        </button>
         <button type="button" className="ht-logout" onClick={() => void logout()}>
           Log out
         </button>
@@ -167,6 +189,7 @@ export function AppLayout() {
         </NavLink>
         <NavLink to="/app/endpoints">Endpoints</NavLink>
         <NavLink to="/app/scenarios">Scenarios</NavLink>
+        <NavLink to="/app/monitor">Monitor</NavLink>
         <a href="https://github.com/IKER-36/hooktrials" target="_blank" rel="noreferrer">
           Source
         </a>
@@ -187,6 +210,9 @@ export function AppLayout() {
           <NavLink to="/app/scenarios">
             <span>03</span> Scenario Studio <small>{scenarios.length}</small>
           </NavLink>
+          <NavLink to="/app/monitor">
+            <span>04</span> Monitor
+          </NavLink>
         </nav>
         <div className="ht-sidebar-foot">
           <div className="ht-runtime-state">
@@ -203,6 +229,9 @@ export function AppLayout() {
           </div>
           <button type="button" className="ht-logout" onClick={() => void logout()}>
             Log out
+          </button>
+          <button type="button" className="ht-tour-restart" onClick={() => setTourOpen(true)}>
+            Restart product tour
           </button>
           <a
             className="ht-cubepath-mini"
@@ -240,6 +269,14 @@ export function AppLayout() {
         ) : null}
         <Outlet context={context} />
       </main>
+      {tourOpen ? (
+        <OnboardingTour
+          onFinish={async () => {
+            if (!user.onboardingCompletedAt) await completeOnboarding();
+            setTourOpen(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
