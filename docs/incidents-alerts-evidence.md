@@ -5,12 +5,18 @@ delivery failures. Recovery is automatic when passing evidence arrives.
 
 ## Outgoing alert channel
 
-Open **Monitor**, configure an HTTPS webhook URL and optionally encrypted headers, then send a test.
+Open **Operations**, configure an HTTPS webhook URL and optionally encrypted headers, then send a test.
 HookTrials emits redacted `opened` and `recovered` events. Recent delivery state, status and latency
 are visible in the panel; secrets and captured payloads are excluded.
 
 Treat the receiver like any other integration: authenticate it, return quickly and deduplicate by
 incident and event identifiers.
+
+## Operations queue
+
+The Operations page combines open/recovered incidents, unresolved dead letters, manual retry/replay
+and outgoing alert audit. Resolved dead letters remain available as evidence but are hidden by
+default. Every recovery action requires confirmation and records its source and requesting user.
 
 ## Shareable evidence
 

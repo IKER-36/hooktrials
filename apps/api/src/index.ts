@@ -205,15 +205,24 @@ function monitorMetrics(
     errorCategory: string | null;
   }>,
 ) {
-  const latencies = checks
+  const now = Date.now();
+  const checks24h = checks.filter(
+    (check) => check.startedAt.getTime() >= now - 24 * 60 * 60 * 1_000,
+  );
+  const checks1h = checks24h.filter((check) => check.startedAt.getTime() >= now - 60 * 60 * 1_000);
+  const availability = (windowChecks: Array<{ outcome: 'healthy' | 'degraded' | 'down' }>) => {
+    if (windowChecks.length === 0) return null;
+    const healthy = windowChecks.filter((check) => check.outcome === 'healthy').length;
+    return Math.round((healthy / windowChecks.length) * 10_000) / 100;
+  };
+  const latencies = checks24h
     .map((check) => check.latencyMs)
     .filter((value): value is number => value !== null);
-  const healthy = checks.filter((check) => check.outcome === 'healthy').length;
   const latest = checks.at(-1) ?? null;
   return {
-    checks24h: checks.length,
-    availability24h:
-      checks.length === 0 ? null : Math.round((healthy / checks.length) * 10_000) / 100,
+    checks24h: checks24h.length,
+    availability1h: availability(checks1h),
+    availability24h: availability(checks24h),
     averageLatencyMs:
       latencies.length === 0
         ? null
@@ -793,6 +802,138 @@ app.get('/v1/incidents', async (request, reply) => {
       ...row.incident,
       resourceName: row.resourceName,
       resourceType: row.resourceType,
+    })),
+  };
+});
+
+app.get('/v1/operations', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1_000);
+  const [incidentRows, deadLetterRows, recoveryRows, alertRows] = await Promise.all([
+    database.db
+      .select({
+        incident: incidents,
+        resourceName: integrationResources.name,
+        resourceType: integrationResources.type,
+        environment: integrationResources.environment,
+      })
+      .from(incidents)
+      .innerJoin(integrationResources, eq(incidents.resourceId, integrationResources.id))
+      .where(eq(integrationResources.userId, user.id))
+      .orderBy(desc(incidents.openedAt))
+      .limit(100),
+    database.db
+      .select({
+        delivery: destinationDeliveries,
+        eventId: events.id,
+        correlationKey: events.correlationKey,
+        endpointId: endpoints.id,
+        resourceName: integrationResources.name,
+        environment: integrationResources.environment,
+      })
+      .from(destinationDeliveries)
+      .innerJoin(events, eq(destinationDeliveries.eventId, events.id))
+      .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
+      .innerJoin(
+        integrationResources,
+        eq(destinationDeliveries.resourceId, integrationResources.id),
+      )
+      .where(
+        and(
+          eq(integrationResources.userId, user.id),
+          eq(destinationDeliveries.state, 'dead_letter'),
+        ),
+      )
+      .orderBy(desc(destinationDeliveries.createdAt))
+      .limit(100),
+    database.db
+      .select({ id: destinationDeliveries.id })
+      .from(destinationDeliveries)
+      .innerJoin(
+        integrationResources,
+        eq(destinationDeliveries.resourceId, integrationResources.id),
+      )
+      .where(
+        and(
+          eq(integrationResources.userId, user.id),
+          eq(destinationDeliveries.state, 'succeeded'),
+          inArray(destinationDeliveries.kind, ['retry', 'replay']),
+          gte(destinationDeliveries.completedAt, since24h),
+        ),
+      ),
+    database.db
+      .select({
+        delivery: alertDeliveries,
+        resourceName: integrationResources.name,
+        incidentEvent: incidents.status,
+      })
+      .from(alertDeliveries)
+      .innerJoin(alertChannels, eq(alertDeliveries.channelId, alertChannels.id))
+      .innerJoin(incidents, eq(alertDeliveries.incidentId, incidents.id))
+      .innerJoin(integrationResources, eq(incidents.resourceId, integrationResources.id))
+      .where(eq(alertChannels.userId, user.id))
+      .orderBy(desc(alertDeliveries.createdAt))
+      .limit(50),
+  ]);
+
+  const deadLetterEventIds = [...new Set(deadLetterRows.map((row) => row.eventId))];
+  const followUps =
+    deadLetterEventIds.length === 0
+      ? []
+      : await database.db
+          .select({
+            id: destinationDeliveries.id,
+            eventId: destinationDeliveries.eventId,
+            sequence: destinationDeliveries.sequence,
+            state: destinationDeliveries.state,
+          })
+          .from(destinationDeliveries)
+          .where(inArray(destinationDeliveries.eventId, deadLetterEventIds));
+
+  const deadLetters = deadLetterRows.map((row) => {
+    const children = followUps.filter(
+      (delivery) => delivery.eventId === row.eventId && delivery.sequence > row.delivery.sequence,
+    );
+    const recovery = children.find((delivery) => delivery.state === 'succeeded') ?? null;
+    const pending = children.find((delivery) =>
+      ['queued', 'delivering', 'retrying'].includes(delivery.state),
+    );
+    return {
+      ...row.delivery,
+      eventId: row.eventId,
+      correlationKey: row.correlationKey,
+      endpointId: row.endpointId,
+      resourceName: row.resourceName,
+      environment: row.environment,
+      resolved: Boolean(recovery),
+      recoveryDeliveryId: recovery?.id ?? null,
+      recoveryPending: Boolean(pending),
+    };
+  });
+
+  const incidentItems = incidentRows.map((row) => ({
+    ...row.incident,
+    resourceName: row.resourceName,
+    resourceType: row.resourceType,
+    environment: row.environment,
+  }));
+  return {
+    summary: {
+      openIncidents: incidentItems.filter((incident) => incident.status === 'open').length,
+      recovered24h: incidentItems.filter(
+        (incident) =>
+          incident.recoveredAt && new Date(incident.recoveredAt).getTime() >= since24h.getTime(),
+      ).length,
+      unresolvedDeadLetters: deadLetters.filter((delivery) => !delivery.resolved).length,
+      protectedRecoveries24h: recoveryRows.length,
+    },
+    incidents: incidentItems,
+    deadLetters,
+    alerts: alertRows.map((row) => ({
+      ...row.delivery,
+      resourceName: row.resourceName,
+      incidentStatus: row.incidentEvent,
     })),
   };
 });

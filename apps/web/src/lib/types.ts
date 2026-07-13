@@ -99,6 +99,7 @@ export interface DestinationDelivery {
   nextAttemptAt: string | null;
   startedAt: string;
   completedAt: string | null;
+  createdAt: string;
 }
 export interface EventSummary {
   id: string;
@@ -153,6 +154,7 @@ export interface Incident {
 
 export interface MonitorMetrics {
   checks24h: number;
+  availability1h: number | null;
   availability24h: number | null;
   averageLatencyMs: number | null;
   p95LatencyMs: number | null;
@@ -222,4 +224,40 @@ export interface IntegrationSummary {
   latestDelivery: DestinationDelivery | null;
   incident: Incident | null;
   score: ReliabilityScore;
+}
+
+export interface OperationalDeadLetter extends DestinationDelivery {
+  correlationKey: string;
+  endpointId: string;
+  resourceName: string;
+  environment: 'test' | 'staging' | 'production';
+  resolved: boolean;
+  recoveryDeliveryId: string | null;
+  recoveryPending: boolean;
+}
+
+export interface OperationalAlert {
+  id: string;
+  channelId: string;
+  incidentId: string;
+  event: 'opened' | 'recovered';
+  state: 'pending' | 'sent' | 'failed';
+  statusCode: number | null;
+  errorCategory: string | null;
+  attemptedAt: string | null;
+  createdAt: string;
+  resourceName: string;
+  incidentStatus: 'open' | 'recovered';
+}
+
+export interface OperationsResponse {
+  summary: {
+    openIncidents: number;
+    recovered24h: number;
+    unresolvedDeadLetters: number;
+    protectedRecoveries24h: number;
+  };
+  incidents: Incident[];
+  deadLetters: OperationalDeadLetter[];
+  alerts: OperationalAlert[];
 }

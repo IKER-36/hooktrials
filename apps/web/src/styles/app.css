@@ -96,6 +96,253 @@
 
 /* ---------- Integration Monitor ---------- */
 
+.ht-control-center {
+  border: 1px solid var(--ht-hairline-bright);
+  background: var(--ht-glass);
+  box-shadow: 7px 7px 0 var(--ht-shadow);
+}
+.ht-control-center > header,
+.ht-operation-panel > header,
+.ht-integration-table > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+.ht-control-center h2,
+.ht-operation-panel h2,
+.ht-integration-table h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.ht-control-metrics,
+.ht-operation-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+.ht-control-metrics article,
+.ht-operation-summary article {
+  display: grid;
+  gap: 8px;
+  padding: 15px 18px;
+  border-right: 1px solid var(--ht-hairline);
+}
+.ht-control-metrics article:last-child,
+.ht-operation-summary article:last-child {
+  border-right: 0;
+}
+.ht-control-metrics span,
+.ht-operation-summary span {
+  color: var(--ht-faint);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ht-control-metrics strong,
+.ht-operation-summary strong {
+  font-size: 20px;
+}
+.ht-control-center > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 13px 18px;
+  border-top: 1px solid var(--ht-hairline);
+}
+.ht-control-center > footer p {
+  margin: 0;
+  color: var(--ht-muted);
+  font-size: 11px;
+}
+.ht-control-center > footer div {
+  display: flex;
+  gap: 14px;
+  white-space: nowrap;
+}
+.ht-control-center > footer a,
+.ht-operation-actions a {
+  color: var(--ht-green);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ht-integration-table {
+  overflow-x: auto;
+  border: 1px solid var(--ht-hairline-bright);
+  background: var(--ht-glass);
+}
+.ht-integration-table > header > span,
+.ht-operation-panel > header > span {
+  color: var(--ht-faint);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.ht-integration-table-head,
+.ht-integration-table > button {
+  min-width: 980px;
+  display: grid;
+  grid-template-columns: 1.5fr 1.1fr 0.8fr 0.7fr 0.75fr 0.6fr 0.7fr 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+}
+.ht-integration-table-head {
+  color: var(--ht-faint);
+  background: #050806;
+  border-bottom: 1px solid var(--ht-hairline);
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.ht-integration-table > button {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--ht-hairline);
+  background: transparent;
+  color: var(--ht-muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ht-integration-table > button:hover {
+  background: #37f71208;
+  color: var(--ht-ink);
+}
+.ht-integration-table > button:last-child {
+  border-bottom: 0;
+}
+.ht-integration-table strong {
+  color: var(--ht-ink);
+  font-size: 12px;
+}
+.ht-integration-table span,
+.ht-integration-table code,
+.ht-integration-table small,
+.ht-integration-table b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}
+.ht-integration-table b {
+  color: var(--ht-green);
+}
+
+.ht-operation-summary {
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--ht-hairline-bright);
+  background: var(--ht-glass);
+}
+.ht-operation-summary article.danger strong {
+  color: var(--ht-red);
+}
+.ht-operation-summary article.healthy strong {
+  color: var(--ht-green);
+}
+.ht-operation-panel {
+  border: 1px solid var(--ht-hairline-bright);
+  background: var(--ht-glass);
+}
+.ht-operation-empty {
+  margin: 0;
+  padding: 22px 18px;
+  color: var(--ht-faint);
+  font-size: 12px;
+}
+.ht-operation-list,
+.ht-dlq-list,
+.ht-alert-audit-list {
+  display: grid;
+}
+.ht-operation-list article {
+  display: grid;
+  grid-template-columns: 90px minmax(240px, 1fr) 110px 160px;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+.ht-operation-list article:last-child,
+.ht-dlq-list article:last-child,
+.ht-alert-audit-list article:last-child {
+  border-bottom: 0;
+}
+.ht-operation-list p,
+.ht-dlq-list p {
+  margin: 4px 0 0;
+  color: var(--ht-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.ht-operation-list small,
+.ht-dlq-list small,
+.ht-alert-audit-list small {
+  color: var(--ht-faint);
+  font-size: 10px;
+}
+.ht-operation-list code,
+.ht-dlq-list code,
+.ht-alert-audit-list code {
+  color: var(--ht-amber);
+  font-size: 10px;
+}
+.ht-operation-toggle {
+  color: var(--ht-muted);
+  font-size: 11px;
+}
+.ht-operation-toggle input {
+  accent-color: var(--ht-green);
+}
+.ht-dlq-list article {
+  display: grid;
+  grid-template-columns: minmax(230px, 1.2fr) minmax(220px, 1fr) 170px auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+.ht-dlq-list article.resolved {
+  opacity: 0.62;
+}
+.ht-dlq-list article > div:first-child {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  align-items: center;
+}
+.ht-dlq-list article > div:first-child code {
+  grid-column: 1 / -1;
+}
+.ht-operation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.ht-operation-actions button {
+  border: 1px solid var(--ht-hairline-bright);
+  background: transparent;
+  color: var(--ht-ink);
+  padding: 7px 9px;
+  font: 700 10px/1 var(--ht-mono);
+  cursor: pointer;
+}
+.ht-operation-actions button:hover {
+  color: var(--ht-green);
+  border-color: var(--ht-green);
+}
+.ht-alert-audit-list article {
+  display: grid;
+  grid-template-columns: 90px 1fr 120px 220px;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
 .ht-monitor-summary {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -324,7 +571,7 @@
 }
 .ht-monitor-metrics {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   border: 1px solid var(--ht-hairline);
 }
 .ht-monitor-metrics article {
@@ -2511,6 +2758,24 @@
 }
 
 @media (max-width: 760px) {
+  .ht-control-metrics,
+  .ht-operation-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ht-control-center > footer,
+  .ht-operation-panel > header,
+  .ht-integration-table > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ht-operation-list article,
+  .ht-dlq-list article,
+  .ht-alert-audit-list article {
+    grid-template-columns: 1fr;
+  }
+  .ht-operation-actions {
+    justify-content: flex-start;
+  }
   .ht-monitor-form-grid,
   .ht-monitor-summary,
   .ht-monitor-metrics {
@@ -2668,6 +2933,8 @@
 }
 
 @media (max-width: 480px) {
+  .ht-control-metrics,
+  .ht-operation-summary,
   .ht-monitor-form-grid,
   .ht-monitor-summary,
   .ht-monitor-metrics,

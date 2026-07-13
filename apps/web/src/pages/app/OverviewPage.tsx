@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AttemptSequence, OutcomeBadge } from '../../components/app/AttemptSequence';
+import { ControlCenterSummary } from '../../components/app/ControlCenterSummary';
 import { EventInspector } from '../../components/app/EventInspector';
 import { GuidedDemo } from '../../components/app/GuidedDemo';
 import { RouteConfiguration } from '../../components/app/RouteConfiguration';
@@ -111,6 +112,7 @@ export function OverviewPage() {
             <h1>Your webhook lab</h1>
           </div>
         </header>
+        <ControlCenterSummary />
         <div className="ht-onboarding">
           <img src="/logo.png" alt="" width="56" height="56" />
           <h2>Run your first trial</h2>
@@ -159,6 +161,8 @@ export function OverviewPage() {
           </Link>
         </div>
       </header>
+
+      <ControlCenterSummary />
 
       <section className="ht-endpoint-card" aria-label="Active endpoint">
         <div className="ht-endpoint-state">

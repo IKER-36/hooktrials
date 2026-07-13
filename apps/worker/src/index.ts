@@ -36,6 +36,34 @@ const monitorQueue = new Queue('monitor-checks', { connection: redis });
 const deliveryQueue = new Queue('destination-deliveries', { connection: redis });
 const alertQueue = new Queue('incident-alerts', { connection: redis });
 
+const MONITOR_LOCK_MS = 60_000;
+const MONITOR_USER_CONCURRENCY = 2;
+const wait = (milliseconds: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+
+async function acquireMonitorSlot(
+  keys: string[],
+  token: string,
+  waitForAvailable: boolean,
+): Promise<(() => Promise<void>) | null> {
+  do {
+    for (const key of keys) {
+      const acquired = await redis.set(key, token, 'PX', MONITOR_LOCK_MS, 'NX');
+      if (acquired !== 'OK') continue;
+      return async () => {
+        await redis.eval(
+          `if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end`,
+          1,
+          key,
+          token,
+        );
+      };
+    }
+    if (waitForAvailable) await wait(100);
+  } while (waitForAvailable);
+  return null;
+}
+
 async function analyzeEvent(eventId: string) {
   const rows = await database.db
     .select()
@@ -703,7 +731,40 @@ const monitorWorker = new Worker(
   'monitor-checks',
   async (job) => {
     if (typeof job.data.monitorId !== 'string') throw new Error('Missing monitorId');
-    await performMonitorCheck(job.data.monitorId);
+    const monitorId = job.data.monitorId;
+    const owner = (
+      await database.db
+        .select({ userId: integrationResources.userId })
+        .from(monitors)
+        .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+        .where(eq(monitors.id, monitorId))
+        .limit(1)
+    )[0];
+    if (!owner) return;
+
+    const token = `${job.id ?? Date.now()}:${monitorId}`;
+    const releaseUser = await acquireMonitorSlot(
+      Array.from(
+        { length: MONITOR_USER_CONCURRENCY },
+        (_, slot) => `hooktrials:monitor-user:${owner.userId}:slot:${slot}`,
+      ),
+      token,
+      true,
+    );
+    if (!releaseUser) return;
+    let releaseMonitor: (() => Promise<void>) | null = null;
+    try {
+      releaseMonitor = await acquireMonitorSlot(
+        [`hooktrials:monitor-lock:${monitorId}`],
+        token,
+        false,
+      );
+      if (!releaseMonitor) return;
+      await performMonitorCheck(monitorId);
+    } finally {
+      if (releaseMonitor) await releaseMonitor();
+      if (releaseUser) await releaseUser();
+    }
   },
   { connection: redis, concurrency: 4 },
 );

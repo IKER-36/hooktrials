@@ -44,6 +44,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 
 - React dashboard, login and first-run setup. No marketing landing.
 - First-entry product tour with a permanent restart control.
+- Unified Control Center, integration inventory and Operations recovery queue.
 - Fastify API and isolated public ingestion service.
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.

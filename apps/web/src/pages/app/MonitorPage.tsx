@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { AlertChannelPanel } from '../../components/app/AlertChannelPanel';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -33,6 +32,7 @@ function metric(value: number | null, suffix = ''): string {
 }
 
 export function MonitorPage() {
+  const navigate = useNavigate();
   const { setup } = useAuth();
   const { selectEndpoint } = useDashboard();
   const [monitors, setMonitors] = useState<MonitorSummary[]>([]);
@@ -168,6 +168,16 @@ export function MonitorPage() {
         </article>
       </section>
 
+      <UnifiedIntegrationTable
+        monitors={monitors}
+        routes={routes}
+        onSelectMonitor={setSelectedId}
+        onSelectRoute={(id) => {
+          selectEndpoint(id);
+          navigate('/app');
+        }}
+      />
+
       {error ? (
         <p className="ht-form-error" role="alert">
           {error}
@@ -285,7 +295,67 @@ export function MonitorPage() {
         onConfirm={() => void confirmDelete()}
         onCancel={() => setDeleting(null)}
       />
-      <AlertChannelPanel />
+    </section>
+  );
+}
+
+function UnifiedIntegrationTable({
+  monitors,
+  routes,
+  onSelectMonitor,
+  onSelectRoute,
+}: {
+  monitors: MonitorSummary[];
+  routes: IntegrationSummary[];
+  onSelectMonitor(id: string): void;
+  onSelectRoute(id: string): void;
+}) {
+  if (monitors.length === 0 && routes.length === 0) return null;
+  return (
+    <section className="ht-integration-table" aria-label="All integrations">
+      <header>
+        <div>
+          <p className="ht-kicker">Unified inventory</p>
+          <h2>All integrations</h2>
+        </div>
+        <span>Active checks + real webhook traffic</span>
+      </header>
+      <div className="ht-integration-table-head" aria-hidden="true">
+        <span>Integration</span>
+        <span>Type</span>
+        <span>Environment</span>
+        <span>Mode</span>
+        <span>Status</span>
+        <span>Score</span>
+        <span>Latency</span>
+        <span>Latest issue</span>
+      </div>
+      {routes.map((route) => (
+        <button key={route.id} type="button" onClick={() => onSelectRoute(route.endpointId)}>
+          <strong>{route.name}</strong>
+          <span>webhook</span>
+          <span>{route.environment}</span>
+          <span>{route.mode}</span>
+          <span className={`ht-monitor-state ${route.state}`}>{STATE_LABEL[route.state]}</span>
+          <b>{route.score.score}/100</b>
+          <code>{route.latestDelivery?.latencyMs ?? '—'} ms</code>
+          <small>{route.incident?.cause ?? route.latestDelivery?.errorCategory ?? 'None'}</small>
+        </button>
+      ))}
+      {monitors.map((monitor) => (
+        <button key={monitor.id} type="button" onClick={() => onSelectMonitor(monitor.id)}>
+          <strong>{monitor.name}</strong>
+          <span>{monitor.resourceType.replaceAll('_', ' ')}</span>
+          <span>{monitor.environment}</span>
+          <span>monitor</span>
+          <span className={`ht-monitor-state ${monitor.state}`}>{STATE_LABEL[monitor.state]}</span>
+          <b>{monitor.score.score}/100</b>
+          <code>{monitor.metrics.latest?.latencyMs ?? '—'} ms</code>
+          <small>
+            {monitor.incident?.cause ?? monitor.metrics.latest?.errorCategory ?? 'None'}
+          </small>
+        </button>
+      ))}
     </section>
   );
 }
@@ -604,6 +674,10 @@ function MonitorDetail({
         </p>
       ) : null}
       <section className="ht-monitor-metrics">
+        <article>
+          <span>Availability 1h</span>
+          <strong>{metric(summary.metrics.availability1h, '%')}</strong>
+        </article>
         <article>
           <span>Availability 24h</span>
           <strong>{metric(summary.metrics.availability24h, '%')}</strong>

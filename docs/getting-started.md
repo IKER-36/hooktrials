@@ -20,6 +20,7 @@ webhook traffic and monitor HTTP dependencies from one dashboard.
 4. Open the generated event. Inspect inbound attempts, payload stability and the resilience score.
 5. Open **Monitor** and create a public HTTP check, or use a self-host allowlist for an internal
    destination.
+6. Open **Operations** to inspect incident recovery, dead letters and outgoing alert evidence.
 
 Use synthetic payloads for demonstrations. Captured request bodies are encrypted, but unnecessary
 personal or production data should never be sent to a test installation.

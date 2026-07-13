@@ -4,6 +4,7 @@ import { AuthPage } from './pages/AuthPage';
 import { EvidencePage } from './pages/EvidencePage';
 import { EndpointsPage } from './pages/app/EndpointsPage';
 import { OverviewPage } from './pages/app/OverviewPage';
+import { OperationsPage } from './pages/app/OperationsPage';
 import { MonitorPage } from './pages/app/MonitorPage';
 import { ScenariosPage } from './pages/app/ScenariosPage';
 import { useAuth } from './context/AuthContext';
@@ -27,6 +28,7 @@ export function App() {
         <Route path="endpoints" element={<EndpointsPage />} />
         <Route path="scenarios" element={<ScenariosPage />} />
         <Route path="monitor" element={<MonitorPage />} />
+        <Route path="operations" element={<OperationsPage />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />

@@ -15,7 +15,7 @@ after a passing check.
 
 ## Read the dashboard
 
-- **Availability:** passing checks divided by all checks for the displayed window.
+- **Availability 1h / 24h:** passing checks divided by all checks in each exact window.
 - **Current / average / p95 latency:** request duration evidence, not an estimated score.
 - **State:** `NEW`, `HEALTHY`, `DEGRADED`, `DOWN` or `PAUSED`.
 - **Score:** deductions for availability, latency, contract failures and open incidents. Every
@@ -30,3 +30,6 @@ redirects are validated to prevent bypasses. See [Security](security.md).
 
 One-minute checks are the fastest supported interval. This avoids turning a small installation into
 a high-frequency probing service and keeps CubePath Micro-class deployments predictable.
+
+The worker allows at most four checks globally and two checks per user at once. A per-monitor lock
+prevents overlapping checks even when a scheduled run and **Run now** coincide.
