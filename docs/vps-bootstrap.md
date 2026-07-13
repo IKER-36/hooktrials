@@ -56,7 +56,7 @@ Required public paths:
 sudo install -d -m 0755 -o "$USER" -g "$USER" /opt/hooktrials
 git clone https://github.com/IKER-36/hooktrials.git /opt/hooktrials
 cd /opt/hooktrials
-git checkout v0.3.3
+git checkout v0.3.5
 ./hooktrials doctor
 ./hooktrials configure domain trials.example.com operator@example.com
 ./hooktrials up
@@ -67,9 +67,8 @@ The helper generates `.hooktrials/runtime.env` once with mode `0600`, builds the
 migrations and starts Caddy with automatic HTTPS. Preserve this file: it contains the encryption key
 required to read retained payloads.
 
-Release `v0.3.3` needs the worker egress adjustment described in
-[Current release status](release-status.md) before Monitor, Protect or outgoing alerts can contact
-destinations.
+Release `v0.3.5` includes the worker egress topology required by Monitor, Protect and outgoing
+alerts.
 
 ## 5. Verify outside the VPS
 

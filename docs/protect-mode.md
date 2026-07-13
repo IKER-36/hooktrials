@@ -34,6 +34,5 @@ In Protect mode HookTrials owns downstream recovery. Monitor its queue, incident
 Back up PostgreSQL because event and delivery state is durable there; Redis coordinates work but is
 not the source of truth.
 
-Self-hosted release `v0.3.3` requires the worker-network workaround in
-[Release status](release-status.md) before protected deliveries can reach a destination. HookTrials
-Cloud already runs the corrected topology.
+Release `v0.3.5` includes the dual-network worker topology required for protected deliveries. Keep
+the data network internal and the edge network egress-capable.

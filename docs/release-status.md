@@ -2,7 +2,7 @@
 
 Updated: 14 July 2026.
 
-## Release `v0.3.4`
+## Release `v0.3.5`
 
 The current public release includes the complete Integration Reliability Control Plane:
 
@@ -31,7 +31,7 @@ The source `compose.yml` attaches `worker` only to the internal `data` network. 
 monitors, Protect deliveries and outgoing alert webhooks from reaching external destinations even
 though application-level SSRF controls are working. Trial and Observe remain functional.
 
-The correction is included in `v0.3.4`. Self-hosted `v0.3.3` operators can either update or add the
+The correction is included in `v0.3.5`. Self-hosted `v0.3.3` operators can either update or add the
 egress-capable `edge` network to the worker service:
 
 ```yaml

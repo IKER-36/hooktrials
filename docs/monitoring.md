@@ -34,5 +34,5 @@ a high-frequency probing service and keeps CubePath Micro-class deployments pred
 The worker allows at most four checks globally and two checks per user at once. A per-monitor lock
 prevents overlapping checks even when a scheduled run and **Run now** coincide.
 
-Self-hosted operators on `v0.3.3` must apply the worker-network workaround documented in
-[Release status](release-status.md) before public or private monitor targets can be reached.
+Release `v0.3.5` includes the worker egress network required for public and explicitly allowlisted
+private monitor targets.
