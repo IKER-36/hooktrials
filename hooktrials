@@ -1,0 +1,115 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+RUNTIME_DIR="$ROOT/.hooktrials"
+RUNTIME_ENV="$RUNTIME_DIR/runtime.env"
+COMPOSE="docker compose --project-directory $ROOT --env-file $RUNTIME_ENV -f $ROOT/compose.yml"
+
+die() {
+  printf '%s\n' "error: $*" >&2
+  exit 1
+}
+
+require() {
+  command -v "$1" >/dev/null 2>&1 || die "$1 is required"
+}
+
+generate_runtime() {
+  [ -f "$RUNTIME_ENV" ] && return
+  require openssl
+  mkdir -p "$RUNTIME_DIR"
+  chmod 700 "$RUNTIME_DIR"
+  umask 077
+
+  port=${HOOKTRIALS_PORT:-3000}
+  origin=${HOOKTRIALS_ORIGIN:-http://localhost:$port}
+  postgres_password=$(openssl rand -hex 24)
+  redis_password=$(openssl rand -hex 24)
+
+  cat >"$RUNTIME_ENV" <<EOF
+HOOKTRIALS_PROJECT=hooktrials-selfhost
+HOOKTRIALS_BIND=${HOOKTRIALS_BIND:-0.0.0.0}
+HOOKTRIALS_PORT=$port
+HOOKTRIALS_ORIGIN=$origin
+DEPLOYMENT_MODE=selfhost
+REGISTRATION_MODE=first-user
+COOKIE_SECURE=${COOKIE_SECURE:-false}
+POSTGRES_PASSWORD=$postgres_password
+REDIS_PASSWORD=$redis_password
+DATABASE_URL=postgresql://hooktrials:$postgres_password@postgres:5432/hooktrials
+REDIS_URL=redis://:$redis_password@redis:6379/0
+SESSION_SECRET=$(openssl rand -hex 48)
+PAYLOAD_ENCRYPTION_KEY=$(openssl rand -hex 32)
+ENDPOINTS_LIMIT=0
+DAILY_EVENTS_LIMIT=0
+EVENT_RETENTION_HOURS=72
+MAX_BODY_BYTES=524288
+EOF
+  chmod 600 "$RUNTIME_ENV"
+  printf '%s\n' "Generated private runtime configuration: $RUNTIME_ENV"
+}
+
+compose() {
+  # shellcheck disable=SC2086
+  $COMPOSE "$@"
+}
+
+require docker
+docker compose version >/dev/null 2>&1 || die "Docker Compose v2 is required"
+
+case "${1:-up}" in
+  up)
+    generate_runtime
+    compose up -d --build
+    compose ps
+    printf '\nHookTrials: %s\n' "$(sed -n 's/^HOOKTRIALS_ORIGIN=//p' "$RUNTIME_ENV")"
+    printf '%s\n' "Create first account to become installation owner."
+    ;;
+  down)
+    [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+    compose down
+    ;;
+  logs)
+    [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+    if [ -n "${2:-}" ]; then
+      compose logs --tail=200 -f "$2"
+    else
+      compose logs --tail=200 -f
+    fi
+    ;;
+  status)
+    [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+    compose ps
+    ;;
+  doctor)
+    generate_runtime
+    compose config --quiet
+    printf '%s\n' "Docker, Compose and configuration: OK"
+    ;;
+  update)
+    [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+    compose build --pull
+    compose up -d
+    compose ps
+    ;;
+  backup)
+    [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+    mkdir -p "$ROOT/backups"
+    backup="$ROOT/backups/hooktrials-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
+    compose exec -T postgres pg_dump -U hooktrials hooktrials | gzip >"$backup"
+    chmod 600 "$backup"
+    printf '%s\n' "Backup created: $backup"
+    ;;
+  reset)
+    [ "${2:-}" = "--yes" ] || die "reset deletes all HookTrials data; rerun: ./hooktrials reset --yes"
+    [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+    compose down --volumes
+    rm -f "$RUNTIME_ENV"
+    printf '%s\n' "HookTrials data and runtime secrets removed."
+    ;;
+  *)
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor|update|backup|reset --yes}" >&2
+    exit 2
+    ;;
+esac

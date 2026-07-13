@@ -1,0 +1,43 @@
+# Dependencies and build output
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Runtime data
+data/
+backups/
+*.sqlite
+*.sqlite3
+
+# Secrets and environment files: never commit any variant
+.env
+.env.*
+!.envrc.example.disabled
+*.pem
+*.key
+*.crt
+secrets/
+
+# Private project documentation
+.pdocs/
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Local tooling
+.docker/
+.cache/
+.hooktrials/
+.claude/
+.playwright-cli/
+output/playwright/

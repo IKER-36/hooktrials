@@ -1,0 +1,27 @@
+{
+	admin off
+}
+
+:8080 {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	handle_path /api/* {
+		reverse_proxy api:3001
+	}
+
+	handle /i/* {
+		reverse_proxy ingestor:3002
+	}
+
+	handle {
+		reverse_proxy web:8080
+	}
+}

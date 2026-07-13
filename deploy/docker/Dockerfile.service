@@ -1,0 +1,37 @@
+FROM node:24-alpine AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/ingestor/package.json apps/ingestor/package.json
+COPY apps/web/package.json apps/web/package.json
+COPY apps/worker/package.json apps/worker/package.json
+COPY packages/config/package.json packages/config/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+COPY packages/crypto/package.json packages/crypto/package.json
+COPY packages/database/package.json packages/database/package.json
+COPY packages/logger/package.json packages/logger/package.json
+COPY packages/scenario-engine/package.json packages/scenario-engine/package.json
+RUN pnpm install --frozen-lockfile
+
+FROM dependencies AS build
+COPY . .
+RUN pnpm --filter './packages/**' build \
+  && pnpm --filter @hooktrials/api build \
+  && pnpm --filter @hooktrials/ingestor build \
+  && pnpm --filter @hooktrials/worker build
+
+FROM node:24-alpine AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+RUN addgroup -S hooktrials && adduser -S hooktrials -G hooktrials
+COPY --from=build --chown=hooktrials:hooktrials /app/node_modules ./node_modules
+COPY --from=build --chown=hooktrials:hooktrials /app/package.json ./package.json
+COPY --from=build --chown=hooktrials:hooktrials /app/apps ./apps
+COPY --from=build --chown=hooktrials:hooktrials /app/packages ./packages
+USER hooktrials
+CMD ["node", "apps/api/dist/index.js"]

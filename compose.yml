@@ -1,0 +1,187 @@
+name: ${HOOKTRIALS_PROJECT:-hooktrials-selfhost}
+
+x-app-environment: &app-environment
+  NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:-selfhost}
+  REGISTRATION_MODE: ${REGISTRATION_MODE:-first-user}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  DATABASE_URL: ${DATABASE_URL:?Run ./hooktrials up to generate runtime configuration}
+  REDIS_URL: ${REDIS_URL:?Run ./hooktrials up to generate runtime configuration}
+  APP_ORIGIN: ${HOOKTRIALS_ORIGIN:-http://localhost:3000}
+  API_ORIGIN: ${HOOKTRIALS_ORIGIN:-http://localhost:3000}/api
+  INGEST_ORIGIN: ${HOOKTRIALS_ORIGIN:-http://localhost:3000}
+  SESSION_SECRET: ${SESSION_SECRET:?Run ./hooktrials up to generate runtime configuration}
+  PAYLOAD_ENCRYPTION_KEY: ${PAYLOAD_ENCRYPTION_KEY:?Run ./hooktrials up to generate runtime configuration}
+  MAX_BODY_BYTES: ${MAX_BODY_BYTES:-524288}
+  EVENT_RETENTION_HOURS: ${EVENT_RETENTION_HOURS:-72}
+  ENDPOINTS_LIMIT: ${ENDPOINTS_LIMIT:-0}
+  DAILY_EVENTS_LIMIT: ${DAILY_EVENTS_LIMIT:-0}
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
+services:
+  gateway:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - '${HOOKTRIALS_BIND:-0.0.0.0}:${HOOKTRIALS_PORT:-3000}:8080'
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks: [edge]
+    depends_on:
+      web: { condition: service_healthy }
+      api: { condition: service_healthy }
+      ingestor: { condition: service_healthy }
+    logging: *default-logging
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.web
+      args:
+        VITE_API_ORIGIN: /api
+    restart: unless-stopped
+    networks: [edge]
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8080/healthz']
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    logging: *default-logging
+
+  migrate:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.service
+    command: ['node', 'packages/database/dist/migrate.js']
+    environment: *app-environment
+    networks: [data]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+    logging: *default-logging
+
+  api:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.service
+    command: ['node', 'apps/api/dist/index.js']
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      API_HOST: 0.0.0.0
+      API_PORT: 3001
+    networks: [edge, data]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/healthz').then(r=>{if(!r.ok)process.exit(1)})",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  ingestor:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.service
+    command: ['node', 'apps/ingestor/dist/index.js']
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      INGEST_HOST: 0.0.0.0
+      INGEST_PORT: 3002
+    networks: [edge, data]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/healthz').then(r=>{if(!r.ok)process.exit(1)})",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  worker:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.service
+    command: ['node', 'apps/worker/dist/index.js']
+    restart: unless-stopped
+    environment: *app-environment
+    networks: [data]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    logging: *default-logging
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hooktrials
+      POSTGRES_USER: hooktrials
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run ./hooktrials up to generate runtime configuration}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks: [data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hooktrials -d hooktrials']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+
+  redis:
+    image: redis:8.6-alpine
+    restart: unless-stopped
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--requirepass',
+        '${REDIS_PASSWORD:?Run ./hooktrials up to generate runtime configuration}',
+        '--maxmemory',
+        '128mb',
+        '--maxmemory-policy',
+        'noeviction',
+      ]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks: [data]
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli -a "$$REDIS_PASSWORD" ping | grep PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+
+networks:
+  edge:
+  data:
+    internal: true
+
+volumes:
+  postgres_data:
+  redis_data:

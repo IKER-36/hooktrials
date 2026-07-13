@@ -1,0 +1,13 @@
+.git
+.github
+.pdocs
+docs
+node_modules
+**/node_modules
+**/dist
+coverage
+.env
+.env.*
+data
+backups
+*.log

@@ -1,0 +1,24 @@
+/* HookTrials dashboard design tokens — TypeUI Mono dark adaptation. */
+
+:root {
+  --ht-bg: #050807;
+  --ht-bg-deep: #040605;
+  --ht-panel: #070d0abd;
+  --ht-glass: #0b120eb8;
+  --ht-ink: #e9f2ec;
+  --ht-muted: #93a39b;
+  --ht-faint: #5d6b64;
+  --ht-hairline: #1d2a24;
+  --ht-hairline-bright: #2c3f36;
+  --ht-green: #37f712;
+  --ht-green-dim: #2bc40e;
+  --ht-green-deep: #00a63d;
+  --ht-blue: #00a6f4;
+  --ht-red: #ff2157;
+  --ht-amber: #fe9900;
+  --ht-stone: #e7e5e4;
+  --ht-shadow: #17351180;
+  --ht-mono:
+    'Space Mono', ui-monospace, 'SF Mono', SFMono-Regular, 'Cascadia Mono', 'JetBrains Mono', Menlo,
+    Consolas, monospace;
+}
