@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 export function BrandMark() {
-  return <img src="/brand/hooklogo-transparent.png" alt="" aria-hidden="true" />;
+  return <img src="/logo.png" alt="" aria-hidden="true" />;
 }
 
 export function Brand() {

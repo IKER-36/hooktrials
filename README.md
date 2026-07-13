@@ -35,18 +35,19 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
 - Deterministic `500`, `503`, `429` and recovery scenarios.
+- Guided endpoint templates and an integrated provider simulator.
 - Live event stream, retry timeline and encrypted payload inspector.
 - Single-origin self-hosting through Docker Compose.
 
 ## Repository model
 
-This public repository is complete self-hosted product. Hosted service uses same core images. Private
-landing and CubePath production orchestration live in separate repositories; neither is required to
-run HookTrials locally.
+This public repository contains the complete self-hosted product. Managed hosting operations and
+the marketing website are outside its scope and are not required to run HookTrials locally.
 
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [Guided demonstration](docs/guided-demo.md)
 - [Self-hosting](docs/self-hosting.md)
 - [Configuration](docs/configuration.md)
 - [Development](docs/development.md)

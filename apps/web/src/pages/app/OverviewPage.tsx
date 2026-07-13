@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AttemptSequence, OutcomeBadge } from '../../components/app/AttemptSequence';
 import { EventInspector } from '../../components/app/EventInspector';
+import { GuidedDemo } from '../../components/app/GuidedDemo';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { useDashboard } from '../../layouts/AppLayout';
 import { useEventStream } from '../../hooks/useEventStream';
@@ -26,7 +27,7 @@ function curlSnippet(url: string): string {
 }
 
 export function OverviewPage() {
-  const { endpoints, selected, selectEndpoint, toggleEndpoint, loading, reportError } =
+  const { endpoints, scenarios, selected, selectEndpoint, toggleEndpoint, loading, reportError } =
     useDashboard();
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
@@ -47,6 +48,7 @@ export function OverviewPage() {
     }
     freshIds.current = fresh;
     setEvents(response.events);
+    return response.events;
   }, []);
 
   useEffect(() => {
@@ -73,6 +75,8 @@ export function OverviewPage() {
     () => events.reduce((total, event) => total + event.attempts.length, 0),
     [events],
   );
+  const selectedScenario =
+    scenarios.find((scenario) => scenario.id === selected?.scenarioId) ?? null;
 
   async function togglePause() {
     if (!selected) return;
@@ -105,8 +109,12 @@ export function OverviewPage() {
           </div>
         </header>
         <div className="ht-onboarding">
-          <img src="/brand/hooklogo-transparent.png" alt="" width="56" height="56" />
+          <img src="/logo.png" alt="" width="56" height="56" />
           <h2>Run your first trial</h2>
+          <p className="ht-muted-line">
+            HookTrials receives a webhook and returns controlled responses. The sender performs the
+            retries; HookTrials captures every attempt and explains what happened.
+          </p>
           <ol>
             <li>Create a trial endpoint.</li>
             <li>Choose a deterministic failure scenario.</li>
@@ -179,8 +187,12 @@ export function OverviewPage() {
               />
             </div>
             <details className="ht-curl">
-              <summary>Send a test delivery with curl</summary>
+              <summary>Send the test manually with curl</summary>
               <div className="ht-curl-body">
+                <p className="ht-muted-line">
+                  Run the same command {selectedScenario?.definition.steps.length ?? 1} time(s).
+                  Keeping the same <code>id</code> groups every delivery into one retry timeline.
+                </p>
                 <pre>{curlSnippet(selected.ingestUrl)}</pre>
                 <CopyButton value={curlSnippet(selected.ingestUrl)} label="Copy curl" />
               </div>
@@ -192,6 +204,14 @@ export function OverviewPage() {
           </p>
         )}
       </section>
+
+      <GuidedDemo
+        endpoint={selected}
+        scenario={selectedScenario}
+        onComplete={async () => {
+          await loadEvents(selected.id);
+        }}
+      />
 
       <section className="ht-metrics" aria-label="Endpoint metrics">
         <article>
@@ -226,8 +246,9 @@ export function OverviewPage() {
           <div className="ht-events-empty">
             <h3>Waiting for the first delivery.</h3>
             <p>
-              Send a request to the URL above — or run the curl example. New attempts appear here
-              automatically{selected.active ? '' : ' once the endpoint is resumed'}.
+              Run the guided demo above, send a request to the URL, or use the curl example. New
+              attempts appear here automatically
+              {selected.active ? '' : ' once the endpoint is resumed'}.
             </p>
           </div>
         ) : (

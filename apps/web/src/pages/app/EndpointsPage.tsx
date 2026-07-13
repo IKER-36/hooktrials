@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { EndpointTemplates } from '../../components/app/EndpointTemplates';
 import { ScenarioPicker } from '../../components/app/ScenarioPicker';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useDashboard } from '../../layouts/AppLayout';
@@ -23,6 +24,7 @@ export function EndpointsPage() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [scenarioId, setScenarioId] = useState<string | null>(null);
+  const [templateId, setTemplateId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [deleting, setDeleting] = useState<Endpoint | null>(null);
@@ -103,6 +105,18 @@ export function EndpointsPage() {
         </span>
       </header>
 
+      <EndpointTemplates
+        scenarios={scenarios}
+        activeId={templateId}
+        disabled={loading || atLimit}
+        onSelect={(selectedTemplate, endpointName, selectedScenario) => {
+          setTemplateId(selectedTemplate);
+          setName(endpointName);
+          setScenarioId(selectedScenario);
+          document.getElementById('endpoint-name')?.focus();
+        }}
+      />
+
       <div className="ht-endpoints-grid">
         <form className="ht-create-card" onSubmit={submit} aria-label="Create endpoint">
           <p className="ht-kicker">New trial</p>
@@ -115,9 +129,13 @@ export function EndpointsPage() {
           <label className="ht-field">
             Endpoint name
             <input
+              id="endpoint-name"
               name="name"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => {
+                setName(event.target.value);
+                setTemplateId(null);
+              }}
               placeholder="stripe-staging"
               minLength={2}
               maxLength={80}
@@ -132,7 +150,10 @@ export function EndpointsPage() {
             <ScenarioPicker
               scenarios={scenarios}
               value={scenarioId}
-              onChange={setScenarioId}
+              onChange={(id) => {
+                setScenarioId(id);
+                setTemplateId(null);
+              }}
               disabled={atLimit}
             />
           )}
