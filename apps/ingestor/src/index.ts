@@ -41,7 +41,9 @@ const app = Fastify({
   bodyLimit: config.MAX_BODY_BYTES,
 });
 
-await app.register(helmet);
+await app.register(helmet, {
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+});
 await app.register(rateLimit, { max: 300, timeWindow: '1 minute' });
 
 app.removeAllContentTypeParsers();
