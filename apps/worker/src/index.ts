@@ -504,6 +504,15 @@ async function performIncidentAlert(incidentId: string, event: 'opened' | 'recov
       .returning({ id: alertDeliveries.id })
   )[0];
   if (!delivery) return;
+  const resourceMetadata = row.resource.metadata as { demoRunId?: unknown };
+  if (typeof resourceMetadata.demoRunId === 'string') {
+    // Demo incidents must exercise the alert audit without notifying a user's real channel.
+    await database.db
+      .update(alertDeliveries)
+      .set({ state: 'sent', statusCode: 204, attemptedAt: new Date() })
+      .where(eq(alertDeliveries.id, delivery.id));
+    return;
+  }
   try {
     const url = decryptValue(row.channel.encryptedUrl, config.PAYLOAD_ENCRYPTION_KEY).toString(
       'utf8',

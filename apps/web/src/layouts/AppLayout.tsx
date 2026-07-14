@@ -15,6 +15,7 @@ export interface DashboardContext {
   loading: boolean;
   selected: Endpoint | null;
   selectEndpoint(id: string): void;
+  refresh(): Promise<void>;
   createEndpoint(name: string, scenarioId: string): Promise<Endpoint>;
   toggleEndpoint(endpoint: Endpoint): Promise<void>;
   updateEndpoint(endpoint: Endpoint, input: Record<string, unknown>): Promise<Endpoint>;
@@ -58,23 +59,24 @@ export function AppLayout() {
     [clearSession],
   );
 
+  const refresh = useCallback(async () => {
+    const [endpointResponse, scenarioResponse] = await Promise.all([
+      apiRequest<{ endpoints: Endpoint[]; limits?: AccountLimits }>('/v1/endpoints'),
+      apiRequest<{ scenarios: Scenario[] }>('/v1/scenarios'),
+    ]);
+    setEndpoints(endpointResponse.endpoints);
+    setLimits(endpointResponse.limits ?? null);
+    setScenarios(scenarioResponse.scenarios);
+    setSelectedId((current) => {
+      const exists = endpointResponse.endpoints.some((endpoint) => endpoint.id === current);
+      return exists ? current : (endpointResponse.endpoints[0]?.id ?? null);
+    });
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    Promise.all([
-      apiRequest<{ endpoints: Endpoint[]; limits?: AccountLimits }>('/v1/endpoints'),
-      apiRequest<{ scenarios: Scenario[] }>('/v1/scenarios'),
-    ])
-      .then(([endpointResponse, scenarioResponse]) => {
-        if (cancelled) return;
-        setEndpoints(endpointResponse.endpoints);
-        setLimits(endpointResponse.limits ?? null);
-        setScenarios(scenarioResponse.scenarios);
-        setSelectedId((current) => {
-          const exists = endpointResponse.endpoints.some((endpoint) => endpoint.id === current);
-          return exists ? current : (endpointResponse.endpoints[0]?.id ?? null);
-        });
-      })
+    refresh()
       .catch(reportError)
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -82,7 +84,7 @@ export function AppLayout() {
     return () => {
       cancelled = true;
     };
-  }, [user, reportError]);
+  }, [user, reportError, refresh]);
 
   const selectEndpoint = useCallback((id: string) => {
     setSelectedId(id);
@@ -97,6 +99,7 @@ export function AppLayout() {
       loading,
       selected: endpoints.find((endpoint) => endpoint.id === selectedId) ?? null,
       selectEndpoint,
+      refresh,
       async createEndpoint(name, scenarioId) {
         const response = await apiRequest<{ endpoint: Endpoint }>('/v1/endpoints', {
           method: 'POST',
@@ -159,7 +162,7 @@ export function AppLayout() {
       },
       reportError,
     }),
-    [endpoints, scenarios, limits, loading, selectedId, selectEndpoint, reportError],
+    [endpoints, scenarios, limits, loading, selectedId, selectEndpoint, refresh, reportError],
   );
 
   if (authLoading) {

@@ -48,7 +48,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - React dashboard, login and first-run setup. No marketing landing.
 - First-entry product tour with a permanent restart control.
 - Unified Control Center, integration inventory and Operations recovery queue.
-- Demo Lab proving Test, Observe, Protect, Monitor and recovery with isolated synthetic resources.
+- One-click Demo Lab filling every product module with an isolated, realistic synthetic workspace.
 - Fastify API and isolated public ingestion service.
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
@@ -61,6 +61,24 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Active API/HTTP monitoring with explainable availability, latency and integrity scores.
 - Single-origin self-hosting through Docker Compose.
 - Terminal CLI and reusable GitHub Action for deterministic reliability trials in CI.
+
+## One-click full product demo
+
+After signing in, open **Demo Lab** and select **Run full demo**. HookTrials creates and exercises a
+complete synthetic workspace instead of showing static sample cards:
+
+- a custom cascading-outage scenario and a `500 → 503 → 429 → 200` Trial timeline;
+- Observe and Protect traffic with destination evidence, durable retries and recovery;
+- four active monitors covering an external API, internal API, HTTP route and webhook destination;
+- healthy, degraded, down and recovered monitor states with latency and availability history;
+- open and recovered incidents, protected deliveries and safe synthetic alert-audit entries;
+- one redacted evidence report with an expiring share link.
+
+Every generated resource belongs to the signed-in account and receives a private run identifier.
+**Clean only this demo run** removes that exact workspace without matching names or touching other
+user data. Demo incidents never call a real alert webhook configured by the user.
+
+See [Full Demo Lab](docs/demo-lab.md) for the generated dataset, safety boundary and cleanup model.
 
 ## Repository model
 

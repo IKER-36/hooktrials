@@ -13,19 +13,24 @@ Monitor and Recover language.
 
 Open **Demo Lab** and select **Run full demo**. Explain each state as it turns green:
 
-- Trial groups the provider-style `500 -> 500 -> 200` sequence.
+- Scenario Studio receives a custom cascading-outage recipe.
+- Trial groups the provider-style `500 -> 503 -> 429 -> 200` sequence.
 - Observe exposes the real downstream failure synchronously.
 - Protect returns `202`, persists first and retries without losing the event.
-- Monitor opens and recovers an incident from active checks.
-- Operations reconciles incidents, protected recovery and dead letters.
+- Monitor fills external API, internal API, HTTP route and webhook-destination rows across healthy,
+  degraded, down and recovered states.
+- Operations reconciles open/recovered incidents, protected recovery, safe alert audit and dead
+  letters.
+- Evidence creates a redacted 24-hour share link for the recovered Trial.
 
-Pause on **Journey verified** and the four operational counters.
+Pause on **Journey verified** and the six operational counters.
 
 ## 1:35-2:10 — evidence, not animation
 
 Open **Inspect timelines** and show one correlated event with attempts and destination deliveries.
-Open **Monitor** to show check history and recovered incident evidence. Open **Operations** to show
-zero unresolved dead letters and the protected recovery count.
+Open **Scenario Studio** to show the generated recipe. Open **Monitor** to show all four resource
+types and health states. Open **Operations** to show the open/recovered incidents, alert audit, zero
+unresolved dead letters and protected recovery count. Finish on the redacted evidence link.
 
 ## 2:10-2:35 — developer workflow
 

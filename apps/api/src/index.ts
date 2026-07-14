@@ -1207,11 +1207,48 @@ app.post('/v1/demo/setup', async (request, reply) => {
     config.DEPLOYMENT_MODE === 'selfhost'
       ? `http://ingestor:3002/i/${targetToken}`
       : targetIngestUrl;
+  const apiHealthUrl = `${config.API_ORIGIN.replace(/\/$/, '')}/healthz`;
+  const apiHealthWorkerUrl =
+    config.DEPLOYMENT_MODE === 'selfhost' ? 'http://api:3001/healthz' : apiHealthUrl;
+  const applicationWorkerUrl =
+    config.DEPLOYMENT_MODE === 'selfhost' ? 'http://web:8080/' : config.APP_ORIGIN;
   const privateNetwork = config.DEPLOYMENT_MODE === 'selfhost';
   const privateCidrs = privateNetwork ? ['172.16.0.0/12'] : [];
+  const existingAlertChannel = (
+    await database.db
+      .select({ id: alertChannels.id })
+      .from(alertChannels)
+      .where(and(eq(alertChannels.userId, userId), eq(alertChannels.active, true)))
+      .limit(1)
+  )[0];
 
   const created = await database.db.transaction(async (tx) => {
-    async function createDemoEndpoint(kind: 'source' | 'target', token: string) {
+    const customScenario = (
+      await tx
+        .insert(scenarios)
+        .values({
+          userId,
+          name: 'Demo · Cascading provider outage',
+          definition: {
+            name: 'Demo · Cascading provider outage',
+            repeatLastStep: true,
+            steps: [
+              { statusCode: 500, delayMs: 0, headers: {} },
+              { statusCode: 503, delayMs: 250, headers: {} },
+              { statusCode: 429, delayMs: 0, headers: { 'retry-after': '2' } },
+              { statusCode: 200, delayMs: 0, headers: {} },
+            ],
+          },
+        })
+        .returning({ id: scenarios.id, name: scenarios.name })
+    )[0];
+    if (!customScenario) throw new Error('Demo scenario creation returned no record');
+
+    async function createDemoEndpoint(
+      kind: 'source' | 'target',
+      token: string,
+      scenarioId: string,
+    ) {
       const name = kind === 'source' ? 'Demo Lab · provider' : 'Demo Lab · destination';
       const resource = (
         await tx
@@ -1232,11 +1269,18 @@ app.post('/v1/demo/setup', async (request, reply) => {
           .values({
             userId,
             resourceId: resource.id,
-            scenarioId: builtInScenarioIds.temporaryOutage,
+            scenarioId,
             name,
             publicTokenHash: sha256(token),
             publicTokenPrefix: token.slice(0, 12),
             encryptedToken: encryptValue(token, config.PAYLOAD_ENCRYPTION_KEY),
+            encryptedContract:
+              kind === 'source'
+                ? encryptValue(
+                    JSON.stringify({ method: 'POST', requiredHeaders: {}, jsonPaths: {} }),
+                    config.PAYLOAD_ENCRYPTION_KEY,
+                  )
+                : null,
           })
           .returning({ id: endpoints.id, resourceId: endpoints.resourceId })
       )[0];
@@ -1245,50 +1289,151 @@ app.post('/v1/demo/setup', async (request, reply) => {
         .update(integrationResources)
         .set({ metadata: { demoRunId: runId, demoKind: kind, endpointId: endpoint.id } })
         .where(eq(integrationResources.id, resource.id));
-      return endpoint;
+      return { id: endpoint.id, resourceId: resource.id };
     }
 
-    const source = await createDemoEndpoint('source', sourceToken);
-    const target = await createDemoEndpoint('target', targetToken);
-    const monitorResource = (
-      await tx
-        .insert(integrationResources)
-        .values({
-          userId: user.id,
-          type: 'webhook_destination',
-          name: 'Demo Lab · recovery monitor',
-          environment: 'test',
-          active: false,
-          metadata: {
-            demoRunId: runId,
-            demoKind: 'monitor',
-            displayUrl: targetIngestUrl,
-          },
-        })
-        .returning({ id: integrationResources.id })
-    )[0];
-    if (!monitorResource) throw new Error('Demo monitor resource creation returned no record');
-    const monitor = (
-      await tx
-        .insert(monitors)
-        .values({
-          resourceId: monitorResource.id,
-          encryptedUrl: encryptValue(targetWorkerUrl, config.PAYLOAD_ENCRYPTION_KEY),
-          displayHost: new URL(targetIngestUrl).host,
-          method: 'POST',
-          intervalSeconds: 900,
-          timeoutMs: 10_000,
-          expectedMinStatus: 200,
-          expectedMaxStatus: 299,
-          consecutiveFailuresToOpen: 1,
-          allowPrivateNetworks: privateNetwork,
-          allowedPrivateCidrs: privateCidrs,
-          state: 'paused',
-        })
-        .returning({ id: monitors.id, resourceId: monitors.resourceId })
-    )[0];
-    if (!monitor) throw new Error('Demo monitor creation returned no record');
-    return { source, target, monitor };
+    const source = await createDemoEndpoint('source', sourceToken, customScenario.id);
+    const target = await createDemoEndpoint(
+      'target',
+      targetToken,
+      builtInScenarioIds.temporaryOutage,
+    );
+
+    async function createDemoMonitor(input: {
+      kind: string;
+      name: string;
+      type: 'external_api' | 'internal_api' | 'http_route' | 'webhook_destination';
+      environment: 'test' | 'staging' | 'production';
+      publicUrl: string;
+      workerUrl: string;
+      method?: 'GET' | 'POST';
+      expectedMinStatus?: number;
+      expectedMaxStatus?: number;
+      expectedText?: string;
+      expectedJsonPath?: string;
+      consecutiveFailuresToOpen?: number;
+    }) {
+      const resource = (
+        await tx
+          .insert(integrationResources)
+          .values({
+            userId,
+            type: input.type,
+            name: input.name,
+            environment: input.environment,
+            active: false,
+            metadata: {
+              demoRunId: runId,
+              demoKind: input.kind,
+              displayUrl: input.publicUrl,
+            },
+          })
+          .returning({ id: integrationResources.id })
+      )[0];
+      if (!resource) throw new Error('Demo monitor resource creation returned no record');
+      const monitor = (
+        await tx
+          .insert(monitors)
+          .values({
+            resourceId: resource.id,
+            encryptedUrl: encryptValue(input.workerUrl, config.PAYLOAD_ENCRYPTION_KEY),
+            displayHost: new URL(input.publicUrl).host,
+            method: input.method ?? 'GET',
+            intervalSeconds: 900,
+            timeoutMs: 10_000,
+            expectedMinStatus: input.expectedMinStatus ?? 200,
+            expectedMaxStatus: input.expectedMaxStatus ?? 299,
+            expectedText: input.expectedText,
+            expectedJsonPath: input.expectedJsonPath,
+            consecutiveFailuresToOpen: input.consecutiveFailuresToOpen ?? 1,
+            allowPrivateNetworks: privateNetwork,
+            allowedPrivateCidrs: privateCidrs,
+            state: 'paused',
+          })
+          .returning({ id: monitors.id, resourceId: monitors.resourceId })
+      )[0];
+      if (!monitor) throw new Error('Demo monitor creation returned no record');
+      return monitor;
+    }
+
+    const recovery = await createDemoMonitor({
+      kind: 'recovery-monitor',
+      name: 'Demo · webhook destination recovery',
+      type: 'webhook_destination',
+      environment: 'test',
+      publicUrl: targetIngestUrl,
+      workerUrl: targetWorkerUrl,
+      method: 'POST',
+    });
+    const healthyApi = await createDemoMonitor({
+      kind: 'healthy-api',
+      name: 'Demo · public API health',
+      type: 'external_api',
+      environment: 'production',
+      publicUrl: apiHealthUrl,
+      workerUrl: apiHealthWorkerUrl,
+      expectedJsonPath: '$.status',
+    });
+    const degradedContract = await createDemoMonitor({
+      kind: 'degraded-contract',
+      name: 'Demo · internal API contract drift',
+      type: 'internal_api',
+      environment: 'staging',
+      publicUrl: apiHealthUrl,
+      workerUrl: apiHealthWorkerUrl,
+      expectedText: 'demo-contract-version: 2',
+      consecutiveFailuresToOpen: 2,
+    });
+    const downRoute = await createDemoMonitor({
+      kind: 'down-route',
+      name: 'Demo · unavailable checkout route',
+      type: 'http_route',
+      environment: 'production',
+      publicUrl: config.APP_ORIGIN,
+      workerUrl: applicationWorkerUrl,
+      expectedMinStatus: 503,
+      expectedMaxStatus: 503,
+    });
+
+    const demoAlertChannel = existingAlertChannel
+      ? null
+      : (
+          await tx
+            .insert(alertChannels)
+            .values({
+              userId,
+              encryptedUrl: encryptValue(targetWorkerUrl, config.PAYLOAD_ENCRYPTION_KEY),
+              displayHost: new URL(targetIngestUrl).host,
+              active: true,
+              allowPrivateNetworks: privateNetwork,
+              allowedPrivateCidrs: privateCidrs,
+            })
+            .returning({ id: alertChannels.id })
+        )[0];
+
+    await tx
+      .update(integrationResources)
+      .set({
+        metadata: {
+          demoRunId: runId,
+          demoKind: 'source',
+          endpointId: source.id,
+          demoScenarioId: customScenario.id,
+          demoAlertChannelId: demoAlertChannel?.id,
+        },
+      })
+      .where(eq(integrationResources.id, source.resourceId));
+
+    return {
+      source,
+      target,
+      scenario: customScenario,
+      monitors: { recovery, healthyApi, degradedContract, downRoute },
+      alertChannel: {
+        id: demoAlertChannel?.id ?? existingAlertChannel?.id ?? null,
+        demoOwned: Boolean(demoAlertChannel),
+      },
+    };
   });
 
   return reply.code(201).send({
@@ -1296,7 +1441,9 @@ app.post('/v1/demo/setup', async (request, reply) => {
       runId,
       source: { ...created.source, ingestUrl: sourceIngestUrl },
       target: { ...created.target, ingestUrl: targetIngestUrl },
-      monitor: created.monitor,
+      scenario: created.scenario,
+      monitors: created.monitors,
+      alertChannel: created.alertChannel,
       destination: {
         url: targetWorkerUrl,
         allowPrivateNetworks: privateNetwork,
@@ -1312,7 +1459,7 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
   deliveryActionInputSchema.parse(request.body);
   const { runId } = request.params as { runId: string };
   const owned = await database.db
-    .select({ id: integrationResources.id })
+    .select({ id: integrationResources.id, metadata: integrationResources.metadata })
     .from(integrationResources)
     .where(
       and(
@@ -1322,6 +1469,16 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
     );
   if (owned.length === 0) return { removed: 0 };
   const resourceIds = owned.map((resource) => resource.id);
+  const ownedMetadata = owned.map(
+    (resource) =>
+      resource.metadata as { demoScenarioId?: string; demoAlertChannelId?: string | null },
+  );
+  const scenarioIds = [
+    ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoScenarioId ?? [])),
+  ];
+  const alertChannelIds = [
+    ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoAlertChannelId ?? [])),
+  ];
   await database.db.transaction(async (tx) => {
     await tx
       .delete(endpoints)
@@ -1334,8 +1491,28 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
           inArray(integrationResources.id, resourceIds),
         ),
       );
+    if (scenarioIds.length > 0) {
+      await tx
+        .delete(scenarios)
+        .where(
+          and(
+            eq(scenarios.userId, user.id),
+            eq(scenarios.builtIn, false),
+            inArray(scenarios.id, scenarioIds),
+          ),
+        );
+    }
+    if (alertChannelIds.length > 0) {
+      await tx
+        .delete(alertChannels)
+        .where(and(eq(alertChannels.userId, user.id), inArray(alertChannels.id, alertChannelIds)));
+    }
   });
-  return { removed: resourceIds.length };
+  return {
+    removed: resourceIds.length,
+    scenariosRemoved: scenarioIds.length,
+    alertChannelsRemoved: alertChannelIds.length,
+  };
 });
 
 app.post('/v1/endpoints', async (request, reply) => {
