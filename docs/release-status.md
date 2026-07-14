@@ -76,9 +76,10 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-The live release has verified the complete Demo Lab loop: deterministic Trial recovery, Observe
-capture, durable Protect delivery, Monitor incident recovery, outgoing alerts and the unified
-Operations state. The public landing is running its matching `v0.2.0` product narrative.
+Managed Cloud is running server and dashboard `v0.4.0` with landing `v0.3.0`. The live release has
+verified the complete eight-step Demo Lab: deterministic Trial recovery, Observe capture, durable
+Protect delivery, four monitor types, an actionable dead letter, outgoing alerts and redacted
+evidence. The retained jury workspace contains synthetic data only.
 
 Patch `v0.3.6` also accepts authenticated empty payload ciphertext during report analysis. Empty
 webhook bodies now produce normal deterministic evidence instead of a failed background job.
