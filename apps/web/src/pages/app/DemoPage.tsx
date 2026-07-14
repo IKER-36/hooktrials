@@ -31,6 +31,7 @@ const definitions = [
   ['Observe', 'One request is proxied synchronously and its destination failure is recorded.'],
   ['Protect', 'The event is accepted first, retried durably and recovered without data loss.'],
   ['Monitor', 'API, internal, route and destination checks fill every health state.'],
+  ['Recovery queue', 'A separate delivery exhausts its retry budget and enters dead-letter.'],
   ['Operations', 'Open and recovered incidents, retries and safe alert audit share one queue.'],
   ['Evidence', 'A redacted, expiring report proves the recovered Trial sequence.'],
 ] as const;
@@ -220,15 +221,38 @@ export function DemoPage() {
 
       activeStep = 5;
       step(5, 'running');
+      await apiRequest(`/v1/endpoints/${response.demo.target.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ scenarioId: response.demo.scenario.id }),
+      });
+      const deadLetterId = `demo-dead-letter-${Date.now()}`;
+      await postWebhook(
+        response.demo.source.ingestUrl,
+        JSON.stringify({ id: deadLetterId, type: 'fulfillment.delivery_requested' }),
+      );
+      await eventually(
+        () => events(response.demo.source.id),
+        (value) =>
+          value.events.some(
+            (event) =>
+              event.correlationKey === deadLetterId &&
+              event.deliveries.some((delivery) => delivery.state === 'dead_letter'),
+          ),
+      );
+      step(5, 'passed');
+
+      activeStep = 6;
+      step(6, 'running');
       const result = await eventually(
         () => apiRequest<OperationsResponse>('/v1/operations'),
         (value) =>
           value.summary.openIncidents >= 1 &&
           value.summary.recovered24h >= 2 &&
           value.summary.protectedRecoveries24h >= 1 &&
+          value.summary.unresolvedDeadLetters >= 1 &&
           value.alerts.filter(
             (alert) => alert.resourceName.startsWith('Demo') && alert.state === 'sent',
-          ).length >= 5,
+          ).length >= 6,
       );
       setOperations(result.summary);
       setAlertCount(
@@ -236,10 +260,10 @@ export function DemoPage() {
           (alert) => alert.resourceName.startsWith('Demo') && alert.state === 'sent',
         ).length,
       );
-      step(5, 'passed');
+      step(6, 'passed');
 
-      activeStep = 6;
-      step(6, 'running');
+      activeStep = 7;
+      step(7, 'running');
       await eventually(
         () => apiRequest<{ event: EventDetail }>(`/v1/events/${trialEvent.id}`),
         (value) => value.event.report?.status === 'passed',
@@ -253,7 +277,7 @@ export function DemoPage() {
       );
       setEvidenceUrl(evidence.shareUrl);
       await refresh();
-      step(6, 'passed');
+      step(7, 'passed');
       setMessage('Full workspace ready. Every module now contains safe, inspectable evidence.');
     } catch (error) {
       step(activeStep, 'failed');
@@ -320,9 +344,9 @@ export function DemoPage() {
             {complete ? 'Journey verified' : running ? 'Running real checks…' : 'Ready to prove it'}
           </h2>
           <p>
-            The lab creates two endpoints, one custom scenario, four monitored integrations,
-            incident and alert evidence, plus one expiring report. Cleanup matches the private run
-            ID and your account before removing anything.
+            The lab creates two endpoints, one custom scenario, four monitored integrations, a
+            recoverable dead letter, incident and alert evidence, plus one expiring report. Cleanup
+            matches the private run ID and your account before removing anything.
           </p>
           <button
             type="button"

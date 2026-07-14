@@ -11,9 +11,11 @@ The run creates a realistic synthetic workspace owned by the signed-in account:
 4. **Protect** accepts a new event with `202`, retries it durably and recovers on attempt three.
 5. **Monitor** exercises four integrations: external API, internal API, HTTP route and webhook
    destination. The resulting catalogue contains healthy, degraded, down and recovered states.
-6. **Operations** receives an open incident, recovered incidents, protected retries and five or more
-   synthetic sent-alert audit entries.
-7. **Evidence** publishes an expiring, redacted report for the recovered Trial sequence.
+6. **Recovery queue** receives a separate protected event whose three failed deliveries exhaust its
+   retry budget and leave one real, unresolved dead letter ready for replay or discard.
+7. **Operations** receives open and recovered incidents, protected retries and six or more synthetic
+   sent-alert audit entries.
+8. **Evidence** publishes an expiring, redacted report for the recovered Trial sequence.
 
 This is real application behavior: webhook traffic passes through the public ingestor, protected
 delivery and monitor checks run on BullMQ workers, and reports are produced by the normal analysis

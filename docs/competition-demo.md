@@ -19,8 +19,9 @@ Open **Demo Lab** and select **Run full demo**. Explain each state as it turns g
 - Protect returns `202`, persists first and retries without losing the event.
 - Monitor fills external API, internal API, HTTP route and webhook-destination rows across healthy,
   degraded, down and recovered states.
-- Operations reconciles open/recovered incidents, protected recovery, safe alert audit and dead
-  letters.
+- Recovery queue receives a separate protected event after it exhausts all three delivery attempts.
+- Operations reconciles open/recovered incidents, protected recovery, safe alert audit and the
+  actionable dead letter.
 - Evidence creates a redacted 24-hour share link for the recovered Trial.
 
 Pause on **Journey verified** and the six operational counters.
@@ -29,8 +30,8 @@ Pause on **Journey verified** and the six operational counters.
 
 Open **Inspect timelines** and show one correlated event with attempts and destination deliveries.
 Open **Scenario Studio** to show the generated recipe. Open **Monitor** to show all four resource
-types and health states. Open **Operations** to show the open/recovered incidents, alert audit, zero
-unresolved dead letters and protected recovery count. Finish on the redacted evidence link.
+types and health states. Open **Operations** to show the open/recovered incidents, alert audit, one
+unresolved dead letter and protected recovery count. Finish on the redacted evidence link.
 
 ## 2:10-2:35 — developer workflow
 

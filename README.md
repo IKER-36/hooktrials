@@ -71,6 +71,7 @@ complete synthetic workspace instead of showing static sample cards:
 - Observe and Protect traffic with destination evidence, durable retries and recovery;
 - four active monitors covering an external API, internal API, HTTP route and webhook destination;
 - healthy, degraded, down and recovered monitor states with latency and availability history;
+- an exhausted protected delivery in the dead-letter inbox, ready for replay or discard;
 - open and recovered incidents, protected deliveries and safe synthetic alert-audit entries;
 - one redacted evidence report with an expiring share link.
 
