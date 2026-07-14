@@ -1,5 +1,7 @@
-@import '@fontsource/space-mono/400.css';
-@import '@fontsource/space-mono/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
 @import '@fontsource/jetbrains-mono/400.css';
 
 * {
@@ -15,7 +17,7 @@ body {
   min-height: 100vh;
   margin: 0;
   color: var(--ht-ink);
-  font-family: var(--ht-mono);
+  font-family: var(--ht-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -64,12 +66,13 @@ pre {
   place-items: center;
   width: 31px;
   height: 31px;
-  padding: 3px;
+  padding: 5px;
   overflow: hidden;
   color: var(--ht-bg);
-  background: var(--ht-stone);
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--ht-hairline-bright);
-  box-shadow: 3px 3px 0 #17351180;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(25, 41, 72, 0.1);
 }
 .brand-mark img {
   display: block;
@@ -85,13 +88,12 @@ pre {
   gap: 8px;
   padding: 10px 15px;
   border: 1px solid var(--ht-hairline-bright);
-  border-radius: 0;
+  border-radius: 10px;
   color: var(--ht-ink);
   background: transparent;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
   cursor: pointer;
   transition:
     border-color 120ms ease,
@@ -104,18 +106,22 @@ pre {
   border-color: var(--ht-green);
 }
 .button.primary {
-  color: #071005;
-  background: var(--ht-green);
+  color: #fff;
+  background: linear-gradient(135deg, #1fbd5b, #159448);
   border-color: var(--ht-green);
-  box-shadow: 4px 4px 0 #173511;
+  box-shadow:
+    0 9px 22px rgba(22, 163, 74, 0.24),
+    inset 0 1px rgba(255, 255, 255, 0.25);
 }
 .button.primary:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 6px 6px 0 #173511;
+  transform: translateY(-1px);
+  box-shadow:
+    0 13px 28px rgba(22, 163, 74, 0.3),
+    inset 0 1px rgba(255, 255, 255, 0.25);
 }
 .button.secondary {
   color: var(--ht-muted);
-  background: #0a110d;
+  background: rgba(255, 255, 255, 0.72);
 }
 .button.secondary:hover {
   color: var(--ht-ink);

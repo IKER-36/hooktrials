@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Outlet, useOutletContext } from 'react-router-dom';
+import {
+  Activity,
+  BellRing,
+  FlaskConical,
+  Gauge,
+  GitBranch,
+  Code2,
+  HelpCircle,
+  LogOut,
+  Radar,
+  ServerCog,
+} from 'lucide-react';
 import { Brand } from '../components/Brand';
 import { OnboardingTour } from '../components/app/OnboardingTour';
 import { useAuth } from '../context/AuthContext';
@@ -175,29 +187,45 @@ export function AppLayout() {
   }
   if (!user) return <Navigate to="/login" replace />;
 
+  const navigation = [
+    { to: '/app', label: 'Overview', icon: Gauge, end: true },
+    { to: '/app/endpoints', label: 'Endpoints', icon: GitBranch, count: endpoints.length },
+    { to: '/app/scenarios', label: 'Scenarios', icon: FlaskConical, count: scenarios.length },
+    { to: '/app/monitor', label: 'Monitor', icon: Radar },
+    { to: '/app/operations', label: 'Operations', icon: BellRing },
+    { to: '/app/demo', label: 'Demo Lab', icon: Activity },
+  ];
+
   return (
     <div className="ht-shell">
       <header className="ht-mobilebar">
         <Brand />
-        <button type="button" className="ht-mobile-tour" onClick={() => setTourOpen(true)}>
-          Tour
-        </button>
-        <button type="button" className="ht-logout" onClick={() => void logout()}>
-          Log out
-        </button>
+        <div>
+          <button
+            type="button"
+            className="ht-mobile-tour"
+            onClick={() => setTourOpen(true)}
+            aria-label="Open product tour"
+          >
+            <HelpCircle aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="ht-logout"
+            onClick={() => void logout()}
+            aria-label="Log out"
+          >
+            <LogOut aria-hidden="true" />
+          </button>
+        </div>
       </header>
       <nav className="ht-mobilenav" aria-label="Dashboard sections">
-        <NavLink to="/app" end>
-          Overview
-        </NavLink>
-        <NavLink to="/app/endpoints">Endpoints</NavLink>
-        <NavLink to="/app/scenarios">Scenarios</NavLink>
-        <NavLink to="/app/monitor">Monitor</NavLink>
-        <NavLink to="/app/operations">Operations</NavLink>
-        <NavLink to="/app/demo">Demo Lab</NavLink>
-        <a href="https://github.com/IKER-36/hooktrials" target="_blank" rel="noreferrer">
-          Source
-        </a>
+        {navigation.map(({ to, label, icon: Icon, end }) => (
+          <NavLink key={to} to={to} end={end} aria-label={label}>
+            <Icon aria-hidden="true" />
+            <span>{label}</span>
+          </NavLink>
+        ))}
       </nav>
 
       <aside className="ht-sidebar">
@@ -206,24 +234,13 @@ export function AppLayout() {
           <span>{setup?.deploymentMode === 'cloud' ? 'CLOUD' : 'SELF-HOSTED'}</span>
         </div>
         <nav aria-label="Dashboard">
-          <NavLink to="/app" end>
-            <span>01</span> Overview
-          </NavLink>
-          <NavLink to="/app/endpoints">
-            <span>02</span> Endpoints <small>{endpoints.length}</small>
-          </NavLink>
-          <NavLink to="/app/scenarios">
-            <span>03</span> Scenario Studio <small>{scenarios.length}</small>
-          </NavLink>
-          <NavLink to="/app/monitor">
-            <span>04</span> Monitor
-          </NavLink>
-          <NavLink to="/app/operations">
-            <span>05</span> Operations
-          </NavLink>
-          <NavLink to="/app/demo">
-            <span>06</span> Demo Lab
-          </NavLink>
+          {navigation.map(({ to, label, icon: Icon, count, end }) => (
+            <NavLink key={to} to={to} end={end}>
+              <Icon aria-hidden="true" />
+              <span>{label}</span>
+              {count !== undefined ? <small>{count}</small> : null}
+            </NavLink>
+          ))}
         </nav>
         <div className="ht-sidebar-foot">
           <div className="ht-runtime-state">
@@ -239,10 +256,10 @@ export function AppLayout() {
             <small>{user.email}</small>
           </div>
           <button type="button" className="ht-logout" onClick={() => void logout()}>
-            Log out
+            <LogOut aria-hidden="true" /> Log out
           </button>
           <button type="button" className="ht-tour-restart" onClick={() => setTourOpen(true)}>
-            Restart product tour
+            <HelpCircle aria-hidden="true" /> Product tour
           </button>
           <a
             className="ht-cubepath-mini"
@@ -258,14 +275,16 @@ export function AppLayout() {
             target="_blank"
             rel="noreferrer"
           >
-            Source code · AGPL-3.0
+            <Code2 aria-hidden="true" /> Source code · AGPL-3.0
           </a>
         </div>
       </aside>
 
       <main className="ht-main">
         <header className="ht-systembar">
-          <code>hooktrials://workspace</code>
+          <span className="ht-system-title">
+            <ServerCog aria-hidden="true" /> Integration workspace
+          </span>
           <span>
             <i /> systems nominal
           </span>

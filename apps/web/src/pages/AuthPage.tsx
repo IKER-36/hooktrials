@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Brand } from '../components/Brand';
 import { useAuth } from '../context/AuthContext';
 import { readableError } from '../lib/api';
@@ -48,14 +49,16 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
       <section className="ht-auth-aside">
         <Brand />
         <div className="ht-auth-pitch">
-          <p className="ht-kicker">Webhook reliability, measured</p>
+          <p className="ht-auth-eyebrow">
+            <ShieldCheck aria-hidden="true" /> Integration reliability platform
+          </p>
           <h1>
-            Break it here.
-            <span> Not in production.</span>
+            Build integrations that recover.
+            <span> Before production needs them to.</span>
           </h1>
           <p className="ht-muted-line">
-            Create private endpoints, run deterministic failure scenarios and understand every
-            retry.
+            Test failure paths, protect webhook delivery and monitor every dependency from one calm
+            operational workspace.
           </p>
           <div className="ht-auth-sequence" aria-hidden="true">
             {SEQUENCE.map((code, index) => (
@@ -66,6 +69,17 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                 </code>
               </span>
             ))}
+          </div>
+          <div className="ht-auth-proof">
+            <span>
+              <CheckCircle2 aria-hidden="true" /> Deterministic testing
+            </span>
+            <span>
+              <CheckCircle2 aria-hidden="true" /> Durable recovery
+            </span>
+            <span>
+              <CheckCircle2 aria-hidden="true" /> Self-host ready
+            </span>
           </div>
         </div>
         <a
@@ -128,6 +142,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             ) : null}
             <button className="button primary" type="submit" disabled={submitting}>
               {submitting ? 'Please wait…' : registerMode ? 'Create account' : 'Log in'}
+              {!submitting ? <ArrowRight aria-hidden="true" /> : null}
             </button>
           </form>
           {!ownerSetup && (registerMode || setup?.registrationOpen) ? (

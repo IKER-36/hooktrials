@@ -10,13 +10,15 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "5.2.8",
     "@fontsource/space-mono": "5.2.8",
     "@vitejs/plugin-react": "6.0.3",
-    "vite": "8.1.4",
+    "lucide-react": "^1.24.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-router-dom": "7.18.1"
+    "react-router-dom": "7.18.1",
+    "vite": "8.1.4"
   },
   "devDependencies": {
     "@types/react": "19.2.17",

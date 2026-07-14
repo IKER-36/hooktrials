@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import './styles/tokens.css';
 import './styles.css';
 import './styles/app.css';
+import './styles/modern.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element not found');

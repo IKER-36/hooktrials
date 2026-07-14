@@ -163,6 +163,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@fontsource/inter':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@fontsource/jetbrains-mono':
         specifier: 5.2.8
         version: 5.2.8
@@ -172,6 +175,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 6.0.3
         version: 6.0.3(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(tsx@4.23.0)(yaml@2.8.1))
+      lucide-react:
+        specifier: ^1.24.0
+        version: 1.24.0(react@19.2.7)
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -921,6 +927,9 @@ packages:
 
   '@fastify/rate-limit@11.1.0':
     resolution: {integrity: sha512-BeJ9tizLvmTXGD7deYU5G04OtHhwk5uHxbpEPVp09gKvUBIXmau/4Bshxhu9ci54MvVWfGjCEx4RzvsTntojwA==}
+
+  '@fontsource/inter@5.2.8':
+    resolution: {integrity: sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg==}
 
   '@fontsource/jetbrains-mono@5.2.8':
     resolution: {integrity: sha512-6w8/SG4kqvIMu7xd7wt6x3idn1Qux3p9N62s6G3rfldOUYHpWcc2FKrqf+Vo44jRvqWj2oAtTHrZXEP23oSKwQ==}
@@ -1795,6 +1804,11 @@ packages:
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
+  lucide-react@1.24.0:
+    resolution: {integrity: sha512-YT6mBD8lGKkg4nM39enlm94/sfJIiW0YKUT60fBy4YK8tai31ylg1VhGNWxkpSKHo9UagfnZqwIff3HTDQwXeA==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   luxon@3.7.2:
     resolution: {integrity: sha512-vtEhXh/gNjI9Yg1u4jX/0YVPMvxzHuGgCm6tC5kZyb08yjGWGnqAjGJvcXbqQR2P3MyMEFnRbpcdFS6PBcLqew==}
     engines: {node: '>=12'}
@@ -2585,6 +2599,8 @@ snapshots:
       '@lukeed/ms': 2.0.2
       fastify-plugin: 6.0.0
       toad-cache: 3.7.4
+
+  '@fontsource/inter@5.2.8': {}
 
   '@fontsource/jetbrains-mono@5.2.8': {}
 
@@ -3387,6 +3403,10 @@ snapshots:
   lodash.isarguments@3.1.0: {}
 
   lodash.merge@4.6.2: {}
+
+  lucide-react@1.24.0(react@19.2.7):
+    dependencies:
+      react: 19.2.7
 
   luxon@3.7.2: {}
 
