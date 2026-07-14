@@ -2,7 +2,23 @@
 
 Updated: 14 July 2026.
 
-## Release `v0.3.6`
+## Release `v0.4.0`
+
+Release `v0.4.0` makes the complete product easier to understand and demonstrate:
+
+- a modern, accessible dashboard with a calmer glass-and-rounded visual system;
+- an eight-step Demo Lab covering Scenario Studio, Trial, Observe, Protect, Monitor, the recovery
+  queue, Operations and redacted Evidence;
+- four active monitor types with healthy, degraded, down and recovered histories;
+- a real protected delivery that exhausts three attempts and enters the dead-letter inbox;
+- isolated cleanup by authenticated user and private `demoRunId`.
+
+The release gate passes formatting, ESLint, strict TypeScript, 112 automated tests, all production
+builds and the complete browser-driven Demo Lab. The verified run produced a recoverable delivery,
+an unresolved dead letter, open and recovered incidents, synthetic alert audit records and an
+expiring evidence report without browser-console errors.
+
+## Previous release `v0.3.6`
 
 The current public release includes the complete Integration Reliability Control Plane:
 
