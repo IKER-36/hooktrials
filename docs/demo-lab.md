@@ -26,7 +26,7 @@ The endpoint URLs use the normal public ingestion origin in Cloud. Self-hosted i
 internal ingestor URL only for server-to-server demo traffic, while the browser continues to use the
 configured public or local origin.
 
-## Cleanup boundary
+## Recovery and cleanup boundary
 
 Every resource created by setup receives a random `demoRunId` in private resource metadata. Cleanup
 requires an authenticated user and explicit confirmation, then matches both that user ID and the
@@ -35,8 +35,13 @@ monitors, checks, incidents and evidence follow normal database cascades. The ex
 and a demo-owned alert channel are also removed by stored IDs; an existing user alert channel is
 never deleted or overwritten.
 
-Cleanup never matches names or prefixes and cannot touch another user's resources. If a browser is
-closed before cleanup, the resources remain ordinary test endpoints and monitors that can be
-inspected; no background destructive cleanup is performed.
+The browser queries the API for an existing private run when Demo Lab opens. Closing or reloading the
+browser therefore cannot lose the cleanup control. If one run is found, **Reset demo workspace**
+removes it. If historical interrupted runs exist, reset removes every demo-tagged run owned by that
+account while preserving all normal resources.
 
-Only use synthetic payloads. Cloud accounts need capacity for two temporary endpoints before setup.
+**Clean only this demo run** remains limited to the run created in the current browser journey.
+Cleanup never matches names or prefixes and cannot touch another user's resources.
+
+Only use synthetic payloads. Demo endpoints use temporary reserved Cloud capacity and do not consume
+the normal endpoint quota shown to the user. A second run cannot start while demo resources exist.

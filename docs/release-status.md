@@ -1,8 +1,25 @@
 # Current release status
 
-Updated: 14 July 2026.
+Updated: 15 July 2026.
 
-## Release `v0.4.0`
+## Release `v0.5.0`
+
+Release `v0.5.0` turns existing reliability evidence into an operator-facing decision layer:
+
+- Reliability Replay with deterministic diagnosis, impact, causal stages and runbook;
+- first-to-selected attempt comparison for HTTP response, latency, integrity and payload stability;
+- explainable 100-point Production Readiness with a highest-impact next action;
+- Stripe, GitHub, Shopify and Slack route-configuration starters;
+- revocable public monitor status pages with 24-hour health and incident history;
+- reload-safe Demo Lab recovery, all-run reset and quota-reserved temporary endpoints.
+
+The local release gate passes formatting, ESLint, strict TypeScript, 115 automated tests, production
+builds, migration `0008`, a production-shaped Docker rebuild and a browser-driven eight-step Demo
+Lab. Browser validation also covered recovered-run reset, reload recovery, Readiness, Reliability
+Replay and zero console errors. Cloud promotion is recorded after the immutable images and
+production smoke test complete.
+
+## Previous release `v0.4.0`
 
 Release `v0.4.0` makes the complete product easier to understand and demonstrate:
 
@@ -76,8 +93,9 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud is running server and dashboard `v0.4.0` with landing `v0.3.0`. The live release has
-verified the complete eight-step Demo Lab: deterministic Trial recovery, Observe capture, durable
+Managed Cloud remains on server and dashboard `v0.4.0` with landing `v0.3.0` until the `v0.5.0`
+promotion completes. The live release has verified the complete eight-step Demo Lab: deterministic
+Trial recovery, Observe capture, durable
 Protect delivery, four monitor types, an actionable dead letter, outgoing alerts and redacted
 evidence. The retained jury workspace contains synthetic data only.
 

@@ -244,6 +244,8 @@ export const monitors = pgTable(
     allowPrivateNetworks: boolean('allow_private_networks').notNull().default(false),
     allowedPrivateCidrs: jsonb('allowed_private_cidrs').notNull().default([]),
     state: monitorStateEnum('state').notNull().default('new'),
+    publicStatusTokenHash: text('public_status_token_hash'),
+    publicStatusEnabled: boolean('public_status_enabled').notNull().default(false),
     nextCheckAt: timestamp('next_check_at', { withTimezone: true }).notNull().defaultNow(),
     lastCheckAt: timestamp('last_check_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -251,6 +253,7 @@ export const monitors = pgTable(
   },
   (table) => [
     uniqueIndex('monitors_resource_id_unique').on(table.resourceId),
+    uniqueIndex('monitors_public_status_token_hash_unique').on(table.publicStatusTokenHash),
     index('monitors_next_check_at_idx').on(table.nextCheckAt),
   ],
 );

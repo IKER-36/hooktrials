@@ -45,9 +45,11 @@ export interface Endpoint {
   scenarioName?: string | null;
   createdAt: string;
   expiresAt?: string | null;
+  demoOwned?: boolean;
 }
 export interface AccountLimits {
   endpoints: number;
+  endpointUsage?: number;
   dailyEvents: number;
 }
 export interface SetupState {
@@ -134,6 +136,36 @@ export interface EventDetail {
   attempts: AttemptDetail[];
   deliveries: DestinationDelivery[];
   report: { status: string; score: number | null; result: unknown } | null;
+  replay: ReliabilityReplay;
+}
+
+export interface ReliabilityReplay {
+  outcome: 'received' | 'delivered' | 'recovered' | 'protected' | 'failed';
+  headline: string;
+  diagnosis: string;
+  impact: string;
+  durationMs: number;
+  steps: Array<{
+    code: string;
+    label: string;
+    detail: string;
+    state: 'passed' | 'warning' | 'failed';
+  }>;
+  actions: string[];
+}
+
+export interface ReadinessCheck {
+  code: string;
+  label: string;
+  points: number;
+  passed: boolean;
+  action: string;
+}
+
+export interface IntegrationReadiness {
+  score: number;
+  level: 'starting' | 'developing' | 'production_ready';
+  checks: ReadinessCheck[];
 }
 
 export type MonitorState = 'new' | 'healthy' | 'degraded' | 'down' | 'paused';
@@ -187,12 +219,39 @@ export interface MonitorSummary {
   allowPrivateNetworks: boolean;
   allowedPrivateCidrs: string[];
   hasAuthenticationHeaders: boolean;
+  publicStatusEnabled?: boolean;
   state: MonitorState;
   lastCheckAt: string | null;
   nextCheckAt: string;
   metrics: MonitorMetrics;
   incident: Incident | null;
   score: ReliabilityScore;
+}
+
+export interface PublicMonitorStatus {
+  name: string;
+  resourceType: MonitorSummary['resourceType'];
+  environment: MonitorSummary['environment'];
+  displayHost: string;
+  state: MonitorState;
+  lastCheckAt: string | null;
+  metrics: MonitorMetrics;
+  checks: Array<
+    Pick<
+      MonitorCheck,
+      | 'id'
+      | 'startedAt'
+      | 'statusCode'
+      | 'latencyMs'
+      | 'outcome'
+      | 'errorCategory'
+      | 'contractResult'
+    >
+  >;
+  incidents: Array<
+    Pick<Incident, 'id' | 'status' | 'cause' | 'summary' | 'openedAt' | 'recoveredAt'>
+  >;
+  generatedAt: string;
 }
 
 export interface MonitorCheck {
@@ -224,6 +283,7 @@ export interface IntegrationSummary {
   latestDelivery: DestinationDelivery | null;
   incident: Incident | null;
   score: ReliabilityScore;
+  readiness: IntegrationReadiness;
 }
 
 export interface OperationalDeadLetter extends DestinationDelivery {

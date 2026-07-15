@@ -168,10 +168,288 @@ export interface ReliabilityScore {
   deductions: ScoreDeduction[];
 }
 
+export interface ReadinessCheck {
+  code: string;
+  label: string;
+  points: number;
+  passed: boolean;
+  action: string;
+}
+
+export interface IntegrationReadiness {
+  score: number;
+  level: 'starting' | 'developing' | 'production_ready';
+  checks: ReadinessCheck[];
+}
+
+export interface ReliabilityReplay {
+  outcome: 'received' | 'delivered' | 'recovered' | 'protected' | 'failed';
+  headline: string;
+  diagnosis: string;
+  impact: string;
+  durationMs: number;
+  steps: Array<{
+    code: string;
+    label: string;
+    detail: string;
+    state: 'passed' | 'warning' | 'failed';
+  }>;
+  actions: string[];
+}
+
 function score(deductions: ScoreDeduction[]): ReliabilityScore {
   return {
     score: Math.max(0, 100 - deductions.reduce((total, item) => total + item.points, 0)),
     deductions,
+  };
+}
+
+export function calculateIntegrationReadiness(input: {
+  active: boolean;
+  externalAccess: boolean;
+  contractConfigured: boolean;
+  signatureConfigured: boolean;
+  destinationConfigured: boolean;
+  protectMode: boolean;
+  attemptsObserved: number;
+  recoveryDemonstrated: boolean;
+  evidenceGenerated: boolean;
+  openIncident: boolean;
+}): IntegrationReadiness {
+  const checks: ReadinessCheck[] = [
+    {
+      code: 'active',
+      label: 'Route is active',
+      points: 5,
+      passed: input.active,
+      action: 'Resume the route before sending provider traffic.',
+    },
+    {
+      code: 'external_access',
+      label: 'Public HTTPS ingestion is reachable',
+      points: 10,
+      passed: input.externalAccess,
+      action: 'Configure a public HTTPS domain or reverse proxy.',
+    },
+    {
+      code: 'contract',
+      label: 'Inbound contract is enforced',
+      points: 15,
+      passed: input.contractConfigured,
+      action: 'Define the expected method, headers and payload fields.',
+    },
+    {
+      code: 'signature',
+      label: 'Provider signature is verified',
+      points: 15,
+      passed: input.signatureConfigured,
+      action: 'Enable the GitHub or Stripe signature preset and add its secret.',
+    },
+    {
+      code: 'destination',
+      label: 'A destination is configured',
+      points: 10,
+      passed: input.destinationConfigured,
+      action: 'Add the backend destination that should receive valid events.',
+    },
+    {
+      code: 'protect',
+      label: 'Durable protection is enabled',
+      points: 15,
+      passed: input.protectMode,
+      action: 'Enable Protect mode to accept first and retry safely.',
+    },
+    {
+      code: 'traffic',
+      label: 'Real or synthetic traffic was observed',
+      points: 10,
+      passed: input.attemptsObserved > 0,
+      action: 'Send a synthetic event or run a deterministic trial.',
+    },
+    {
+      code: 'recovery',
+      label: 'Recovery was demonstrated',
+      points: 10,
+      passed: input.recoveryDemonstrated,
+      action: 'Run a failure-to-recovery scenario and inspect its timeline.',
+    },
+    {
+      code: 'evidence',
+      label: 'Evidence report was generated',
+      points: 5,
+      passed: input.evidenceGenerated,
+      action: 'Complete a trial and wait for its background evidence report.',
+    },
+    {
+      code: 'incident',
+      label: 'No incident is currently open',
+      points: 5,
+      passed: !input.openIncident,
+      action: 'Resolve the active incident and verify recovery.',
+    },
+  ];
+  const readinessScore = checks.reduce(
+    (total, check) => total + (check.passed ? check.points : 0),
+    0,
+  );
+  return {
+    score: readinessScore,
+    level:
+      readinessScore >= 85 ? 'production_ready' : readinessScore >= 55 ? 'developing' : 'starting',
+    checks,
+  };
+}
+
+export function buildReliabilityReplay(input: {
+  mode: 'trial' | 'observe' | 'protect';
+  attempts: Array<{
+    sequence: number;
+    receivedAt: Date | string;
+    responseStatus: number;
+    responseDelayMs: number;
+    signatureProvider: SignatureProvider;
+    signatureStatus: SignatureStatus;
+    contractResult: { configured?: boolean; passed?: boolean };
+  }>;
+  deliveries: Array<{
+    sequence: number;
+    state: 'queued' | 'delivering' | 'succeeded' | 'failed' | 'retrying' | 'dead_letter';
+    statusCode: number | null;
+    errorCategory: string | null;
+    startedAt: Date | string;
+    completedAt: Date | string | null;
+  }>;
+}): ReliabilityReplay {
+  const firstAttempt = input.attempts[0];
+  const lastAttempt = input.attempts[input.attempts.length - 1];
+  const lastDelivery = input.deliveries[input.deliveries.length - 1];
+  const failedDeliveries = input.deliveries.filter((delivery) =>
+    ['failed', 'retrying', 'dead_letter'].includes(delivery.state),
+  );
+  const recoveredDelivery = lastDelivery?.state === 'succeeded' && failedDeliveries.length > 0;
+  const recoveredTrial =
+    input.deliveries.length === 0 &&
+    input.attempts.length > 1 &&
+    Boolean(lastAttempt && lastAttempt.responseStatus >= 200 && lastAttempt.responseStatus < 300);
+  const protectedDelivery = Boolean(
+    lastDelivery && ['queued', 'delivering', 'retrying'].includes(lastDelivery.state),
+  );
+  const failed = Boolean(
+    lastDelivery
+      ? ['failed', 'dead_letter'].includes(lastDelivery.state)
+      : lastAttempt && lastAttempt.responseStatus >= 400,
+  );
+  const outcome: ReliabilityReplay['outcome'] =
+    recoveredDelivery || recoveredTrial
+      ? 'recovered'
+      : protectedDelivery
+        ? 'protected'
+        : failed
+          ? 'failed'
+          : lastDelivery?.state === 'succeeded' ||
+              (lastAttempt && lastAttempt.responseStatus >= 200 && lastAttempt.responseStatus < 300)
+            ? 'delivered'
+            : 'received';
+  const contractFailure = input.attempts.some(
+    (attempt) => attempt.contractResult.configured && attempt.contractResult.passed === false,
+  );
+  const invalidSignature = input.attempts.some(
+    (attempt) =>
+      attempt.signatureProvider !== 'none' &&
+      ['invalid', 'missing', 'stale'].includes(attempt.signatureStatus),
+  );
+  const start = firstAttempt ? new Date(firstAttempt.receivedAt).getTime() : Date.now();
+  const endValue =
+    lastDelivery?.completedAt ?? lastDelivery?.startedAt ?? lastAttempt?.receivedAt ?? start;
+  const durationMs = Math.max(0, new Date(endValue).getTime() - start);
+  const actions: string[] = [];
+  if (invalidSignature)
+    actions.push('Reject the event and verify the provider secret and timestamp tolerance.');
+  if (contractFailure)
+    actions.push('Compare the failed contract checks with the provider payload before replaying.');
+  if (lastDelivery?.state === 'dead_letter')
+    actions.push('Inspect the destination, then retry the protected dead-letter delivery.');
+  if (failedDeliveries.some((delivery) => delivery.statusCode === 429))
+    actions.push('Keep Retry-After handling enabled and review the destination rate limit.');
+  if (failedDeliveries.some((delivery) => (delivery.statusCode ?? 0) >= 500))
+    actions.push('Check destination availability and preserve bounded exponential retries.');
+  if (outcome === 'recovered')
+    actions.push('Save or share the redacted evidence as proof of recovery.');
+  if (actions.length === 0)
+    actions.push('Keep the contract, signing secret and recovery trial current.');
+
+  const diagnosis = invalidSignature
+    ? 'The provider request reached HookTrials, but signature verification did not pass.'
+    : contractFailure
+      ? 'The provider request reached HookTrials, but one or more inbound contract checks failed.'
+      : recoveredDelivery
+        ? `The destination failed ${failedDeliveries.length} time${failedDeliveries.length === 1 ? '' : 's'} before HookTrials completed the protected delivery.`
+        : recoveredTrial
+          ? `The provider retried ${input.attempts.length - 1} time${input.attempts.length === 2 ? '' : 's'} and the deterministic endpoint finally accepted the event.`
+          : lastDelivery?.state === 'dead_letter'
+            ? 'The protected delivery exhausted its retry budget and is waiting for an operator decision.'
+            : protectedDelivery
+              ? 'HookTrials accepted the event and is retaining it while bounded delivery continues.'
+              : failed
+                ? 'The latest attempt is still failing and recovery has not been demonstrated.'
+                : 'The event completed inside the configured reliability boundary.';
+
+  return {
+    outcome,
+    headline:
+      outcome === 'recovered'
+        ? 'Failure contained. Recovery proven.'
+        : outcome === 'protected'
+          ? 'Event protected while delivery continues.'
+          : outcome === 'failed'
+            ? 'Operator action required.'
+            : outcome === 'delivered'
+              ? 'Delivery completed.'
+              : 'Event received.',
+    diagnosis,
+    impact:
+      outcome === 'recovered'
+        ? 'No data loss is visible in the recorded delivery chain.'
+        : input.mode === 'protect' && outcome === 'protected'
+          ? 'The provider was acknowledged and the payload remains in the durable queue.'
+          : outcome === 'failed'
+            ? 'Successful downstream processing is not yet proven.'
+            : 'No active delivery failure is visible in this event.',
+    durationMs,
+    steps: [
+      {
+        code: 'receive',
+        label: 'Provider → HookTrials',
+        detail: `${input.attempts.length} inbound attempt${input.attempts.length === 1 ? '' : 's'} correlated`,
+        state: 'passed',
+      },
+      {
+        code: 'integrity',
+        label: 'Integrity gate',
+        detail: invalidSignature
+          ? 'Signature verification failed'
+          : contractFailure
+            ? 'Inbound contract failed'
+            : 'Configured integrity checks passed',
+        state: invalidSignature || contractFailure ? 'failed' : 'passed',
+      },
+      {
+        code: 'delivery',
+        label: input.deliveries.length === 0 ? 'Deterministic trial' : 'Destination delivery',
+        detail:
+          input.deliveries.length > 0
+            ? `${input.deliveries.length} delivery attempt${input.deliveries.length === 1 ? '' : 's'} recorded`
+            : `${input.attempts.length} provider attempt${input.attempts.length === 1 ? '' : 's'} recorded`,
+        state: outcome === 'failed' ? 'failed' : outcome === 'protected' ? 'warning' : 'passed',
+      },
+      {
+        code: 'recovery',
+        label: 'Final outcome',
+        detail: diagnosis,
+        state: outcome === 'failed' ? 'failed' : outcome === 'protected' ? 'warning' : 'passed',
+      },
+    ],
+    actions: [...new Set(actions)],
   };
 }
 

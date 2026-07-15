@@ -34,7 +34,12 @@ import {
   users,
 } from '@hooktrials/database';
 import { createLogger } from '@hooktrials/logger';
-import { calculateMonitorScore, calculateWebhookScore } from '@hooktrials/integration-engine';
+import {
+  buildReliabilityReplay,
+  calculateIntegrationReadiness,
+  calculateMonitorScore,
+  calculateWebhookScore,
+} from '@hooktrials/integration-engine';
 import { percentile } from '@hooktrials/monitor-engine';
 import { NetworkPolicyError, safeRequest, validateTarget } from '@hooktrials/network-policy';
 import { builtInScenarios } from '@hooktrials/scenario-engine';
@@ -48,6 +53,9 @@ import { ZodError } from 'zod';
 import { clearSession, createSession, getAuthenticatedUser, setSessionCookie } from './auth.js';
 
 const config = readRuntimeConfig();
+const externalAccess = !['localhost', '127.0.0.1', '::1'].includes(
+  new URL(config.APP_ORIGIN).hostname,
+);
 const logger = createLogger(config.LOG_LEVEL);
 const database = createDatabase(config.DATABASE_URL);
 const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: null });
@@ -258,9 +266,7 @@ app.get('/v1/setup', async () => {
       (config.REGISTRATION_MODE === 'first-user' && setupRequired),
     setupRequired,
     publicOrigin: config.APP_ORIGIN,
-    externalAccess: !['localhost', '127.0.0.1', '::1'].includes(
-      new URL(config.APP_ORIGIN).hostname,
-    ),
+    externalAccess,
   };
 });
 
@@ -388,6 +394,70 @@ app.get('/v1/scenarios', async (request, reply) => {
   return { scenarios: items };
 });
 
+app.get('/v1/status/:token', async (request, reply) => {
+  const { token } = request.params as { token: string };
+  const shared = (
+    await database.db
+      .select({ monitor: monitors, resource: integrationResources })
+      .from(monitors)
+      .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+      .where(
+        and(
+          eq(monitors.publicStatusTokenHash, sha256(token)),
+          eq(monitors.publicStatusEnabled, true),
+        ),
+      )
+      .limit(1)
+  )[0];
+  if (!shared) return reply.code(404).send({ error: 'status_page_not_found' });
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1_000);
+  const [checkRows, incidentRows] = await Promise.all([
+    database.db
+      .select({
+        id: monitorChecks.id,
+        outcome: monitorChecks.outcome,
+        latencyMs: monitorChecks.latencyMs,
+        startedAt: monitorChecks.startedAt,
+        statusCode: monitorChecks.statusCode,
+        errorCategory: monitorChecks.errorCategory,
+        contractResult: monitorChecks.contractResult,
+      })
+      .from(monitorChecks)
+      .where(
+        and(eq(monitorChecks.monitorId, shared.monitor.id), gte(monitorChecks.startedAt, since)),
+      )
+      .orderBy(asc(monitorChecks.startedAt))
+      .limit(200),
+    database.db
+      .select({
+        id: incidents.id,
+        status: incidents.status,
+        cause: incidents.cause,
+        summary: incidents.summary,
+        openedAt: incidents.openedAt,
+        recoveredAt: incidents.recoveredAt,
+      })
+      .from(incidents)
+      .where(eq(incidents.resourceId, shared.resource.id))
+      .orderBy(desc(incidents.openedAt))
+      .limit(10),
+  ]);
+  return {
+    status: {
+      name: shared.resource.name,
+      resourceType: shared.resource.type,
+      environment: shared.resource.environment,
+      displayHost: shared.monitor.displayHost,
+      state: shared.monitor.state,
+      lastCheckAt: shared.monitor.lastCheckAt,
+      metrics: monitorMetrics(checkRows),
+      checks: checkRows.slice(-50).reverse(),
+      incidents: incidentRows,
+      generatedAt: new Date(),
+    },
+  };
+});
+
 app.post('/v1/scenarios', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
@@ -498,6 +568,7 @@ app.get('/v1/monitors', async (request, reply) => {
         allowPrivateNetworks: monitor.allowPrivateNetworks,
         allowedPrivateCidrs: monitor.allowedPrivateCidrs,
         hasAuthenticationHeaders: Boolean(monitor.encryptedHeaders),
+        publicStatusEnabled: monitor.publicStatusEnabled,
         state: monitor.state,
         lastCheckAt: monitor.lastCheckAt,
         nextCheckAt: monitor.nextCheckAt,
@@ -616,6 +687,7 @@ app.get('/v1/monitors/:id', async (request, reply) => {
       allowPrivateNetworks: owned.monitor.allowPrivateNetworks,
       allowedPrivateCidrs: owned.monitor.allowedPrivateCidrs,
       hasAuthenticationHeaders: Boolean(owned.monitor.encryptedHeaders),
+      publicStatusEnabled: owned.monitor.publicStatusEnabled,
       state: owned.monitor.state,
       lastCheckAt: owned.monitor.lastCheckAt,
       nextCheckAt: owned.monitor.nextCheckAt,
@@ -692,6 +764,55 @@ app.put('/v1/monitors/:id', async (request, reply) => {
       .where(eq(monitors.id, id));
   });
   return { monitor: { id, resourceId: owned.resource.id, state: owned.monitor.state } };
+});
+
+app.post('/v1/monitors/:id/status-page', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  deliveryActionInputSchema.parse(request.body);
+  const { id } = request.params as { id: string };
+  const owned = (
+    await database.db
+      .select({ id: monitors.id })
+      .from(monitors)
+      .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .limit(1)
+  )[0];
+  if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
+  const token = `hts_${nanoid(32)}`;
+  await database.db
+    .update(monitors)
+    .set({
+      publicStatusTokenHash: sha256(token),
+      publicStatusEnabled: true,
+      updatedAt: new Date(),
+    })
+    .where(eq(monitors.id, id));
+  return {
+    shareUrl: `${config.APP_ORIGIN.replace(/\/$/, '')}/status/${token}`,
+    rotated: true,
+  };
+});
+
+app.delete('/v1/monitors/:id/status-page', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const owned = (
+    await database.db
+      .select({ id: monitors.id })
+      .from(monitors)
+      .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .limit(1)
+  )[0];
+  if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
+  await database.db
+    .update(monitors)
+    .set({ publicStatusTokenHash: null, publicStatusEnabled: false, updatedAt: new Date() })
+    .where(eq(monitors.id, id));
+  return reply.code(204).send();
 });
 
 app.post('/v1/monitors/:id/run', async (request, reply) => {
@@ -972,7 +1093,7 @@ app.get('/v1/integrations', async (request, reply) => {
 
   const integrations = await Promise.all(
     routes.map(async ({ resource, endpoint }) => {
-      const [deliveryHistory, attemptHistory, openRows] = await Promise.all([
+      const [deliveryHistory, attemptHistory, openRows, reportHistory] = await Promise.all([
         database.db
           .select()
           .from(destinationDeliveries)
@@ -981,6 +1102,7 @@ app.get('/v1/integrations', async (request, reply) => {
           .limit(100),
         database.db
           .select({
+            responseStatus: attempts.responseStatus,
             signatureStatus: attempts.signatureStatus,
             contractResult: attempts.contractResult,
           })
@@ -994,6 +1116,13 @@ app.get('/v1/integrations', async (request, reply) => {
           .from(incidents)
           .where(and(eq(incidents.resourceId, resource.id), eq(incidents.status, 'open')))
           .limit(1),
+        database.db
+          .select({ status: reports.status })
+          .from(reports)
+          .innerJoin(events, eq(reports.eventId, events.id))
+          .where(eq(events.endpointId, endpoint.id))
+          .orderBy(desc(reports.completedAt))
+          .limit(100),
       ]);
       const latest = deliveryHistory[0] ?? null;
       const openIncident = openRows[0] ?? null;
@@ -1033,6 +1162,27 @@ app.get('/v1/integrations', async (request, reply) => {
             return result.configured === true && result.passed === false;
           }).length,
           inboundAttempts: attemptHistory.length,
+          openIncident: Boolean(openIncident),
+        }),
+        readiness: calculateIntegrationReadiness({
+          active: endpoint.active,
+          externalAccess,
+          contractConfigured: Boolean(endpoint.encryptedContract),
+          signatureConfigured: Boolean(endpoint.encryptedSignatureSecret),
+          destinationConfigured: Boolean(endpoint.encryptedDestinationUrl),
+          protectMode: endpoint.mode === 'protect',
+          attemptsObserved: attemptHistory.length,
+          recoveryDemonstrated:
+            deliveryHistory.some(
+              (delivery) => delivery.state === 'succeeded' && delivery.sequence > 1,
+            ) ||
+            (attemptHistory.length > 1 &&
+              Boolean(
+                attemptHistory[0] &&
+                attemptHistory[0].responseStatus >= 200 &&
+                attemptHistory[0].responseStatus < 300,
+              )),
+          evidenceGenerated: reportHistory.some((report) => report.status === 'passed'),
           openIncident: Boolean(openIncident),
         }),
       };
@@ -1171,18 +1321,67 @@ app.get('/v1/endpoints', async (request, reply) => {
       scenarioName: scenarios.name,
       createdAt: endpoints.createdAt,
       expiresAt: endpoints.expiresAt,
+      resourceMetadata: integrationResources.metadata,
     })
     .from(endpoints)
     .leftJoin(scenarios, eq(endpoints.scenarioId, scenarios.id))
+    .leftJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
     .where(eq(endpoints.userId, user.id))
     .orderBy(desc(endpoints.createdAt));
 
   return {
-    endpoints: items.map(({ encryptedToken, ...item }) => {
+    endpoints: items.map(({ encryptedToken, resourceMetadata, ...item }) => {
       const token = decryptToken(encryptedToken);
-      return { ...item, ingestUrl: token ? `${config.INGEST_ORIGIN}/i/${token}` : null };
+      const metadata = resourceMetadata as { demoRunId?: unknown } | null;
+      return {
+        ...item,
+        demoOwned: typeof metadata?.demoRunId === 'string',
+        ingestUrl: token ? `${config.INGEST_ORIGIN}/i/${token}` : null,
+      };
     }),
-    limits: { endpoints: config.ENDPOINTS_LIMIT, dailyEvents: config.DAILY_EVENTS_LIMIT },
+    limits: {
+      endpoints: config.ENDPOINTS_LIMIT,
+      endpointUsage: items.filter((item) => {
+        const metadata = item.resourceMetadata as { demoRunId?: unknown } | null;
+        return typeof metadata?.demoRunId !== 'string';
+      }).length,
+      dailyEvents: config.DAILY_EVENTS_LIMIT,
+    },
+  };
+});
+
+app.get('/v1/demo/active', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const resources = await database.db
+    .select({ metadata: integrationResources.metadata, createdAt: integrationResources.createdAt })
+    .from(integrationResources)
+    .where(
+      and(
+        eq(integrationResources.userId, user.id),
+        sql`${integrationResources.metadata} ? 'demoRunId'`,
+      ),
+    )
+    .orderBy(desc(integrationResources.createdAt));
+  const run = resources.find((resource) => {
+    const metadata = resource.metadata as { demoRunId?: unknown };
+    return typeof metadata.demoRunId === 'string';
+  });
+  if (!run) return { demo: null };
+  const runId = (run.metadata as { demoRunId: string }).demoRunId;
+  const runIds = new Set(
+    resources.flatMap((resource) => {
+      const value = (resource.metadata as { demoRunId?: unknown }).demoRunId;
+      return typeof value === 'string' ? [value] : [];
+    }),
+  );
+  return {
+    demo: {
+      runId,
+      createdAt: run.createdAt,
+      resourceCount: resources.length,
+      runCount: runIds.size,
+    },
   };
 });
 
@@ -1190,12 +1389,24 @@ app.post('/v1/demo/setup', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   const userId = user.id;
-  const existing = await database.db
-    .select({ value: count() })
-    .from(endpoints)
-    .where(eq(endpoints.userId, user.id));
-  if (config.ENDPOINTS_LIMIT > 0 && (existing[0]?.value ?? 0) + 2 > config.ENDPOINTS_LIMIT) {
-    return reply.code(403).send({ error: 'demo_endpoint_capacity_required' });
+  const activeDemo = (
+    await database.db
+      .select({ metadata: integrationResources.metadata })
+      .from(integrationResources)
+      .where(
+        and(
+          eq(integrationResources.userId, user.id),
+          sql`${integrationResources.metadata} ? 'demoRunId'`,
+        ),
+      )
+      .limit(1)
+  )[0];
+  if (activeDemo) {
+    const metadata = activeDemo.metadata as { demoRunId?: unknown };
+    return reply.code(409).send({
+      error: 'demo_run_active',
+      runId: typeof metadata.demoRunId === 'string' ? metadata.demoRunId : undefined,
+    });
   }
 
   const runId = nanoid(16);
@@ -1515,6 +1726,69 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
   };
 });
 
+app.post('/v1/demo/reset', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  deliveryActionInputSchema.parse(request.body);
+  const owned = await database.db
+    .select({ id: integrationResources.id, metadata: integrationResources.metadata })
+    .from(integrationResources)
+    .where(
+      and(
+        eq(integrationResources.userId, user.id),
+        sql`${integrationResources.metadata} ? 'demoRunId'`,
+      ),
+    );
+  if (owned.length === 0) return { removed: 0, runsRemoved: 0 };
+  const resourceIds = owned.map((resource) => resource.id);
+  const metadata = owned.map(
+    (resource) =>
+      resource.metadata as {
+        demoRunId?: string;
+        demoScenarioId?: string;
+        demoAlertChannelId?: string | null;
+      },
+  );
+  const scenarioIds = [...new Set(metadata.flatMap((item) => item.demoScenarioId ?? []))];
+  const alertChannelIds = [...new Set(metadata.flatMap((item) => item.demoAlertChannelId ?? []))];
+  const runIds = new Set(metadata.flatMap((item) => item.demoRunId ?? []));
+  await database.db.transaction(async (tx) => {
+    await tx
+      .delete(endpoints)
+      .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
+    await tx
+      .delete(integrationResources)
+      .where(
+        and(
+          eq(integrationResources.userId, user.id),
+          inArray(integrationResources.id, resourceIds),
+        ),
+      );
+    if (scenarioIds.length > 0) {
+      await tx
+        .delete(scenarios)
+        .where(
+          and(
+            eq(scenarios.userId, user.id),
+            eq(scenarios.builtIn, false),
+            inArray(scenarios.id, scenarioIds),
+          ),
+        );
+    }
+    if (alertChannelIds.length > 0) {
+      await tx
+        .delete(alertChannels)
+        .where(and(eq(alertChannels.userId, user.id), inArray(alertChannels.id, alertChannelIds)));
+    }
+  });
+  return {
+    removed: resourceIds.length,
+    runsRemoved: runIds.size,
+    scenariosRemoved: scenarioIds.length,
+    alertChannelsRemoved: alertChannelIds.length,
+  };
+});
+
 app.post('/v1/endpoints', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
@@ -1522,7 +1796,13 @@ app.post('/v1/endpoints', async (request, reply) => {
   const existing = await database.db
     .select({ value: count() })
     .from(endpoints)
-    .where(eq(endpoints.userId, user.id));
+    .leftJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
+    .where(
+      and(
+        eq(endpoints.userId, user.id),
+        sql`not coalesce(${integrationResources.metadata} ? 'demoRunId', false)`,
+      ),
+    );
   if (config.ENDPOINTS_LIMIT > 0 && (existing[0]?.value ?? 0) >= config.ENDPOINTS_LIMIT) {
     return reply.code(403).send({ error: 'endpoint_limit_reached' });
   }
@@ -1848,6 +2128,7 @@ app.get('/v1/events/:id', async (request, reply) => {
       endpointId: events.endpointId,
       correlationKey: events.correlationKey,
       bodyHash: events.bodyHash,
+      mode: endpoints.mode,
     })
     .from(events)
     .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
@@ -1883,6 +2164,17 @@ app.get('/v1/events/:id', async (request, reply) => {
       }),
       deliveries: deliveryRows,
       report: report ?? null,
+      replay: buildReliabilityReplay({
+        mode: event.mode,
+        attempts: attemptRows.map((attempt) => ({
+          ...attempt,
+          contractResult: attempt.contractResult as {
+            configured?: boolean;
+            passed?: boolean;
+          },
+        })),
+        deliveries: deliveryRows,
+      }),
     },
   };
 });

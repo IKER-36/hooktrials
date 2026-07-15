@@ -4,6 +4,7 @@ import { AttemptSequence, OutcomeBadge } from '../../components/app/AttemptSeque
 import { ControlCenterSummary } from '../../components/app/ControlCenterSummary';
 import { EventInspector } from '../../components/app/EventInspector';
 import { GuidedDemo } from '../../components/app/GuidedDemo';
+import { ReadinessPanel } from '../../components/app/ReadinessPanel';
 import { RouteConfiguration } from '../../components/app/RouteConfiguration';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { useAuth } from '../../context/AuthContext';
@@ -238,6 +239,8 @@ export function OverviewPage() {
           </p>
         )}
       </section>
+
+      <ReadinessPanel endpointId={selected.id} />
 
       <RouteConfiguration endpoint={selected} />
 

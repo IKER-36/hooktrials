@@ -4,6 +4,37 @@ import { useDashboard } from '../../layouts/AppLayout';
 import { readableError } from '../../lib/api';
 import type { Endpoint } from '../../lib/types';
 
+const PROVIDER_PRESETS = [
+  {
+    id: 'stripe',
+    name: 'Stripe',
+    provider: 'stripe' as const,
+    headers: { 'stripe-signature': '' },
+    note: 'Native signature verification · add your whsec_ secret',
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    provider: 'github' as const,
+    headers: { 'x-github-event': '', 'x-github-delivery': '', 'x-hub-signature-256': '' },
+    note: 'Native X-Hub-Signature-256 verification',
+  },
+  {
+    id: 'shopify',
+    name: 'Shopify',
+    provider: 'none' as const,
+    headers: { 'x-shopify-topic': '', 'x-shopify-webhook-id': '', 'x-shopify-hmac-sha256': '' },
+    note: 'Contract starter · HMAC header presence captured',
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    provider: 'none' as const,
+    headers: { 'x-slack-request-timestamp': '', 'x-slack-signature': '' },
+    note: 'Contract starter · signing headers captured',
+  },
+] as const;
+
 export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
   const { setup } = useAuth();
   const { updateEndpoint } = useDashboard();
@@ -40,6 +71,18 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  function applyProviderPreset(preset: (typeof PROVIDER_PRESETS)[number]) {
+    setActivePreset(preset.id);
+    setSignatureProvider(preset.provider);
+    setContractMethod('POST');
+    setContractHeaders(JSON.stringify(preset.headers, null, 2));
+    setContractJsonPaths('');
+    setRemoveContract(false);
+    setSaved(false);
+    setError('');
+  }
 
   useEffect(() => {
     setMode(endpoint.mode);
@@ -302,6 +345,26 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
               {endpoint.contractConfigured ? 'Contract active' : 'No contract'}
             </span>
           </header>
+          <div className="ht-provider-presets" aria-label="Provider presets">
+            {PROVIDER_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className={activePreset === preset.id ? 'active' : ''}
+                onClick={() => applyProviderPreset(preset)}
+              >
+                <b>{preset.name}</b>
+                <small>{preset.note}</small>
+              </button>
+            ))}
+          </div>
+          {activePreset ? (
+            <p className="ht-provider-note" role="status">
+              {activePreset === 'stripe' || activePreset === 'github'
+                ? 'Preset applied. Enter the provider signing secret, review the contract, then save.'
+                : 'Contract starter applied. Header presence will be verified; native signature verification currently supports Stripe and GitHub.'}
+            </p>
+          ) : null}
           <div className="ht-monitor-form-grid">
             <label className="ht-field">
               Provider signature preset

@@ -57,6 +57,13 @@
       "when": 1783965086775,
       "tag": "0007_fuzzy_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784105685271,
+      "tag": "0008_harsh_deadpool",
+      "breakpoints": true
     }
   ]
 }

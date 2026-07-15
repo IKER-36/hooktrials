@@ -26,19 +26,20 @@ Open **Demo Lab** and select **Run full demo**. Explain each state as it turns g
 
 Pause on **Journey verified** and the six operational counters.
 
-## 1:35-2:10 — evidence, not animation
+## 1:35-2:15 — evidence, not animation
 
-Open **Inspect timelines** and show one correlated event with attempts and destination deliveries.
-Open **Scenario Studio** to show the generated recipe. Open **Monitor** to show all four resource
-types and health states. Open **Operations** to show the open/recovered incidents, alert audit, one
-unresolved dead letter and protected recovery count. Finish on the redacted evidence link.
+Open **Inspect timelines** and pause on **Reliability Replay**: diagnosis, impact, four causal stages
+and evidence-based runbook. Expand the first-to-last attempt comparison. Return to Overview and show
+the Production Readiness checklist with its highest-impact next action. Open **Monitor** to show all
+four resource types, create a revocable public status page and then show Operations with one
+actionable dead letter. Finish on the redacted evidence link.
 
-## 2:10-2:35 — developer workflow
+## 2:15-2:38 — developer workflow
 
 Show `examples/payment-webhook.trial.yml` and a terminal result with three PASS lines. Explain that
 the same exact trial runs from the CLI or bundled GitHub Action and fails CI if a status differs.
 
-## 2:35-3:00 — credible deployment
+## 2:38-3:00 — credible deployment
 
 “The complete product is AGPL-3.0, self-hosts with one command and supports local, reverse-proxy or
 automatic-HTTPS domain modes. The managed version runs on CubePath with isolated ingestion,
@@ -46,4 +47,5 @@ PostgreSQL, Redis/BullMQ workers, append-only backups, restore testing and a pub
 
 Finish on the landing statement: **Test failure. Protect delivery. Prove recovery.**
 
-After recording, use **Clean only this demo run** and confirm the scoped-cleanup message.
+After recording, use **Clean only this demo run** and confirm the scoped-cleanup message. Reload once
+before cleanup during rehearsal to prove that HookTrials recovers the private run safely.

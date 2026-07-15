@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -23,6 +23,13 @@ interface DemoSetup {
     allowPrivateNetworks: boolean;
     allowedPrivateCidrs: string[];
   };
+}
+
+interface ActiveDemo {
+  runId: string;
+  createdAt: string;
+  resourceCount: number;
+  runCount: number;
 }
 
 const definitions = [
@@ -64,12 +71,37 @@ async function postWebhook(url: string, body: string) {
 export function DemoPage() {
   const { refresh } = useDashboard();
   const [run, setRun] = useState<DemoSetup | null>(null);
+  const [activeDemo, setActiveDemo] = useState<ActiveDemo | null>(null);
+  const [checkingActive, setCheckingActive] = useState(true);
   const [states, setStates] = useState<StepState[]>(definitions.map(() => 'idle'));
   const [message, setMessage] = useState('');
   const [operations, setOperations] = useState<OperationsResponse['summary'] | null>(null);
   const [alertCount, setAlertCount] = useState(0);
   const [evidenceUrl, setEvidenceUrl] = useState('');
   const [cleaning, setCleaning] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiRequest<{ demo: ActiveDemo | null }>('/v1/demo/active')
+      .then((response) => {
+        if (cancelled) return;
+        setActiveDemo(response.demo);
+        if (response.demo) {
+          setMessage(
+            'An existing Demo Lab workspace was recovered. Reset it safely before running a new journey.',
+          );
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) setMessage(readableError(error));
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingActive(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function step(index: number, state: StepState) {
     setStates((current) => current.map((value, item) => (item === index ? state : value)));
@@ -80,7 +112,7 @@ export function DemoPage() {
   }
 
   async function runJourney() {
-    if (states.includes('running') || run) return;
+    if (states.includes('running') || run || activeDemo) return;
     setStates(definitions.map(() => 'idle'));
     setOperations(null);
     setAlertCount(0);
@@ -94,6 +126,12 @@ export function DemoPage() {
         body: '{}',
       });
       setRun(response.demo);
+      setActiveDemo({
+        runId: response.demo.runId,
+        createdAt: new Date().toISOString(),
+        resourceCount: 6,
+        runCount: 1,
+      });
       step(0, 'passed');
 
       activeStep = 1;
@@ -286,14 +324,16 @@ export function DemoPage() {
   }
 
   async function cleanup() {
-    if (!run || cleaning) return;
+    const runId = run?.runId ?? activeDemo?.runId;
+    if (!runId || cleaning) return;
     setCleaning(true);
     try {
-      await apiRequest(`/v1/demo/${run.runId}/cleanup`, {
+      await apiRequest(run ? `/v1/demo/${runId}/cleanup` : '/v1/demo/reset', {
         method: 'POST',
         body: JSON.stringify({ confirm: true }),
       });
       setRun(null);
+      setActiveDemo(null);
       setOperations(null);
       setAlertCount(0);
       setEvidenceUrl('');
@@ -309,6 +349,7 @@ export function DemoPage() {
 
   const running = states.includes('running');
   const complete = states.every((state) => state === 'passed');
+  const hasActiveDemo = Boolean(run || activeDemo);
 
   return (
     <section className="ht-page ht-demo-lab">
@@ -348,26 +389,41 @@ export function DemoPage() {
             recoverable dead letter, incident and alert evidence, plus one expiring report. Cleanup
             matches the private run ID and your account before removing anything.
           </p>
+          {activeDemo && !run ? (
+            <div className="ht-demo-recovered" role="status">
+              <b>Existing workspace recovered</b>
+              <span>
+                {activeDemo.resourceCount} resources · run <code>{activeDemo.runId}</code>
+              </span>
+              <small>
+                {activeDemo.runCount > 1
+                  ? `${activeDemo.runCount} historical demo runs were found. Reset removes all of them, scoped to your account.`
+                  : 'Your browser can be closed safely. HookTrials remembers the private run and keeps cleanup scoped to your account.'}
+              </small>
+            </div>
+          ) : null}
           <button
             type="button"
             className="button primary"
-            disabled={running || Boolean(run)}
+            disabled={checkingActive || running || hasActiveDemo}
             onClick={() => void runJourney()}
           >
             {running
               ? 'Running reliability journey…'
-              : complete
-                ? 'Journey complete'
-                : 'Run full demo'}
+              : checkingActive
+                ? 'Checking demo workspace…'
+                : complete
+                  ? 'Journey complete'
+                  : 'Run full demo'}
           </button>
-          {run ? (
+          {hasActiveDemo ? (
             <button
               type="button"
               className="button secondary"
               disabled={running || cleaning}
               onClick={() => void cleanup()}
             >
-              {cleaning ? 'Cleaning…' : 'Clean only this demo run'}
+              {cleaning ? 'Cleaning…' : run ? 'Clean only this demo run' : 'Reset demo workspace'}
             </button>
           ) : null}
           {message ? <p className="ht-demo-message">{message}</p> : null}

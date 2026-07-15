@@ -5,6 +5,8 @@ import type { AttemptDetail, EventDetail } from '../../lib/types';
 import { CopyButton } from '../ui/CopyButton';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { statusTone } from '../ui/StatusChip';
+import { AttemptComparison } from './AttemptComparison';
+import { ReliabilityReplayPanel } from './ReliabilityReplayPanel';
 
 function isRedacted(value: unknown): boolean {
   return typeof value === 'string' && value.toLowerCase().includes('redacted');
@@ -237,6 +239,8 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
               </div>
             </dl>
 
+            <ReliabilityReplayPanel replay={detail.replay} />
+
             <section className="ht-share-evidence">
               <div>
                 <b>Redacted evidence</b>
@@ -289,6 +293,9 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
 
             {attempt ? (
               <section className="ht-attempt" aria-label={`Attempt ${attempt.sequence}`}>
+                {detail.attempts.length > 1 && detail.attempts[0] ? (
+                  <AttemptComparison baseline={detail.attempts[0]} current={attempt} />
+                ) : null}
                 <div className="ht-request-line">
                   <code>
                     <b>{attempt.method}</b> {attempt.path}

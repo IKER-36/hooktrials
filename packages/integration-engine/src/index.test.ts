@@ -1,6 +1,8 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
+  buildReliabilityReplay,
+  calculateIntegrationReadiness,
   calculateMonitorScore,
   calculateWebhookScore,
   evaluateWebhookContract,
@@ -124,5 +126,72 @@ describe('explainable scores', () => {
       'signature',
       'contract',
     ]);
+  });
+});
+
+describe('integration readiness', () => {
+  it('weights every production control and explains missing actions', () => {
+    const readiness = calculateIntegrationReadiness({
+      active: true,
+      externalAccess: true,
+      contractConfigured: true,
+      signatureConfigured: false,
+      destinationConfigured: true,
+      protectMode: true,
+      attemptsObserved: 4,
+      recoveryDemonstrated: true,
+      evidenceGenerated: true,
+      openIncident: false,
+    });
+    expect(readiness.score).toBe(85);
+    expect(readiness.level).toBe('production_ready');
+    expect(readiness.checks.find((check) => check.code === 'signature')).toMatchObject({
+      passed: false,
+      points: 15,
+    });
+    expect(readiness.checks.every((check) => check.action.length > 0)).toBe(true);
+  });
+});
+
+describe('reliability replay', () => {
+  it('explains a protected failure followed by recovery', () => {
+    const replay = buildReliabilityReplay({
+      mode: 'protect',
+      attempts: [
+        {
+          sequence: 1,
+          receivedAt: '2026-07-15T10:00:00.000Z',
+          responseStatus: 202,
+          responseDelayMs: 0,
+          signatureProvider: 'stripe',
+          signatureStatus: 'valid',
+          contractResult: { configured: true, passed: true },
+        },
+      ],
+      deliveries: [
+        {
+          sequence: 1,
+          state: 'failed',
+          statusCode: 503,
+          errorCategory: 'http_status',
+          startedAt: '2026-07-15T10:00:00.100Z',
+          completedAt: '2026-07-15T10:00:00.200Z',
+        },
+        {
+          sequence: 2,
+          state: 'succeeded',
+          statusCode: 200,
+          errorCategory: null,
+          startedAt: '2026-07-15T10:00:02.000Z',
+          completedAt: '2026-07-15T10:00:02.100Z',
+        },
+      ],
+    });
+    expect(replay.outcome).toBe('recovered');
+    expect(replay.durationMs).toBe(2_100);
+    expect(replay.diagnosis).toContain('failed 1 time');
+    expect(replay.actions).toContain(
+      'Check destination availability and preserve bounded exponential retries.',
+    );
   });
 });

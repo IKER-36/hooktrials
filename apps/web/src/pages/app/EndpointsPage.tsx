@@ -37,7 +37,9 @@ export function EndpointsPage() {
 
   const limit = limits?.endpoints ?? 0;
   const limited = limit > 0;
-  const atLimit = limited && endpoints.length >= limit;
+  const endpointUsage =
+    limits?.endpointUsage ?? endpoints.filter((endpoint) => !endpoint.demoOwned).length;
+  const atLimit = limited && endpointUsage >= limit;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,18 +92,18 @@ export function EndpointsPage() {
           className="ht-limit"
           aria-label={
             limited
-              ? `${endpoints.length} of ${limit} endpoints used`
+              ? `${endpointUsage} of ${limit} regular endpoints used`
               : `${endpoints.length} endpoints`
           }
         >
           {limited ? (
             <span className="ht-limit-meter" aria-hidden="true">
               {Array.from({ length: limit }, (_, index) => (
-                <i key={index} className={index < endpoints.length ? 'used' : ''} />
+                <i key={index} className={index < endpointUsage ? 'used' : ''} />
               ))}
             </span>
           ) : null}
-          {limited ? `${endpoints.length}/${limit} used` : `${endpoints.length} · unlimited`}
+          {limited ? `${endpointUsage}/${limit} used` : `${endpoints.length} · unlimited`}
         </span>
       </header>
 

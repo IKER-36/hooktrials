@@ -1,11 +1,15 @@
 # HookTrials
 
+[![Hosted on CubePath](https://img.shields.io/badge/Hosted%20on-CubePath-22c55e?style=flat-square)](https://cubepath.com/)
+[![Release](https://img.shields.io/badge/release-v0.5.0-6366f1?style=flat-square)](docs/release-status.md)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-334155?style=flat-square)](LICENSE)
+
 Open-source integration reliability control plane. HookTrials tests failure behavior, safely
 operates webhook delivery and monitors APIs, HTTP routes and destinations from one dashboard.
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.4.0** (14 July 2026). The managed sandbox is available at
+Current public release: **v0.5.0** (15 July 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
 
 ## Run locally
@@ -56,9 +60,14 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Scenario Studio for custom multi-step status, delay, header and body recipes.
 - Guided endpoint templates and an integrated provider simulator.
 - Live event stream, retry timeline and encrypted payload inspector.
+- Reliability Replay turning each event into a causal diagnosis, impact statement and runbook.
+- Attempt comparison for status, latency, headers, payload stability, signature and contract state.
 - Trial, Observe and Protect route modes with contracts and GitHub/Stripe signatures.
+- Stripe, GitHub, Shopify and Slack provider starters inside route configuration.
 - Durable retries, dead-letter recovery, incidents, outgoing alerts and redacted evidence links.
 - Active API/HTTP monitoring with explainable availability, latency and integrity scores.
+- Explainable production-readiness score with a highest-impact next action for every route.
+- Revocable public monitor status pages with 24-hour metrics and incident history.
 - Single-origin self-hosting through Docker Compose.
 - Terminal CLI and reusable GitHub Action for deterministic reliability trials in CI.
 
@@ -81,6 +90,22 @@ user data. Demo incidents never call a real alert webhook configured by the user
 
 See [Full Demo Lab](docs/demo-lab.md) for the generated dataset, safety boundary and cleanup model.
 
+## Why HookTrials is different
+
+Request bins show what arrived. Uptime tools show whether one URL responds. HookTrials connects the
+complete reliability loop: deliberately break an integration, separate provider-side failure from
+destination failure, protect delivery, observe recovery and preserve shareable evidence.
+
+**Reliability Replay** turns the recorded chain into a deterministic explanation. **Production
+Readiness** scores only controls and evidence the user can inspect. Neither feature invents an AI
+conclusion or hides a grading formula.
+
+### See the evidence, not a black-box score
+
+![Production Readiness showing nine of ten verifiable controls](docs/assets/production-readiness.png)
+
+![Reliability Replay reconstructing a recovered delivery](docs/assets/reliability-replay.png)
+
 ## Repository model
 
 This public repository contains the complete self-hosted product. Managed hosting operations and
@@ -91,6 +116,9 @@ the marketing website are outside its scope and are not required to run HookTria
 - [Getting started](docs/getting-started.md)
 - [Trial, Observe and Protect](docs/trial-mode.md)
 - [Monitoring](docs/monitoring.md)
+- [Reliability Replay](docs/reliability-replay.md)
+- [Production readiness](docs/production-readiness.md)
+- [Public status pages](docs/public-status-pages.md)
 - [Contracts and signatures](docs/contracts-and-signatures.md)
 - [Incidents, alerts and evidence](docs/incidents-alerts-evidence.md)
 - [Architecture](docs/architecture.md)

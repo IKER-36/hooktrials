@@ -29,3 +29,16 @@ tolerance unless clock behavior gives a concrete reason to change it.
 
 Secrets and destination authentication headers are encrypted at rest and never returned by the API.
 The dashboard only reports whether a secret is configured. Re-enter a secret only when rotating it.
+
+## Provider starters
+
+Route control includes four starters:
+
+- **Stripe:** POST contract plus native `Stripe-Signature` verification;
+- **GitHub:** delivery/event headers plus native `X-Hub-Signature-256` verification;
+- **Shopify:** POST contract and required topic, webhook-ID and HMAC header presence;
+- **Slack:** POST contract and required timestamp/signature header presence.
+
+Stripe and GitHub perform native cryptographic verification. Shopify and Slack starters verify the
+expected header surface but do not claim native HMAC verification. Always review a starter before
+saving it and provide a real secret only through the encrypted route form.

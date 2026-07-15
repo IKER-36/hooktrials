@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { CopyButton } from '../../components/ui/CopyButton';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -632,6 +633,53 @@ function MonitorDetail({
   onDelete(): void;
 }) {
   const latestIncident = detail.incidents[0] ?? null;
+  const [statusUrl, setStatusUrl] = useState('');
+  const [statusEnabled, setStatusEnabled] = useState(Boolean(summary.publicStatusEnabled));
+  const [statusBusy, setStatusBusy] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+
+  useEffect(() => {
+    setStatusUrl('');
+    setStatusEnabled(Boolean(summary.publicStatusEnabled));
+    setStatusMessage('');
+  }, [summary.id]);
+
+  useEffect(() => {
+    setStatusEnabled(Boolean(summary.publicStatusEnabled));
+  }, [summary.publicStatusEnabled]);
+
+  async function publishStatus() {
+    setStatusBusy(true);
+    setStatusMessage('');
+    try {
+      const response = await apiRequest<{ shareUrl: string }>(
+        `/v1/monitors/${summary.id}/status-page`,
+        { method: 'POST', body: JSON.stringify({ confirm: true }) },
+      );
+      setStatusUrl(response.shareUrl);
+      setStatusEnabled(true);
+      setStatusMessage('Public link created. Creating another link rotates this one.');
+    } catch (requestError) {
+      setStatusMessage(readableError(requestError));
+    } finally {
+      setStatusBusy(false);
+    }
+  }
+
+  async function disableStatus() {
+    setStatusBusy(true);
+    setStatusMessage('');
+    try {
+      await apiRequest(`/v1/monitors/${summary.id}/status-page`, { method: 'DELETE' });
+      setStatusUrl('');
+      setStatusEnabled(false);
+      setStatusMessage('Public status disabled. Previous links no longer work.');
+    } catch (requestError) {
+      setStatusMessage(readableError(requestError));
+    } finally {
+      setStatusBusy(false);
+    }
+  }
   return (
     <article className="ht-monitor-detail">
       <header>
@@ -704,6 +752,45 @@ function MonitorDetail({
           HTTP {summary.expectedMinStatus}–{summary.expectedMaxStatus}
         </span>
         {summary.hasAuthenticationHeaders ? <span>auth configured</span> : null}
+      </section>
+      <section className="ht-status-share">
+        <div>
+          <p className="ht-kicker">Public status</p>
+          <h3>Share availability without exposing credentials</h3>
+          <p>
+            Publishes the integration name, monitored host, health metrics, recent checks and
+            incident summaries. Authentication headers and response bodies are never included.
+          </p>
+        </div>
+        <div className="ht-status-share-actions">
+          <button type="button" onClick={() => void publishStatus()} disabled={statusBusy}>
+            {statusBusy
+              ? 'Working…'
+              : statusEnabled
+                ? 'Rotate public link'
+                : 'Create public status'}
+          </button>
+          {statusEnabled || statusUrl ? (
+            <button
+              type="button"
+              className="danger"
+              onClick={() => void disableStatus()}
+              disabled={statusBusy}
+            >
+              Disable
+            </button>
+          ) : null}
+        </div>
+        {statusUrl ? (
+          <div className="ht-status-share-url">
+            <code>{statusUrl}</code>
+            <CopyButton value={statusUrl} label="Copy status link" />
+            <a href={statusUrl} target="_blank" rel="noreferrer">
+              Open →
+            </a>
+          </div>
+        ) : null}
+        {statusMessage ? <small role="status">{statusMessage}</small> : null}
       </section>
       <section className="ht-score-card" aria-label="Explainable reliability score">
         <header>

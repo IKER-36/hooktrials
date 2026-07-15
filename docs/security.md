@@ -34,6 +34,8 @@ a product requirement, not a deployment option.
 - Destination headers, monitor headers and signature secrets encrypted and write-only.
 - Manual retry/replay requires confirmation and stores user/source audit metadata.
 - Public evidence uses a hashed expiring token and excludes bodies, headers, credentials and URLs.
+- Public monitor status uses a hashed rotatable token and excludes response bodies, authentication
+  headers, query strings and user identity.
 
 ## Rules for rendering captured content
 
@@ -50,6 +52,12 @@ same network-policy package. Validation and connection use the same pinned DNS r
 not followed and response bodies are never retained by Monitor. An operator should still isolate the
 containers from sensitive networks and grant only the minimum private CIDRs required by self-hosted
 integrations.
+
+## Public monitor status
+
+A public status response contains only the integration name, type, environment, monitored hostname,
+aggregate metrics, check outcomes and incident summaries. Tokens have high entropy and only their
+SHA-256 hash is stored. Rotation invalidates the previous link; disabling removes public access.
 
 ## Reporting
 

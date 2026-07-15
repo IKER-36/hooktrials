@@ -36,3 +36,10 @@ prevents overlapping checks even when a scheduled run and **Run now** coincide.
 
 Release `v0.3.6` includes the worker egress network required for public and explicitly allowlisted
 private monitor targets.
+
+## Public status
+
+Each monitor can create one revocable public status URL containing its current state, 24-hour
+metrics, recent outcomes and incident summaries. Creating a new link rotates the old token;
+**Disable** revokes it. Authentication headers, response bodies and complete target URLs remain
+private. See [Public status pages](public-status-pages.md).
