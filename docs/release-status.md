@@ -13,11 +13,11 @@ Release `v0.5.0` turns existing reliability evidence into an operator-facing dec
 - revocable public monitor status pages with 24-hour health and incident history;
 - reload-safe Demo Lab recovery, all-run reset and quota-reserved temporary endpoints.
 
-The local release gate passes formatting, ESLint, strict TypeScript, 115 automated tests, production
+The release gate passes formatting, ESLint, strict TypeScript, 115 automated tests, production
 builds, migration `0008`, a production-shaped Docker rebuild and a browser-driven eight-step Demo
 Lab. Browser validation also covered recovered-run reset, reload recovery, Readiness, Reliability
-Replay and zero console errors. Cloud promotion is recorded after the immutable images and
-production smoke test complete.
+Replay and zero console errors. Immutable multi-architecture images were published and the
+backup-first CubePath promotion passed on 15 July 2026.
 
 ## Previous release `v0.4.0`
 
@@ -93,11 +93,10 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud remains on server and dashboard `v0.4.0` with landing `v0.3.0` until the `v0.5.0`
-promotion completes. The live release has verified the complete eight-step Demo Lab: deterministic
-Trial recovery, Observe capture, durable
-Protect delivery, four monitor types, an actionable dead letter, outgoing alerts and redacted
-evidence. The retained jury workspace contains synthetic data only.
+Managed Cloud runs server and dashboard `v0.5.0` with landing `v0.4.0`. Public HTTPS smoke,
+migration `0008`, authenticated Production Readiness, Reliability Replay, persistent Demo Lab and a
+revocable public monitor status page passed after deployment. The retained jury workspace contains
+synthetic data only.
 
 Patch `v0.3.6` also accepts authenticated empty payload ciphertext during report analysis. Empty
 webhook bodies now produce normal deterministic evidence instead of a failed background job.
