@@ -11,8 +11,9 @@ import {
   BookOpen,
   LogOut,
   Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
   Radar,
-  ServerCog,
   Sun,
 } from 'lucide-react';
 import { Brand } from '../components/Brand';
@@ -61,12 +62,19 @@ export function AppLayout() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() =>
     document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
   );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => localStorage.getItem('ht.sidebarCollapsed') === 'true',
+  );
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
     localStorage.setItem('ht.theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('ht.sidebarCollapsed', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -216,7 +224,7 @@ export function AppLayout() {
   ];
 
   return (
-    <div className="ht-shell">
+    <div className={`ht-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <header className="ht-mobilebar">
         <Brand />
         <div>
@@ -260,11 +268,24 @@ export function AppLayout() {
       <aside className="ht-sidebar">
         <div className="ht-sidebar-brand">
           <Brand />
-          <span>{setup?.deploymentMode === 'cloud' ? 'CLOUD' : 'SELF-HOSTED'}</span>
+          <button
+            type="button"
+            className="ht-sidebar-collapse"
+            onClick={() => setSidebarCollapsed((value) => !value)}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-expanded={!sidebarCollapsed}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen aria-hidden="true" />
+            ) : (
+              <PanelLeftClose aria-hidden="true" />
+            )}
+          </button>
         </div>
         <nav aria-label="Dashboard">
           {navigation.map(({ to, label, icon: Icon, count, end }) => (
-            <NavLink key={to} to={to} end={end}>
+            <NavLink key={to} to={to} end={end} title={sidebarCollapsed ? label : undefined}>
               <Icon aria-hidden="true" />
               <span>{label}</span>
               {count !== undefined ? <small>{count}</small> : null}
@@ -272,65 +293,79 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="ht-sidebar-foot">
-          <LanguageSwitcher />
-          <div className="ht-runtime-state">
-            <span>
-              <i /> API online
+          <div className="ht-sidebar-profile">
+            <span className="ht-account-avatar" aria-hidden="true">
+              {user.displayName.slice(0, 1).toUpperCase()}
             </span>
-            <span>
-              <i /> {setup?.externalAccess ? 'external webhooks ready' : 'local-only endpoints'}
-            </span>
+            <div className="ht-account">
+              <span>{user.displayName}</span>
+              <small>{user.email}</small>
+            </div>
+            <span
+              className="ht-runtime-dot"
+              title={setup?.externalAccess ? 'External webhooks ready' : 'Local-only endpoints'}
+              aria-label={
+                setup?.externalAccess ? 'External webhooks ready' : 'Local-only endpoints'
+              }
+            />
           </div>
-          <div className="ht-account">
-            <span>{user.displayName}</span>
-            <small>{user.email}</small>
+          <div className="ht-sidebar-tools">
+            <LanguageSwitcher compact />
+            <button
+              type="button"
+              className="ht-sidebar-tool"
+              onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
+              aria-label={`Use ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+              aria-pressed={theme === 'dark'}
+            >
+              {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+            </button>
+            <button
+              type="button"
+              className="ht-sidebar-tool"
+              onClick={() => setTourOpen(true)}
+              aria-label="Product tour"
+              title="Product tour"
+            >
+              <HelpCircle aria-hidden="true" />
+            </button>
+            <a
+              className="ht-sidebar-tool"
+              href="https://github.com/IKER-36/hooktrials"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Source code · AGPL-3.0"
+              title="Source code · AGPL-3.0"
+            >
+              <Code2 aria-hidden="true" />
+            </a>
+            <button
+              type="button"
+              className="ht-sidebar-tool danger"
+              onClick={() => void logout()}
+              aria-label="Log out"
+              title="Log out"
+            >
+              <LogOut aria-hidden="true" />
+            </button>
           </div>
-          <button type="button" className="ht-logout" onClick={() => void logout()}>
-            <LogOut aria-hidden="true" /> Log out
-          </button>
-          <button type="button" className="ht-tour-restart" onClick={() => setTourOpen(true)}>
-            <HelpCircle aria-hidden="true" /> Product tour
-          </button>
-          <button
-            type="button"
-            className="ht-theme-toggle"
-            onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
-            aria-pressed={theme === 'dark'}
-          >
-            {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </button>
           <a
-            className="ht-cubepath-mini"
+            className="ht-cubepath-brand"
             href="https://cubepath.com/"
             target="_blank"
             rel="noreferrer"
+            aria-label="Hosted on CubePath"
+            title="Hosted on CubePath"
           >
-            Hosted on CubePath
-          </a>
-          <a
-            className="ht-cubepath-mini"
-            href="https://github.com/IKER-36/hooktrials"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Code2 aria-hidden="true" /> Source code · AGPL-3.0
+            <span>Hosted on</span>
+            <img className="light" src="/brand/cubepath-light.png" alt="CubePath" />
+            <img className="dark" src="/brand/cubepath-dark.png" alt="" aria-hidden="true" />
           </a>
         </div>
       </aside>
 
       <main className="ht-main">
-        <header className="ht-systembar">
-          <span className="ht-system-title">
-            <ServerCog aria-hidden="true" /> Integration workspace
-          </span>
-          <span>
-            <i /> systems nominal
-          </span>
-          <NavLink to="/app/docs" className="ht-system-help">
-            <BookOpen aria-hidden="true" /> Help &amp; docs
-          </NavLink>
-        </header>
         {banner ? (
           <div className="ht-banner" role="alert">
             <span>{banner}</span>

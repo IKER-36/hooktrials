@@ -49,6 +49,11 @@ colors.
    leak into the next screen.
 9. Hover and selected container states use semantic surface tokens. A dark-theme interaction must
    never fall back to a literal white background, and selection remains visible while hovered.
+10. Desktop navigation uses a compact rail that can collapse to icons. Active state is communicated
+    through surface, border and icon color—not a decorative edge stripe. Icon-only controls require
+    translated accessible names and tooltips.
+11. Do not repeat navigation destinations or generic health copy above every page. Product routes
+    begin with their own title and actions; global utilities remain in the rail.
 
 ## Accessibility and verification
 

@@ -2,7 +2,26 @@
 
 Updated: 17 July 2026.
 
-## Release `v0.8.1`
+## Release `v0.8.2`
+
+Release `v0.8.2` makes the authenticated workspace denser and removes redundant chrome:
+
+- the desktop navigation rail is narrower and can collapse to a persistent 64px icon rail;
+- active navigation and selectable cards use restrained surface and border changes without a
+  generic colored stripe;
+- language, theme, tour, source and logout controls share one compact utility row alongside a
+  concise account and runtime state;
+- the repeated workspace/health/help header is removed so every route starts with its actual page
+  content;
+- official CubePath branding replaces the plain hosting text and adapts to light, dark and collapsed
+  states;
+- page margins, headings and vertical rhythm are tightened to expose more working data at once.
+
+The sidebar preference persists locally. English and Spanish labels, icon-only accessible names,
+desktop expanded/collapsed states and both themes passed browser validation. The release gate passes
+formatting, ESLint, strict TypeScript, 129 automated tests and the production web build.
+
+## Previous release `v0.8.1`
 
 Patch `v0.8.1` keeps selectable containers inside the active theme's contrast range. Template,
 scenario, endpoint, monitor, studio, integration and route-mode cards now use a restrained semantic
@@ -164,7 +183,7 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server and dashboard `v0.8.1` with landing `v0.5.0`. The backup-first promotion
+Managed Cloud runs server and dashboard `v0.8.2` with landing `v0.5.0`. The backup-first promotion
 applied migration `0009`, retained the previous immutable images and passed all four public origins,
 authenticated EN/ES, live ICMP, monitor editing, multi-monitor status publication and the corrected
 tour interaction. A post-migration backup restored 16 tables and two users in isolation; watchdog
