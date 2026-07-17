@@ -2,6 +2,9 @@
 
 Updated: 17 July 2026.
 
+Patch `v0.6.1` keeps the selected Docs article synchronized with filtered navigation and expands
+search across steps, expected results and troubleshooting.
+
 ## Release `v0.6.0`
 
 Release `v0.6.0` makes the complete reliability control plane easier to learn and operate:
@@ -109,7 +112,7 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server and dashboard `v0.6.0` with landing `v0.4.0`. Public HTTPS smoke,
+Managed Cloud runs server and dashboard `v0.6.1` with landing `v0.4.0`. Public HTTPS smoke,
 migration `0008`, authenticated Production Readiness, Reliability Replay, persistent Demo Lab and a
 revocable public monitor status page passed after deployment. The retained jury workspace contains
 synthetic data only.

@@ -177,10 +177,24 @@ export function DocsPage() {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return guides;
     return guides.filter((guide) =>
-      `${guide.title} ${guide.summary} ${guide.purpose}`.toLowerCase().includes(normalized),
+      [
+        guide.title,
+        guide.summary,
+        guide.purpose,
+        guide.result,
+        ...guide.steps,
+        ...guide.troubleshooting,
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(normalized),
     );
   }, [query]);
-  const selected = guides.find((guide) => guide.id === selectedId) ?? filtered[0] ?? guides[0]!;
+  const selected =
+    filtered.find((guide) => guide.id === selectedId) ??
+    filtered[0] ??
+    guides.find((guide) => guide.id === selectedId) ??
+    guides[0]!;
   const Icon = selected.icon;
 
   return (
