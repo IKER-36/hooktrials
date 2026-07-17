@@ -570,6 +570,189 @@ pre {
     inset 0 0 0 1px var(--ht-hairline);
   backdrop-filter: blur(18px) saturate(145%);
 }
+
+.ht-status-pages,
+.ht-monitor-edit-modal,
+.ht-public-component {
+  color: var(--ht-ink);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  box-shadow:
+    0 16px 44px rgba(25, 41, 72, 0.08),
+    inset 0 0 0 1px var(--ht-hairline);
+  backdrop-filter: blur(18px) saturate(145%);
+}
+.ht-status-pages {
+  margin-bottom: var(--ht-space-6);
+  overflow: hidden;
+}
+.ht-status-pages > header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ht-space-5);
+  align-items: center;
+  padding: var(--ht-space-5);
+  border-bottom: 1px solid var(--ht-hairline);
+}
+.ht-status-pages h2,
+.ht-status-pages p {
+  margin: 0;
+}
+.ht-status-pages > header p:last-child,
+.ht-status-pages-empty {
+  color: var(--ht-muted);
+  font-size: 13px;
+}
+.ht-status-pages-empty {
+  padding: var(--ht-space-5);
+}
+.ht-status-page-list > article {
+  display: grid;
+  grid-template-columns: 5px minmax(0, 1fr) auto;
+  gap: var(--ht-space-4);
+  align-items: center;
+  padding: var(--ht-space-4) var(--ht-space-5);
+  border-bottom: 1px solid var(--ht-hairline);
+}
+.ht-status-page-list > article > i {
+  width: 5px;
+  height: 42px;
+  background: var(--status-accent);
+  border-radius: 999px;
+}
+.ht-status-page-list article > div:nth-child(2) {
+  display: grid;
+  gap: 3px;
+}
+.ht-status-page-list span,
+.ht-status-page-list small {
+  color: var(--ht-muted);
+}
+.ht-status-page-actions,
+.ht-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ht-space-2);
+  align-items: center;
+}
+.ht-status-page-actions button,
+.ht-status-page-actions a {
+  padding: 8px 10px;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 8px;
+  font-size: 11px;
+}
+.ht-status-page-actions .danger {
+  color: var(--ht-red);
+}
+.ht-status-page-form {
+  padding: var(--ht-space-5);
+  border-top: 1px solid var(--ht-hairline);
+  background: var(--ht-surface-2);
+}
+.ht-status-monitor-picker {
+  display: grid;
+  gap: var(--ht-space-2);
+  margin: var(--ht-space-5) 0;
+  padding: var(--ht-space-4);
+  border: 1px solid var(--ht-hairline);
+  border-radius: 12px;
+}
+.ht-status-monitor-picker label {
+  display: grid;
+  grid-template-columns: auto auto minmax(120px, 1fr) minmax(0, 1fr);
+  gap: var(--ht-space-3);
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+.ht-status-monitor-picker label:last-child {
+  border: 0;
+}
+.ht-status-monitor-picker small {
+  color: var(--ht-muted);
+  text-align: right;
+}
+.ht-monitor-edit-modal {
+  position: relative;
+  width: min(920px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+.ht-monitor-edit-modal .ht-monitor-create {
+  border: 0;
+  box-shadow: none;
+}
+.ht-modal-close {
+  position: absolute;
+  z-index: 2;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 9px;
+}
+.ht-public-status-page {
+  border-top: 4px solid var(--status-accent);
+}
+.ht-public-status-page > header p {
+  max-width: 720px;
+  color: var(--ht-muted);
+}
+.ht-public-components {
+  display: grid;
+  gap: var(--ht-space-5);
+  padding: var(--ht-space-5);
+}
+.ht-public-component {
+  overflow: hidden;
+  background: var(--ht-surface-1);
+}
+.ht-public-component > header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ht-space-4);
+  align-items: center;
+  padding: var(--ht-space-5);
+  border-bottom: 1px solid var(--ht-hairline);
+}
+.ht-public-component h2,
+.ht-public-component h3 {
+  margin: 0;
+}
+.ht-public-component > header span {
+  color: var(--ht-muted);
+  font-size: 12px;
+}
+.ht-public-component .ht-status-metrics,
+.ht-public-component .ht-status-history,
+.ht-public-component .ht-status-incidents {
+  margin: 0;
+  border-radius: 0;
+}
+
+@media (max-width: 760px) {
+  .ht-status-pages > header,
+  .ht-status-page-list > article {
+    align-items: stretch;
+    grid-template-columns: 4px 1fr;
+  }
+  .ht-status-pages > header {
+    flex-direction: column;
+  }
+  .ht-status-page-actions {
+    grid-column: 2;
+  }
+  .ht-status-monitor-picker label {
+    grid-template-columns: auto auto 1fr;
+  }
+  .ht-status-monitor-picker small {
+    grid-column: 3;
+    text-align: left;
+  }
+}
 .ht-control-center > header,
 .ht-operation-panel > header,
 .ht-events > header,

@@ -13,7 +13,9 @@ import {
   registerInputSchema,
   scenarioInputSchema,
   shareEvidenceInputSchema,
+  statusPageInputSchema,
   updateMonitorInputSchema,
+  updateStatusPageInputSchema,
   updateEndpointInputSchema,
 } from '@hooktrials/contracts';
 import { decryptValue, encryptValue, sha256 } from '@hooktrials/crypto';
@@ -31,6 +33,8 @@ import {
   monitors,
   reports,
   scenarios,
+  statusPageMonitors,
+  statusPages,
   users,
 } from '@hooktrials/database';
 import { createLogger } from '@hooktrials/logger';
@@ -41,7 +45,12 @@ import {
   calculateWebhookScore,
 } from '@hooktrials/integration-engine';
 import { percentile } from '@hooktrials/monitor-engine';
-import { NetworkPolicyError, safeRequest, validateTarget } from '@hooktrials/network-policy';
+import {
+  NetworkPolicyError,
+  safeRequest,
+  validateHostTarget,
+  validateTarget,
+} from '@hooktrials/network-policy';
 import { builtInScenarios } from '@hooktrials/scenario-engine';
 import argon2 from 'argon2';
 import { Queue } from 'bullmq';
@@ -204,6 +213,34 @@ function decryptedMonitorHeaders(value: string | null): Record<string, string> {
 function monitorDisplayUrl(input: string): string {
   const url = new URL(input);
   return `${url.origin}${url.pathname}`;
+}
+
+function normalizeMonitorTarget(protocol: 'http' | 'icmp', input: string): string {
+  if (protocol === 'http') return input;
+  return input
+    .trim()
+    .replace(/^icmp:\/\//i, '')
+    .replace(/^\[|\]$/g, '');
+}
+
+async function validateMonitorTarget(input: {
+  protocol: 'http' | 'icmp';
+  url: string;
+  allowPrivateNetworks: boolean;
+  allowedPrivateCidrs: string[];
+}) {
+  const options = monitorNetworkOptions(input);
+  if (input.protocol === 'icmp') return validateHostTarget(input.url, options);
+  return validateTarget(input.url, options);
+}
+
+function monitorTargetPresentation(protocol: 'http' | 'icmp', input: string) {
+  if (protocol === 'icmp') {
+    const hostname = normalizeMonitorTarget(protocol, input);
+    return { displayHost: hostname, displayUrl: `icmp://${hostname}` };
+  }
+  const url = new URL(input);
+  return { displayHost: url.host, displayUrl: monitorDisplayUrl(input) };
 }
 
 function monitorMetrics(
@@ -396,6 +433,89 @@ app.get('/v1/scenarios', async (request, reply) => {
 
 app.get('/v1/status/:token', async (request, reply) => {
   const { token } = request.params as { token: string };
+  const page = (
+    await database.db
+      .select()
+      .from(statusPages)
+      .where(and(eq(statusPages.publicTokenHash, sha256(token)), eq(statusPages.enabled, true)))
+      .limit(1)
+  )[0];
+  if (page) {
+    const members = await database.db
+      .select({ monitor: monitors, resource: integrationResources })
+      .from(statusPageMonitors)
+      .innerJoin(monitors, eq(statusPageMonitors.monitorId, monitors.id))
+      .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+      .where(eq(statusPageMonitors.pageId, page.id))
+      .orderBy(statusPageMonitors.position);
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1_000);
+    const publicMonitors = await Promise.all(
+      members.map(async ({ monitor, resource }) => {
+        const [checkRows, incidentRows] = await Promise.all([
+          database.db
+            .select({
+              id: monitorChecks.id,
+              outcome: monitorChecks.outcome,
+              latencyMs: monitorChecks.latencyMs,
+              startedAt: monitorChecks.startedAt,
+              statusCode: monitorChecks.statusCode,
+              errorCategory: monitorChecks.errorCategory,
+              contractResult: monitorChecks.contractResult,
+            })
+            .from(monitorChecks)
+            .where(
+              and(eq(monitorChecks.monitorId, monitor.id), gte(monitorChecks.startedAt, since)),
+            )
+            .orderBy(asc(monitorChecks.startedAt))
+            .limit(200),
+          database.db
+            .select({
+              id: incidents.id,
+              status: incidents.status,
+              cause: incidents.cause,
+              summary: incidents.summary,
+              openedAt: incidents.openedAt,
+              recoveredAt: incidents.recoveredAt,
+            })
+            .from(incidents)
+            .where(eq(incidents.resourceId, resource.id))
+            .orderBy(desc(incidents.openedAt))
+            .limit(10),
+        ]);
+        return {
+          id: monitor.id,
+          name: resource.name,
+          resourceType: resource.type,
+          environment: resource.environment,
+          protocol: monitor.protocol,
+          displayHost: monitor.displayHost,
+          state: monitor.state,
+          lastCheckAt: monitor.lastCheckAt,
+          metrics: monitorMetrics(checkRows),
+          checks: checkRows.slice(-50).reverse(),
+          incidents: incidentRows,
+        };
+      }),
+    );
+    const aggregateState = publicMonitors.some((monitor) => monitor.state === 'down')
+      ? 'down'
+      : publicMonitors.some((monitor) => monitor.state === 'degraded')
+        ? 'degraded'
+        : publicMonitors.some((monitor) => monitor.state === 'new')
+          ? 'new'
+          : 'healthy';
+    return {
+      page: {
+        name: page.name,
+        headline: page.headline,
+        description: page.description,
+        accentColor: page.accentColor,
+        state: aggregateState,
+        monitors: publicMonitors,
+        generatedAt: new Date(),
+      },
+    };
+  }
   const shared = (
     await database.db
       .select({ monitor: monitors, resource: integrationResources })
@@ -456,6 +576,176 @@ app.get('/v1/status/:token', async (request, reply) => {
       generatedAt: new Date(),
     },
   };
+});
+
+async function assertOwnedMonitors(userId: string, monitorIds: string[]) {
+  const uniqueIds = [...new Set(monitorIds)];
+  const owned = await database.db
+    .select({ id: monitors.id })
+    .from(monitors)
+    .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+    .where(and(eq(integrationResources.userId, userId), inArray(monitors.id, uniqueIds)));
+  if (owned.length !== uniqueIds.length) {
+    throw new NetworkPolicyError('blocked', 'A status page can only include your own monitors');
+  }
+  return uniqueIds;
+}
+
+app.get('/v1/status-pages', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const pages = await database.db
+    .select()
+    .from(statusPages)
+    .where(eq(statusPages.userId, user.id))
+    .orderBy(desc(statusPages.updatedAt));
+  const memberships =
+    pages.length === 0
+      ? []
+      : await database.db
+          .select({ pageId: statusPageMonitors.pageId, monitorId: statusPageMonitors.monitorId })
+          .from(statusPageMonitors)
+          .where(
+            inArray(
+              statusPageMonitors.pageId,
+              pages.map((page) => page.id),
+            ),
+          )
+          .orderBy(statusPageMonitors.position);
+  return {
+    pages: pages.map((page) => {
+      const token = decryptToken(page.encryptedToken);
+      return {
+        id: page.id,
+        name: page.name,
+        headline: page.headline,
+        description: page.description,
+        accentColor: page.accentColor,
+        enabled: page.enabled,
+        monitorIds: memberships
+          .filter((membership) => membership.pageId === page.id)
+          .map((membership) => membership.monitorId),
+        shareUrl: token ? `${config.APP_ORIGIN.replace(/\/$/, '')}/status/${token}` : null,
+        createdAt: page.createdAt,
+        updatedAt: page.updatedAt,
+      };
+    }),
+  };
+});
+
+app.post('/v1/status-pages', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const input = statusPageInputSchema.parse(request.body);
+  const monitorIds = await assertOwnedMonitors(user.id, input.monitorIds);
+  const existing = await database.db
+    .select({ value: count() })
+    .from(statusPages)
+    .where(eq(statusPages.userId, user.id));
+  if ((existing[0]?.value ?? 0) >= 10) {
+    return reply.code(403).send({ error: 'status_page_limit_reached' });
+  }
+  const token = `hts_${nanoid(32)}`;
+  const created = await database.db.transaction(async (tx) => {
+    const page = (
+      await tx
+        .insert(statusPages)
+        .values({
+          userId: user.id,
+          name: input.name,
+          headline: input.headline,
+          description: input.description,
+          accentColor: input.accentColor.toLowerCase(),
+          publicTokenHash: sha256(token),
+          encryptedToken: encryptValue(token, config.PAYLOAD_ENCRYPTION_KEY),
+          enabled: input.enabled,
+        })
+        .returning({ id: statusPages.id })
+    )[0];
+    if (!page) throw new Error('Status page creation returned no record');
+    await tx
+      .insert(statusPageMonitors)
+      .values(monitorIds.map((monitorId, position) => ({ pageId: page.id, monitorId, position })));
+    return page;
+  });
+  return reply.code(201).send({
+    page: {
+      ...created,
+      shareUrl: `${config.APP_ORIGIN.replace(/\/$/, '')}/status/${token}`,
+    },
+  });
+});
+
+app.put('/v1/status-pages/:id', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const input = updateStatusPageInputSchema.parse(request.body);
+  const owned = (
+    await database.db
+      .select({ id: statusPages.id })
+      .from(statusPages)
+      .where(and(eq(statusPages.id, id), eq(statusPages.userId, user.id)))
+      .limit(1)
+  )[0];
+  if (!owned) return reply.code(404).send({ error: 'status_page_not_found' });
+  const monitorIds = input.monitorIds
+    ? await assertOwnedMonitors(user.id, input.monitorIds)
+    : undefined;
+  await database.db.transaction(async (tx) => {
+    await tx
+      .update(statusPages)
+      .set({
+        ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.headline !== undefined ? { headline: input.headline } : {}),
+        ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.accentColor !== undefined
+          ? { accentColor: input.accentColor.toLowerCase() }
+          : {}),
+        ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(statusPages.id, id));
+    if (monitorIds) {
+      await tx.delete(statusPageMonitors).where(eq(statusPageMonitors.pageId, id));
+      await tx
+        .insert(statusPageMonitors)
+        .values(monitorIds.map((monitorId, position) => ({ pageId: id, monitorId, position })));
+    }
+  });
+  return { updated: true };
+});
+
+app.post('/v1/status-pages/:id/rotate', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  deliveryActionInputSchema.parse(request.body);
+  const { id } = request.params as { id: string };
+  const token = `hts_${nanoid(32)}`;
+  const updated = await database.db
+    .update(statusPages)
+    .set({
+      publicTokenHash: sha256(token),
+      encryptedToken: encryptValue(token, config.PAYLOAD_ENCRYPTION_KEY),
+      enabled: true,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(statusPages.id, id), eq(statusPages.userId, user.id)))
+    .returning({ id: statusPages.id });
+  if (!updated[0]) return reply.code(404).send({ error: 'status_page_not_found' });
+  return { shareUrl: `${config.APP_ORIGIN.replace(/\/$/, '')}/status/${token}` };
+});
+
+app.delete('/v1/status-pages/:id', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const removed = await database.db
+    .delete(statusPages)
+    .where(and(eq(statusPages.id, id), eq(statusPages.userId, user.id)))
+    .returning({ id: statusPages.id });
+  if (!removed[0]) return reply.code(404).send({ error: 'status_page_not_found' });
+  return reply.code(204).send();
 });
 
 app.post('/v1/scenarios', async (request, reply) => {
@@ -557,6 +847,7 @@ app.get('/v1/monitors', async (request, reply) => {
         active: resource.active,
         displayUrl: metadata.displayUrl ?? monitor.displayHost,
         displayHost: monitor.displayHost,
+        protocol: monitor.protocol,
         method: monitor.method,
         intervalSeconds: monitor.intervalSeconds,
         timeoutMs: monitor.timeoutMs,
@@ -599,8 +890,9 @@ app.post('/v1/monitors', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   const input = monitorInputSchema.parse(request.body);
-  await validateTarget(input.url, monitorNetworkOptions(input));
-  const url = new URL(input.url);
+  const target = normalizeMonitorTarget(input.protocol, input.url);
+  await validateMonitorTarget({ ...input, url: target });
+  const presentation = monitorTargetPresentation(input.protocol, target);
   const created = await database.db.transaction(async (tx) => {
     const resource = (
       await tx
@@ -610,7 +902,7 @@ app.post('/v1/monitors', async (request, reply) => {
           type: input.resourceType,
           name: input.name,
           environment: input.environment,
-          metadata: { displayUrl: monitorDisplayUrl(input.url) },
+          metadata: { displayUrl: presentation.displayUrl },
         })
         .returning({ id: integrationResources.id })
     )[0];
@@ -620,8 +912,9 @@ app.post('/v1/monitors', async (request, reply) => {
         .insert(monitors)
         .values({
           resourceId: resource.id,
-          encryptedUrl: encryptValue(input.url, config.PAYLOAD_ENCRYPTION_KEY),
-          displayHost: url.host,
+          encryptedUrl: encryptValue(target, config.PAYLOAD_ENCRYPTION_KEY),
+          displayHost: presentation.displayHost,
+          protocol: input.protocol,
           method: input.method,
           encryptedHeaders: encryptedMonitorHeaders(input.headers),
           intervalSeconds: input.intervalSeconds,
@@ -676,6 +969,8 @@ app.get('/v1/monitors/:id', async (request, reply) => {
       environment: owned.resource.environment,
       active: owned.resource.active,
       displayUrl: (owned.resource.metadata as { displayUrl?: string }).displayUrl,
+      displayHost: owned.monitor.displayHost,
+      protocol: owned.monitor.protocol,
       method: owned.monitor.method,
       intervalSeconds: owned.monitor.intervalSeconds,
       timeoutMs: owned.monitor.timeoutMs,
@@ -714,6 +1009,7 @@ app.put('/v1/monitors/:id', async (request, reply) => {
   const input = monitorInputSchema.parse({
     name: owned.resource.name,
     resourceType: owned.resource.type,
+    protocol: owned.monitor.protocol,
     environment: owned.resource.environment,
     url: decryptValue(owned.monitor.encryptedUrl, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8'),
     method: owned.monitor.method,
@@ -729,8 +1025,9 @@ app.put('/v1/monitors/:id', async (request, reply) => {
     allowedPrivateCidrs: owned.monitor.allowedPrivateCidrs,
     ...patch,
   });
-  await validateTarget(input.url, monitorNetworkOptions(input));
-  const url = new URL(input.url);
+  const target = normalizeMonitorTarget(input.protocol, input.url);
+  await validateMonitorTarget({ ...input, url: target });
+  const presentation = monitorTargetPresentation(input.protocol, target);
   await database.db.transaction(async (tx) => {
     await tx
       .update(integrationResources)
@@ -738,15 +1035,16 @@ app.put('/v1/monitors/:id', async (request, reply) => {
         name: input.name,
         type: input.resourceType,
         environment: input.environment,
-        metadata: { displayUrl: monitorDisplayUrl(input.url) },
+        metadata: { displayUrl: presentation.displayUrl },
         updatedAt: new Date(),
       })
       .where(eq(integrationResources.id, owned.resource.id));
     await tx
       .update(monitors)
       .set({
-        encryptedUrl: encryptValue(input.url, config.PAYLOAD_ENCRYPTION_KEY),
-        displayHost: url.host,
+        encryptedUrl: encryptValue(target, config.PAYLOAD_ENCRYPTION_KEY),
+        displayHost: presentation.displayHost,
+        protocol: input.protocol,
         method: input.method,
         encryptedHeaders: encryptedMonitorHeaders(input.headers),
         intervalSeconds: input.intervalSeconds,
@@ -1513,7 +1811,8 @@ app.post('/v1/demo/setup', async (request, reply) => {
     async function createDemoMonitor(input: {
       kind: string;
       name: string;
-      type: 'external_api' | 'internal_api' | 'http_route' | 'webhook_destination';
+      type: 'external_api' | 'internal_api' | 'http_route' | 'webhook_destination' | 'icmp_host';
+      protocol?: 'http' | 'icmp';
       environment: 'test' | 'staging' | 'production';
       publicUrl: string;
       workerUrl: string;
@@ -1536,7 +1835,7 @@ app.post('/v1/demo/setup', async (request, reply) => {
             metadata: {
               demoRunId: runId,
               demoKind: input.kind,
-              displayUrl: input.publicUrl,
+              displayUrl: input.protocol === 'icmp' ? `icmp://${input.publicUrl}` : input.publicUrl,
             },
           })
           .returning({ id: integrationResources.id })
@@ -1548,7 +1847,9 @@ app.post('/v1/demo/setup', async (request, reply) => {
           .values({
             resourceId: resource.id,
             encryptedUrl: encryptValue(input.workerUrl, config.PAYLOAD_ENCRYPTION_KEY),
-            displayHost: new URL(input.publicUrl).host,
+            displayHost:
+              input.protocol === 'icmp' ? input.publicUrl : new URL(input.publicUrl).host,
+            protocol: input.protocol ?? 'http',
             method: input.method ?? 'GET',
             intervalSeconds: 900,
             timeoutMs: 10_000,
@@ -1605,6 +1906,50 @@ app.post('/v1/demo/setup', async (request, reply) => {
       expectedMinStatus: 503,
       expectedMaxStatus: 503,
     });
+    const icmpHost = await createDemoMonitor({
+      kind: 'icmp-host',
+      name: 'Demo · ICMP reachability',
+      type: 'icmp_host',
+      protocol: 'icmp',
+      environment: 'production',
+      publicUrl: '1.1.1.1',
+      workerUrl: '1.1.1.1',
+    });
+    const syntheticCheckAt = new Date();
+    await tx.insert(monitorChecks).values({
+      monitorId: icmpHost.id,
+      startedAt: syntheticCheckAt,
+      completedAt: syntheticCheckAt,
+      latencyMs: 12,
+      outcome: 'healthy',
+      contractResult: { passed: true, synthetic: true },
+    });
+    await tx
+      .update(monitors)
+      .set({ state: 'healthy', lastCheckAt: syntheticCheckAt })
+      .where(eq(monitors.id, icmpHost.id));
+
+    const statusToken = `hts_${nanoid(32)}`;
+    const demoStatusPage = (
+      await tx
+        .insert(statusPages)
+        .values({
+          userId,
+          name: 'Demo · Public service status',
+          headline: 'HookTrials demo services',
+          description: 'Synthetic HTTP and ICMP availability evidence generated by Demo Lab.',
+          accentColor: '#36e37e',
+          publicTokenHash: sha256(statusToken),
+          encryptedToken: encryptValue(statusToken, config.PAYLOAD_ENCRYPTION_KEY),
+          enabled: true,
+        })
+        .returning({ id: statusPages.id })
+    )[0];
+    if (!demoStatusPage) throw new Error('Demo status page creation returned no record');
+    await tx.insert(statusPageMonitors).values([
+      { pageId: demoStatusPage.id, monitorId: healthyApi.id, position: 0 },
+      { pageId: demoStatusPage.id, monitorId: icmpHost.id, position: 1 },
+    ]);
 
     const demoAlertChannel = existingAlertChannel
       ? null
@@ -1631,6 +1976,7 @@ app.post('/v1/demo/setup', async (request, reply) => {
           endpointId: source.id,
           demoScenarioId: customScenario.id,
           demoAlertChannelId: demoAlertChannel?.id,
+          demoStatusPageId: demoStatusPage.id,
         },
       })
       .where(eq(integrationResources.id, source.resourceId));
@@ -1639,7 +1985,11 @@ app.post('/v1/demo/setup', async (request, reply) => {
       source,
       target,
       scenario: customScenario,
-      monitors: { recovery, healthyApi, degradedContract, downRoute },
+      monitors: { recovery, healthyApi, degradedContract, downRoute, icmpHost },
+      statusPage: {
+        id: demoStatusPage.id,
+        shareUrl: `${config.APP_ORIGIN.replace(/\/$/, '')}/status/${statusToken}`,
+      },
       alertChannel: {
         id: demoAlertChannel?.id ?? existingAlertChannel?.id ?? null,
         demoOwned: Boolean(demoAlertChannel),
@@ -1654,6 +2004,7 @@ app.post('/v1/demo/setup', async (request, reply) => {
       target: { ...created.target, ingestUrl: targetIngestUrl },
       scenario: created.scenario,
       monitors: created.monitors,
+      statusPage: created.statusPage,
       alertChannel: created.alertChannel,
       destination: {
         url: targetWorkerUrl,
@@ -1682,7 +2033,11 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
   const resourceIds = owned.map((resource) => resource.id);
   const ownedMetadata = owned.map(
     (resource) =>
-      resource.metadata as { demoScenarioId?: string; demoAlertChannelId?: string | null },
+      resource.metadata as {
+        demoScenarioId?: string;
+        demoAlertChannelId?: string | null;
+        demoStatusPageId?: string;
+      },
   );
   const scenarioIds = [
     ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoScenarioId ?? [])),
@@ -1690,7 +2045,15 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
   const alertChannelIds = [
     ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoAlertChannelId ?? [])),
   ];
+  const statusPageIds = [
+    ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoStatusPageId ?? [])),
+  ];
   await database.db.transaction(async (tx) => {
+    if (statusPageIds.length > 0) {
+      await tx
+        .delete(statusPages)
+        .where(and(eq(statusPages.userId, user.id), inArray(statusPages.id, statusPageIds)));
+    }
     await tx
       .delete(endpoints)
       .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
@@ -1723,6 +2086,7 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
     removed: resourceIds.length,
     scenariosRemoved: scenarioIds.length,
     alertChannelsRemoved: alertChannelIds.length,
+    statusPagesRemoved: statusPageIds.length,
   };
 });
 
@@ -1747,12 +2111,19 @@ app.post('/v1/demo/reset', async (request, reply) => {
         demoRunId?: string;
         demoScenarioId?: string;
         demoAlertChannelId?: string | null;
+        demoStatusPageId?: string;
       },
   );
   const scenarioIds = [...new Set(metadata.flatMap((item) => item.demoScenarioId ?? []))];
   const alertChannelIds = [...new Set(metadata.flatMap((item) => item.demoAlertChannelId ?? []))];
+  const statusPageIds = [...new Set(metadata.flatMap((item) => item.demoStatusPageId ?? []))];
   const runIds = new Set(metadata.flatMap((item) => item.demoRunId ?? []));
   await database.db.transaction(async (tx) => {
+    if (statusPageIds.length > 0) {
+      await tx
+        .delete(statusPages)
+        .where(and(eq(statusPages.userId, user.id), inArray(statusPages.id, statusPageIds)));
+    }
     await tx
       .delete(endpoints)
       .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
@@ -1786,6 +2157,7 @@ app.post('/v1/demo/reset', async (request, reply) => {
     runsRemoved: runIds.size,
     scenariosRemoved: scenarioIds.length,
     alertChannelsRemoved: alertChannelIds.length,
+    statusPagesRemoved: statusPageIds.length,
   };
 });
 

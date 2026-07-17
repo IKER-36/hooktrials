@@ -203,7 +203,9 @@ export interface MonitorSummary {
   id: string;
   resourceId: string;
   name: string;
-  resourceType: 'external_api' | 'internal_api' | 'http_route' | 'webhook_destination';
+  resourceType:
+    'external_api' | 'internal_api' | 'http_route' | 'webhook_destination' | 'icmp_host';
+  protocol: 'http' | 'icmp';
   environment: 'test' | 'staging' | 'production';
   active: boolean;
   displayUrl: string;
@@ -229,8 +231,10 @@ export interface MonitorSummary {
 }
 
 export interface PublicMonitorStatus {
+  id?: string;
   name: string;
   resourceType: MonitorSummary['resourceType'];
+  protocol?: MonitorSummary['protocol'];
   environment: MonitorSummary['environment'];
   displayHost: string;
   state: MonitorState;
@@ -251,6 +255,29 @@ export interface PublicMonitorStatus {
   incidents: Array<
     Pick<Incident, 'id' | 'status' | 'cause' | 'summary' | 'openedAt' | 'recoveredAt'>
   >;
+  generatedAt: string;
+}
+
+export interface StatusPageConfig {
+  id: string;
+  name: string;
+  headline: string;
+  description: string | null;
+  accentColor: string;
+  enabled: boolean;
+  monitorIds: string[];
+  shareUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicStatusPage {
+  name: string;
+  headline: string;
+  description: string | null;
+  accentColor: string;
+  state: MonitorState;
+  monitors: Array<Omit<PublicMonitorStatus, 'generatedAt'>>;
   generatedAt: string;
 }
 

@@ -1,7 +1,7 @@
 # HookTrials
 
 [![Hosted on CubePath](https://img.shields.io/badge/Hosted%20on-CubePath-22c55e?style=flat-square)](https://cubepath.com/)
-[![Release](https://img.shields.io/badge/release-v0.6.1-6366f1?style=flat-square)](docs/release-status.md)
+[![Release](https://img.shields.io/badge/release-v0.7.0-6366f1?style=flat-square)](docs/release-status.md)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-334155?style=flat-square)](LICENSE)
 
 Open-source integration reliability control plane. HookTrials tests failure behavior, safely
@@ -9,7 +9,7 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.6.1** (17 July 2026). The managed sandbox is available at
+Current public release: **v0.7.0** (17 July 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
 
 ## Run locally
@@ -50,6 +50,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 ## Included
 
 - React dashboard, login and first-run setup. No marketing landing.
+- Complete English and Spanish interface, persisted per browser and available on public pages.
 - Contextual product tour that keeps each live module visible, with a permanent restart control.
 - Searchable in-product Docs with exact workflows, outcomes and troubleshooting.
 - Persistent accessible light and dark themes built from shared semantic design tokens.
@@ -67,9 +68,11 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Trial, Observe and Protect route modes with contracts and GitHub/Stripe signatures.
 - Stripe, GitHub, Shopify and Slack provider starters inside route configuration.
 - Durable retries, dead-letter recovery, incidents, outgoing alerts and redacted evidence links.
-- Active API/HTTP monitoring with explainable availability, latency and integrity scores.
+- Editable HTTP/HTTPS and ICMP monitoring with explainable availability, latency and integrity
+  scores.
 - Explainable production-readiness score with a highest-impact next action for every route.
-- Revocable public monitor status pages with 24-hour metrics and incident history.
+- Customizable public status pages that combine selected monitors, branding, 24-hour metrics and
+  incident history behind a revocable URL.
 - Single-origin self-hosting through Docker Compose.
 - Terminal CLI and reusable GitHub Action for deterministic reliability trials in CI.
 
@@ -80,7 +83,8 @@ complete synthetic workspace instead of showing static sample cards:
 
 - a custom cascading-outage scenario and a `500 → 503 → 429 → 200` Trial timeline;
 - Observe and Protect traffic with destination evidence, durable retries and recovery;
-- four active monitors covering an external API, internal API, HTTP route and webhook destination;
+- five monitors covering an external API, internal API, HTTP route, webhook destination and ICMP
+  host, plus a public page combining HTTP and ICMP evidence;
 - healthy, degraded, down and recovered monitor states with latency and availability history;
 - an exhausted protected delivery in the dead-letter inbox, ready for replay or discard;
 - open and recovered incidents, protected deliveries and safe synthetic alert-audit entries;
@@ -118,6 +122,7 @@ the marketing website are outside its scope and are not required to run HookTria
 - [Getting started](docs/getting-started.md)
 - [Trial, Observe and Protect](docs/trial-mode.md)
 - [Monitoring](docs/monitoring.md)
+- [Languages](docs/internationalization.md)
 - [Reliability Replay](docs/reliability-replay.md)
 - [Production readiness](docs/production-readiness.md)
 - [Public status pages](docs/public-status-pages.md)

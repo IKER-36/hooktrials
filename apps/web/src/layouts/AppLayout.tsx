@@ -16,6 +16,7 @@ import {
   Sun,
 } from 'lucide-react';
 import { Brand } from '../components/Brand';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { OnboardingTour } from '../components/app/OnboardingTour';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest, isAuthError, readableError } from '../lib/api';
@@ -214,6 +215,7 @@ export function AppLayout() {
       <header className="ht-mobilebar">
         <Brand />
         <div>
+          <LanguageSwitcher compact />
           <button
             type="button"
             className="ht-mobile-tour"
@@ -265,6 +267,7 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="ht-sidebar-foot">
+          <LanguageSwitcher />
           <div className="ht-runtime-state">
             <span>
               <i /> API online

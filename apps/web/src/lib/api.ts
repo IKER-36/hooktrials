@@ -1,3 +1,5 @@
+import { translatePhrase } from '../i18n/I18nContext';
+
 const productionApiOrigin =
   window.location.hostname === 'app.hooktrials.com' ? 'https://api.hooktrials.com' : '/api';
 
@@ -36,7 +38,8 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
 }
 
 export function readableError(error: unknown): string {
-  if (!(error instanceof ApiError)) return 'Network error. Check your connection and try again.';
+  if (!(error instanceof ApiError))
+    return translatePhrase('Network error. Check your connection and try again.');
   const messages: Record<string, string> = {
     email_already_registered: 'An account already exists for this email.',
     registration_closed: 'Registration is closed on this installation.',
@@ -60,13 +63,14 @@ export function readableError(error: unknown): string {
     alert_channel_not_configured: 'Configure an outgoing alert channel first.',
     evidence_not_found: 'This evidence link expired, was revoked or does not exist.',
     status_page_not_found: 'This public status page was disabled or its link was rotated.',
+    status_page_limit_reached: 'You can publish up to 10 status pages.',
     endpoint_not_found: 'That endpoint no longer exists.',
     event_not_found: 'That event is no longer available. It may have expired.',
     origin_not_allowed: 'This origin is not allowed to call the API.',
     validation_error: 'Please check the entered information.',
     internal_error: 'The server hit an unexpected error. Try again in a moment.',
   };
-  return messages[error.code] ?? 'The request could not be completed.';
+  return translatePhrase(messages[error.code] ?? 'The request could not be completed.');
 }
 
 export function isAuthError(error: unknown): boolean {

@@ -11,6 +11,7 @@ import {
   Search,
   ShieldCheck,
 } from 'lucide-react';
+import { useI18n } from '../../i18n/I18nContext';
 
 interface Guide {
   id: string;
@@ -171,6 +172,7 @@ const guides: Guide[] = [
 ];
 
 export function DocsPage() {
+  const { t, locale } = useI18n();
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState('overview');
   const filtered = useMemo(() => {
@@ -184,12 +186,18 @@ export function DocsPage() {
         guide.result,
         ...guide.steps,
         ...guide.troubleshooting,
+        t(guide.title),
+        t(guide.summary),
+        t(guide.purpose),
+        t(guide.result),
+        ...guide.steps.map(t),
+        ...guide.troubleshooting.map(t),
       ]
         .join(' ')
         .toLowerCase()
         .includes(normalized),
     );
-  }, [query]);
+  }, [locale, query, t]);
   const selected =
     filtered.find((guide) => guide.id === selectedId) ??
     filtered[0] ??
@@ -245,8 +253,8 @@ export function DocsPage() {
                 >
                   <GuideIcon aria-hidden="true" />
                   <span>
-                    <strong>{guide.title}</strong>
-                    <small>{guide.summary}</small>
+                    <strong>{t(guide.title)}</strong>
+                    <small>{t(guide.summary)}</small>
                   </span>
                 </button>
               );
@@ -263,33 +271,33 @@ export function DocsPage() {
             </span>
             <div>
               <p className="ht-kicker">How it works</p>
-              <h2>{selected.title}</h2>
-              <p>{selected.purpose}</p>
+              <h2>{t(selected.title)}</h2>
+              <p>{t(selected.purpose)}</p>
             </div>
           </header>
           <section>
             <h3>Use it step by step</h3>
             <ol>
               {selected.steps.map((step) => (
-                <li key={step}>{step}</li>
+                <li key={step}>{t(step)}</li>
               ))}
             </ol>
           </section>
           <aside className="ht-docs-result">
             <strong>Expected result</strong>
-            <p>{selected.result}</p>
+            <p>{t(selected.result)}</p>
           </aside>
           <section>
             <h3>If the result looks wrong</h3>
             <ul>
               {selected.troubleshooting.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item}>{t(item)}</li>
               ))}
             </ul>
           </section>
           {selected.route !== '/app/docs' ? (
             <Link className="button primary" to={selected.route}>
-              Open {selected.title}
+              {t('Open')} {t(selected.title)}
             </Link>
           ) : null}
         </article>

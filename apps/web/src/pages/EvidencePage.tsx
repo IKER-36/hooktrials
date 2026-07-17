@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { Brand } from '../components/Brand';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { apiRequest } from '../lib/api';
 import { shortDate } from '../lib/format';
 
@@ -47,9 +48,12 @@ export function EvidencePage() {
     <main className="ht-public-evidence">
       <header>
         <Brand />
-        <span>
-          <ShieldCheck aria-hidden="true" /> Redacted evidence · read only
-        </span>
+        <div className="ht-public-tools">
+          <LanguageSwitcher compact />
+          <span>
+            <ShieldCheck aria-hidden="true" /> Redacted evidence · read only
+          </span>
+        </div>
       </header>
       {missing ? (
         <section className="ht-evidence-missing">

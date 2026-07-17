@@ -9,8 +9,9 @@ The run creates a realistic synthetic workspace owned by the signed-in account:
 2. **Trial** sends one stable event four times and records `500 -> 503 -> 429 -> 200`.
 3. **Observe** proxies a different event synchronously and records a destination failure.
 4. **Protect** accepts a new event with `202`, retries it durably and recovers on attempt three.
-5. **Monitor** exercises four integrations: external API, internal API, HTTP route and webhook
-   destination. The resulting catalogue contains healthy, degraded, down and recovered states.
+5. **Monitor** exercises five integrations: external API, internal API, HTTP route, webhook
+   destination and ICMP host. The catalogue contains healthy, degraded, down and recovered states,
+   while a customizable public page combines HTTP and ICMP evidence.
 6. **Recovery queue** receives a separate protected event whose three failed deliveries exhaust its
    retry budget and leave one real, unresolved dead letter ready for replay or discard.
 7. **Operations** receives open and recovered incidents, protected retries and six or more synthetic
@@ -30,10 +31,10 @@ configured public or local origin.
 
 Every resource created by setup receives a random `demoRunId` in private resource metadata. Cleanup
 requires an authenticated user and explicit confirmation, then matches both that user ID and the
-exact run ID. Endpoints are removed before their integration resources so owned events, deliveries,
-monitors, checks, incidents and evidence follow normal database cascades. The exact custom scenario
-and a demo-owned alert channel are also removed by stored IDs; an existing user alert channel is
-never deleted or overwritten.
+exact run ID. The demo-owned status page is removed by its stored ID before integration cascades;
+then endpoints, events, deliveries, monitors, checks, incidents and evidence follow normal database
+cascades. The exact custom scenario and a demo-owned alert channel are also removed by stored IDs;
+an existing user status page or alert channel is never deleted or overwritten.
 
 The browser queries the API for an existing private run when Demo Lab opens. Closing or reloading the
 browser therefore cannot lose the cleanup control. If one run is found, **Reset demo workspace**

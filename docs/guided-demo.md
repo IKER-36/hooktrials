@@ -77,13 +77,16 @@ manual delivery source, retry state and recovery without mixing them with inboun
 
 ## Part 4: monitor and explain
 
-1. Open **Monitor** and add a public API, HTTP route or explicitly allowlisted internal API.
+1. Open **Monitor** and add a public API, HTTP route, ICMP host or explicitly allowlisted internal
+   service.
 2. Run a passing check to establish a baseline.
 3. Make the synthetic target fail long enough to cross its incident threshold.
 4. Restore it and run again.
 
 Show availability, average/p95 latency, classified cause, incident duration and score deductions.
 Configure the outgoing alert channel to demonstrate redacted `opened` and `recovered` notifications.
+Create a public status page, select at least two monitors, customize its headline/accent and open it
+signed out in both English and Spanish.
 
 ## Part 5: validation and evidence
 

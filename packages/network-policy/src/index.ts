@@ -1,8 +1,12 @@
 import { lookup as dnsLookup } from 'node:dns/promises';
+import { execFile as execFileCallback } from 'node:child_process';
 import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { isIP } from 'node:net';
 import { performance } from 'node:perf_hooks';
+import { promisify } from 'node:util';
+
+const execFile = promisify(execFileCallback);
 
 export type NetworkErrorCategory =
   | 'invalid_url'
@@ -54,6 +58,11 @@ export interface SafeResponse {
   statusCode: number;
   headers: Record<string, string | string[] | undefined>;
   body: Buffer;
+  latencyMs: number;
+  remoteAddress: string;
+}
+
+export interface SafeIcmpResponse {
   latencyMs: number;
   remoteAddress: string;
 }
@@ -206,6 +215,68 @@ export async function validateTarget(
     }
   }
   return { url, hostname, addresses: normalized };
+}
+
+export async function validateHostTarget(
+  input: string,
+  options: NetworkPolicyOptions = {},
+): Promise<Omit<ValidatedTarget, 'url'>> {
+  const stripped = input.trim().replace(/^icmp:\/\//i, '');
+  const hostname =
+    stripped.startsWith('[') && stripped.endsWith(']') ? stripped.slice(1, -1) : stripped;
+  if (!hostname || /[\s/?#@]/.test(hostname)) {
+    throw new NetworkPolicyError('invalid_url', 'ICMP target must be a hostname or IP address');
+  }
+  if (hostname.toLowerCase() === 'localhost') {
+    throw new NetworkPolicyError('blocked', 'Local hostnames are not allowed');
+  }
+  const urlHost = isIP(hostname) === 6 ? `[${hostname}]` : hostname;
+  const validated = await validateTarget(`https://${urlHost}`, options);
+  return { hostname: validated.hostname, addresses: validated.addresses };
+}
+
+export async function safeIcmpProbe(
+  input: string,
+  options: NetworkPolicyOptions & { timeoutMs?: number } = {},
+): Promise<SafeIcmpResponse> {
+  const target = await validateHostTarget(input, options);
+  const address =
+    target.addresses.find((candidate) => candidate.family === 4) ?? target.addresses[0]!;
+  const timeoutMs = Math.min(Math.max(options.timeoutMs ?? 10_000, 1_000), 30_000);
+  const linux = process.platform !== 'darwin';
+  const command = !linux && address.family === 6 ? 'ping6' : 'ping';
+  const args = linux
+    ? [
+        '-n',
+        ...(address.family === 6 ? ['-6'] : []),
+        '-c',
+        '1',
+        '-W',
+        String(Math.ceil(timeoutMs / 1_000)),
+        address.address,
+      ]
+    : ['-n', '-c', '1', '-W', String(timeoutMs), address.address];
+  const started = performance.now();
+  try {
+    const { stdout } = await execFile(command, args, {
+      timeout: timeoutMs + 1_000,
+      maxBuffer: 16_384,
+      windowsHide: true,
+    });
+    const reported = stdout.match(/time[=<]([0-9.]+)\s*ms/i)?.[1];
+    return {
+      latencyMs: reported
+        ? Math.max(0, Math.round(Number(reported)))
+        : Math.max(0, Math.round(performance.now() - started)),
+      remoteAddress: address.address,
+    };
+  } catch (error) {
+    const killed = Boolean((error as { killed?: boolean }).killed);
+    throw new NetworkPolicyError(
+      killed ? 'timeout' : 'connect',
+      killed ? 'ICMP probe timed out' : 'ICMP target did not answer',
+    );
+  }
 }
 
 function categorizeRequestError(error: unknown): NetworkPolicyError {

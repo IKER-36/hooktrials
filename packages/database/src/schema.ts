@@ -20,9 +20,11 @@ export const resourceTypeEnum = pgEnum('resource_type', [
   'http_route',
   'webhook_route',
   'webhook_destination',
+  'icmp_host',
 ]);
 export const environmentEnum = pgEnum('integration_environment', ['test', 'staging', 'production']);
 export const monitorMethodEnum = pgEnum('monitor_method', ['GET', 'HEAD', 'POST']);
+export const monitorProtocolEnum = pgEnum('monitor_protocol', ['http', 'icmp']);
 export const monitorStateEnum = pgEnum('monitor_state', [
   'new',
   'healthy',
@@ -231,6 +233,7 @@ export const monitors = pgTable(
       .references(() => integrationResources.id, { onDelete: 'cascade' }),
     encryptedUrl: text('encrypted_url').notNull(),
     displayHost: varchar('display_host', { length: 255 }).notNull(),
+    protocol: monitorProtocolEnum('protocol').notNull().default('http'),
     method: monitorMethodEnum('method').notNull().default('GET'),
     encryptedHeaders: text('encrypted_headers'),
     intervalSeconds: integer('interval_seconds').notNull().default(300),
@@ -255,6 +258,48 @@ export const monitors = pgTable(
     uniqueIndex('monitors_resource_id_unique').on(table.resourceId),
     uniqueIndex('monitors_public_status_token_hash_unique').on(table.publicStatusTokenHash),
     index('monitors_next_check_at_idx').on(table.nextCheckAt),
+  ],
+);
+
+export const statusPages = pgTable(
+  'status_pages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 80 }).notNull(),
+    headline: varchar('headline', { length: 120 }).notNull(),
+    description: varchar('description', { length: 500 }),
+    accentColor: varchar('accent_color', { length: 7 }).notNull().default('#36e37e'),
+    publicTokenHash: text('public_token_hash').notNull(),
+    encryptedToken: text('encrypted_token').notNull(),
+    enabled: boolean('enabled').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('status_pages_public_token_hash_unique').on(table.publicTokenHash),
+    index('status_pages_user_id_idx').on(table.userId),
+  ],
+);
+
+export const statusPageMonitors = pgTable(
+  'status_page_monitors',
+  {
+    pageId: uuid('page_id')
+      .notNull()
+      .references(() => statusPages.id, { onDelete: 'cascade' }),
+    monitorId: uuid('monitor_id')
+      .notNull()
+      .references(() => monitors.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('status_page_monitors_page_monitor_unique').on(table.pageId, table.monitorId),
+    index('status_page_monitors_page_position_idx').on(table.pageId, table.position),
+    index('status_page_monitors_monitor_id_idx').on(table.monitorId),
   ],
 );
 

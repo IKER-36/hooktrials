@@ -123,6 +123,8 @@ services:
       context: .
       dockerfile: deploy/docker/Dockerfile.service
     command: ['node', 'apps/worker/dist/index.js']
+    cap_add:
+      - NET_RAW
     restart: unless-stopped
     environment: *app-environment
     # Monitor checks, protected deliveries and outgoing alerts require egress.

@@ -32,10 +32,11 @@ same HookTrials event ID across sender retries so every attempt stays in one tim
 
 ## Monitor
 
-Create an HTTP monitor with method, expected status range, timeout, cadence and failure threshold.
-Optional contracts can require headers or JSON paths. Run it immediately, inspect latency and
-availability, then publish a revocable status page only when the redacted public fields are suitable.
-Monitor pause affects active checks only; it never pauses webhook routes.
+Create an HTTP monitor with method, expected status range, timeout, cadence and failure threshold,
+or an ICMP monitor for host reachability. Optional HTTP contracts can require headers or JSON paths.
+Run or edit it, inspect latency and availability, then combine selected monitors in a customizable
+status page when the redacted public fields are suitable. Monitor pause affects active checks only;
+it never pauses webhook routes.
 
 ## Operations
 

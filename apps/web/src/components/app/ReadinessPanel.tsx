@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../../lib/api';
+import { useI18n } from '../../i18n/I18nContext';
 import type { IntegrationSummary } from '../../lib/types';
 
 export function ReadinessPanel({ endpointId }: { endpointId: string }) {
+  const { t } = useI18n();
   const [integration, setIntegration] = useState<IntegrationSummary | null>(null);
 
   useEffect(() => {
@@ -39,9 +41,10 @@ export function ReadinessPanel({ endpointId }: { endpointId: string }) {
           {integration.readiness.score}
           <small>/100</small>
         </strong>
-        <span className={`ht-readiness-level ${integration.readiness.level}`}>{level}</span>
+        <span className={`ht-readiness-level ${integration.readiness.level}`}>{t(level)}</span>
         <p>
-          {passed} of {integration.readiness.checks.length} reliability controls proven.
+          {passed} {t('of')} {integration.readiness.checks.length}{' '}
+          {t('reliability controls proven.')}
         </p>
       </div>
       <div className="ht-readiness-checks">
@@ -57,8 +60,10 @@ export function ReadinessPanel({ endpointId }: { endpointId: string }) {
             <article key={check.code} className={check.passed ? 'passed' : 'missing'}>
               <span>{check.passed ? '✓' : `−${check.points}`}</span>
               <div>
-                <b>{check.label}</b>
-                <small>{check.passed ? `${check.points} points proven` : check.action}</small>
+                <b>{t(check.label)}</b>
+                <small>
+                  {check.passed ? `${check.points} ${t('points proven')}` : t(check.action)}
+                </small>
               </div>
             </article>
           ))}
@@ -66,7 +71,7 @@ export function ReadinessPanel({ endpointId }: { endpointId: string }) {
         {failed[0] ? (
           <footer>
             <b>Highest-impact next step</b>
-            <span>{failed[0].action}</span>
+            <span>{t(failed[0].action)}</span>
           </footer>
         ) : (
           <footer className="complete">

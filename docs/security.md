@@ -34,8 +34,10 @@ a product requirement, not a deployment option.
 - Destination headers, monitor headers and signature secrets encrypted and write-only.
 - Manual retry/replay requires confirmation and stores user/source audit metadata.
 - Public evidence uses a hashed expiring token and excludes bodies, headers, credentials and URLs.
-- Public monitor status uses a hashed rotatable token and excludes response bodies, authentication
+- Public status pages use hashed rotatable tokens and exclude response bodies, authentication
   headers, query strings and user identity.
+- ICMP targets pass the same public/private address policy as HTTP targets. Only the worker receives
+  `NET_RAW`; the API, dashboard and ingestor do not.
 
 ## Rules for rendering captured content
 
@@ -53,11 +55,13 @@ not followed and response bodies are never retained by Monitor. An operator shou
 containers from sensitive networks and grant only the minimum private CIDRs required by self-hosted
 integrations.
 
-## Public monitor status
+## Public status pages
 
-A public status response contains only the integration name, type, environment, monitored hostname,
-aggregate metrics, check outcomes and incident summaries. Tokens have high entropy and only their
-SHA-256 hash is stored. Rotation invalidates the previous link; disabling removes public access.
+A public status response contains only page presentation fields plus each selected integration's
+name, type, environment, monitored hostname, aggregate metrics, check outcomes and incident
+summaries. Tokens have high entropy and only their SHA-256 hash is indexed. The recoverable token is
+encrypted at rest so an authenticated owner can copy the URL. Rotation invalidates the previous
+link; disabling removes public access.
 
 ## Reporting
 

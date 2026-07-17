@@ -23,7 +23,7 @@ import {
   evaluateContract,
   outcomeFromContract,
 } from '@hooktrials/monitor-engine';
-import { NetworkPolicyError, safeRequest } from '@hooktrials/network-policy';
+import { NetworkPolicyError, safeIcmpProbe, safeRequest } from '@hooktrials/network-policy';
 import { Queue, Worker } from 'bullmq';
 import { and, asc, eq, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
 import { Redis } from 'ioredis';
@@ -631,29 +631,39 @@ async function performMonitorCheck(monitorId: string) {
     const url = decryptValue(row.monitor.encryptedUrl, config.PAYLOAD_ENCRYPTION_KEY).toString(
       'utf8',
     );
-    const response = await safeRequest(url, {
-      method: row.monitor.method,
-      headers: parseHeaders(row.monitor.encryptedHeaders),
+    const networkOptions = {
       timeoutMs: row.monitor.timeoutMs,
-      maxResponseBytes: 65_536,
-      allowHttp: config.DEPLOYMENT_MODE === 'selfhost' && row.monitor.allowPrivateNetworks,
       allowPrivateNetworks:
         config.DEPLOYMENT_MODE === 'selfhost' && row.monitor.allowPrivateNetworks,
       allowedPrivateCidrs: row.monitor.allowedPrivateCidrs as string[],
-    });
-    statusCode = response.statusCode;
-    latencyMs = response.latencyMs;
-    responseBytes = response.body.length;
-    const evaluated = evaluateContract(response.statusCode, response.body, {
-      minStatus: row.monitor.expectedMinStatus,
-      maxStatus: row.monitor.expectedMaxStatus,
-      expectedText: row.monitor.expectedText,
-      expectedJsonPath: row.monitor.expectedJsonPath,
-    });
-    contractResult = evaluated;
-    outcome = outcomeFromContract(evaluated);
-    if (!evaluated.statusPassed) errorCategory = 'http';
-    else if (!evaluated.passed) errorCategory = 'contract';
+    };
+    if (row.monitor.protocol === 'icmp') {
+      const response = await safeIcmpProbe(url, networkOptions);
+      latencyMs = response.latencyMs;
+      contractResult = { passed: true, protocol: 'icmp', remoteAddress: response.remoteAddress };
+      outcome = 'healthy';
+    } else {
+      const response = await safeRequest(url, {
+        ...networkOptions,
+        method: row.monitor.method,
+        headers: parseHeaders(row.monitor.encryptedHeaders),
+        maxResponseBytes: 65_536,
+        allowHttp: config.DEPLOYMENT_MODE === 'selfhost' && row.monitor.allowPrivateNetworks,
+      });
+      statusCode = response.statusCode;
+      latencyMs = response.latencyMs;
+      responseBytes = response.body.length;
+      const evaluated = evaluateContract(response.statusCode, response.body, {
+        minStatus: row.monitor.expectedMinStatus,
+        maxStatus: row.monitor.expectedMaxStatus,
+        expectedText: row.monitor.expectedText,
+        expectedJsonPath: row.monitor.expectedJsonPath,
+      });
+      contractResult = evaluated;
+      outcome = outcomeFromContract(evaluated);
+      if (!evaluated.statusPassed) errorCategory = 'http';
+      else if (!evaluated.passed) errorCategory = 'contract';
+    }
   } catch (error) {
     errorCategory = error instanceof NetworkPolicyError ? error.category : 'connect';
     contractResult = {

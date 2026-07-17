@@ -31,7 +31,8 @@ Pause on **Journey verified** and the six operational counters.
 Open **Inspect timelines** and pause on **Reliability Replay**: diagnosis, impact, four causal stages
 and evidence-based runbook. Expand the first-to-last attempt comparison. Return to Overview and show
 the Production Readiness checklist with its highest-impact next action. Open **Monitor** to show all
-four resource types, create a revocable public status page and then show Operations with one
+four demo resource types plus a live ICMP target, create a customizable status page with two
+selected monitors and then show Operations with one
 actionable dead letter. Finish on the redacted evidence link.
 
 ## 2:15-2:38 — developer workflow

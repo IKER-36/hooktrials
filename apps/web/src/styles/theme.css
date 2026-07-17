@@ -463,11 +463,66 @@ html[data-theme='dark'] .ht-public-status > article {
   border-color: var(--ht-hairline-bright);
 }
 
+.ht-language-switcher {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 9px;
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 9px;
+}
+.ht-language-switcher svg {
+  width: 16px;
+  height: 16px;
+}
+.ht-language-switcher select {
+  min-width: 52px;
+  padding: 0;
+  color: var(--ht-ink);
+  background: transparent;
+  border: 0;
+  font: 700 11px/1 var(--ht-mono);
+}
+.ht-language-switcher.compact {
+  min-height: 32px;
+}
+.ht-public-tools {
+  display: flex;
+  gap: var(--ht-space-3);
+  align-items: center;
+}
+.ht-auth-panel > .ht-language-switcher {
+  position: absolute;
+  top: var(--ht-space-5);
+  right: var(--ht-space-5);
+}
+html[data-theme='dark'] .ht-status-pages,
+html[data-theme='dark'] .ht-monitor-edit-modal,
+html[data-theme='dark'] .ht-public-component {
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline-bright);
+}
+
+@media (max-width: 760px) {
+  .ht-public-tools {
+    align-items: flex-end;
+    flex-direction: column;
+  }
+  .ht-auth-panel > .ht-language-switcher {
+    top: 12px;
+    right: 12px;
+  }
+}
+
 /* Contextual onboarding: live UI stays visible and is the visual. */
 .ht-tour-layer {
   position: fixed;
   inset: 0;
-  z-index: auto;
+  z-index: 1000;
   pointer-events: none;
 }
 .ht-tour-scrim {
@@ -486,8 +541,8 @@ html[data-theme='dark'] .ht-public-status > article {
     0 28px 90px rgba(0, 0, 0, 0.38) !important;
 }
 .ht-tour-panel {
-  position: absolute;
-  z-index: 1002;
+  position: fixed;
+  z-index: 2147483647;
   right: clamp(18px, 3vw, 46px);
   bottom: clamp(18px, 3vw, 42px);
   width: min(430px, calc(100vw - 36px));

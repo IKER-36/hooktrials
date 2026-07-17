@@ -2,6 +2,26 @@
 
 Updated: 17 July 2026.
 
+## Release `v0.7.0`
+
+Release `v0.7.0` expands Monitor from individual HTTP checks into a bilingual service-health
+surface:
+
+- editable HTTP/HTTPS and ICMP monitors, with private target values kept write-only;
+- bounded ICMP probing with the same public/private network policy used by HTTP checks;
+- customizable multi-monitor status pages with headline, description, accent, visibility, monitor
+  selection and immediate URL rotation;
+- complete English and Spanish UI across authentication, dashboard, tour, documentation, evidence
+  and public status pages;
+- corrected onboarding stacking so the fixed tour card always remains interactive above the
+  highlighted product surface.
+
+Migration `0009` adds monitor protocol and multi-monitor status-page tables. The local release gate
+passes formatting, ESLint, strict TypeScript, 129 automated tests, all production builds and a
+complete Docker rebuild. Browser validation covers language switching in both directions, ICMP
+create/edit and live reachability evidence, customizable status-page publication, the previously
+blocked tour step and an 8/8 Demo Lab run that publishes HTTP + ICMP status evidence.
+
 Patch `v0.6.1` keeps the selected Docs article synchronized with filtered navigation and expands
 search across steps, expected results and troubleshooting.
 
@@ -112,10 +132,8 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server and dashboard `v0.6.1` with landing `v0.4.0`. Public HTTPS smoke,
-migration `0008`, authenticated Production Readiness, Reliability Replay, persistent Demo Lab and a
-revocable public monitor status page passed after deployment. The retained jury workspace contains
-synthetic data only.
+The deployment record below is updated after the release is promoted. Until then, Managed Cloud
+continues to run server and dashboard `v0.6.1` with landing `v0.4.0`.
 
 Patch `v0.3.6` also accepts authenticated empty payload ciphertext during report analysis. Empty
 webhook bodies now produce normal deterministic evidence instead of a failed background job.

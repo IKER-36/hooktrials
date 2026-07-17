@@ -104,9 +104,16 @@ export const scenarioInputSchema = z.object({
 
 const monitorInputBaseSchema = z.object({
   name: z.string().trim().min(2).max(80),
-  resourceType: z.enum(['external_api', 'internal_api', 'http_route', 'webhook_destination']),
+  resourceType: z.enum([
+    'external_api',
+    'internal_api',
+    'http_route',
+    'webhook_destination',
+    'icmp_host',
+  ]),
+  protocol: z.enum(['http', 'icmp']).default('http'),
   environment: z.enum(['test', 'staging', 'production']).default('test'),
-  url: z.string().url().max(2_048),
+  url: z.string().trim().min(1).max(2_048),
   method: z.enum(['GET', 'HEAD', 'POST']).default('GET'),
   intervalSeconds: z.union([z.literal(60), z.literal(300), z.literal(900)]).default(300),
   timeoutMs: z.number().int().min(1_000).max(30_000).default(10_000),
@@ -124,6 +131,20 @@ const monitorInputBaseSchema = z.object({
 });
 
 export const monitorInputSchema = monitorInputBaseSchema
+  .refine(
+    (value) => {
+      if (value.protocol === 'icmp') {
+        return (
+          value.resourceType === 'icmp_host' &&
+          /^(?:icmp:\/\/)?(?:\[[0-9a-fA-F:]+\]|[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?)$/.test(
+            value.url,
+          )
+        );
+      }
+      return value.resourceType !== 'icmp_host' && /^https?:\/\/[^\s]+$/i.test(value.url);
+    },
+    { message: 'Target does not match the selected monitor protocol', path: ['url'] },
+  )
   .refine((value) => value.expectedMinStatus <= value.expectedMaxStatus, {
     message: 'Expected minimum status must not exceed maximum status',
     path: ['expectedMaxStatus'],
@@ -137,6 +158,23 @@ export const updateMonitorInputSchema = monitorInputBaseSchema
   .partial()
   .refine((value) => Object.keys(value).length > 0, 'At least one field is required');
 
+const statusPageBaseSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  headline: z.string().trim().min(2).max(120),
+  description: z.string().trim().max(500).nullable().default(null),
+  accentColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .default('#36e37e'),
+  monitorIds: z.array(z.string().uuid()).min(1).max(25),
+  enabled: z.boolean().default(true),
+});
+
+export const statusPageInputSchema = statusPageBaseSchema;
+export const updateStatusPageInputSchema = statusPageBaseSchema
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, 'At least one field is required');
+
 export type RegisterInput = z.infer<typeof registerInputSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;
 export type CreateEndpointInput = z.infer<typeof createEndpointInputSchema>;
@@ -147,3 +185,5 @@ export type AlertChannelInput = z.infer<typeof alertChannelInputSchema>;
 export type ScenarioInput = z.infer<typeof scenarioInputSchema>;
 export type MonitorInput = z.infer<typeof monitorInputSchema>;
 export type UpdateMonitorInput = z.infer<typeof updateMonitorInputSchema>;
+export type StatusPageInput = z.infer<typeof statusPageInputSchema>;
+export type UpdateStatusPageInput = z.infer<typeof updateStatusPageInputSchema>;

@@ -1,7 +1,7 @@
 # Getting started
 
 HookTrials is an integration reliability control plane. It helps you test failure handling, operate
-webhook traffic and monitor HTTP dependencies from one dashboard.
+webhook traffic and monitor HTTP or ICMP dependencies from one dashboard.
 
 ## The three workflows
 

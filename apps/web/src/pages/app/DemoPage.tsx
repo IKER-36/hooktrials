@@ -16,7 +16,9 @@ interface DemoSetup {
     healthyApi: { id: string; resourceId: string };
     degradedContract: { id: string; resourceId: string };
     downRoute: { id: string; resourceId: string };
+    icmpHost: { id: string; resourceId: string };
   };
+  statusPage: { id: string; shareUrl: string };
   alertChannel: { id: string | null; demoOwned: boolean };
   destination: {
     url: string;
@@ -37,7 +39,7 @@ const definitions = [
   ['Trial', 'Provider retries become one 500 → 503 → 429 → 200 timeline.'],
   ['Observe', 'One request is proxied synchronously and its destination failure is recorded.'],
   ['Protect', 'The event is accepted first, retried durably and recovered without data loss.'],
-  ['Monitor', 'API, internal, route and destination checks fill every health state.'],
+  ['Monitor', 'HTTP and ICMP checks fill every health state and a public status page.'],
   ['Recovery queue', 'A separate delivery exhausts its retry budget and enters dead-letter.'],
   ['Operations', 'Open and recovered incidents, retries and safe alert audit share one queue.'],
   ['Evidence', 'A redacted, expiring report proves the recovered Trial sequence.'],
@@ -129,7 +131,7 @@ export function DemoPage() {
       setActiveDemo({
         runId: response.demo.runId,
         createdAt: new Date().toISOString(),
-        resourceCount: 6,
+        resourceCount: 7,
         runCount: 1,
       });
       step(0, 'passed');
@@ -385,9 +387,10 @@ export function DemoPage() {
             {complete ? 'Journey verified' : running ? 'Running real checks…' : 'Ready to prove it'}
           </h2>
           <p>
-            The lab creates two endpoints, one custom scenario, four monitored integrations, a
-            recoverable dead letter, incident and alert evidence, plus one expiring report. Cleanup
-            matches the private run ID and your account before removing anything.
+            The lab creates two endpoints, one custom scenario, five monitored integrations, a
+            multi-monitor public status page, a recoverable dead letter, incident and alert
+            evidence, plus one expiring report. Cleanup matches the private run ID and your account
+            before removing anything.
           </p>
           {activeDemo && !run ? (
             <div className="ht-demo-recovered" role="status">
@@ -447,7 +450,7 @@ export function DemoPage() {
               </div>
               <div>
                 <dt>Monitor catalogue</dt>
-                <dd>4</dd>
+                <dd>5</dd>
               </div>
               <div>
                 <dt>Demo alerts audited</dt>
@@ -460,6 +463,11 @@ export function DemoPage() {
               <Link to="/app">Inspect timelines</Link>
               <Link to="/app/scenarios">Open Scenario Studio</Link>
               <Link to="/app/monitor">Inspect monitor</Link>
+              {run?.statusPage.shareUrl ? (
+                <a href={run.statusPage.shareUrl} target="_blank" rel="noreferrer">
+                  Open public status page
+                </a>
+              ) : null}
               <Link to="/app/operations">Open Operations</Link>
               {evidenceUrl ? (
                 <a href={evidenceUrl} target="_blank" rel="noreferrer">

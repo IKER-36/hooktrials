@@ -26,7 +26,7 @@ provider ─ /i/* ────> ingestor ────────┼─> Postgre
                          │              └─> Redis/BullMQ ─> worker
                          └─ Observe ──────────────────────> destination
                                         Protect worker ──> destination
-                                        Monitor worker ──> HTTP resource
+                                        Monitor worker ──> HTTP or ICMP resource
 ```
 
 PostgreSQL and Redis use internal Docker network. API and ingestor remain separate trust boundaries.
@@ -42,7 +42,8 @@ PostgreSQL/Redis publish no host ports.
 - **Observe:** ingestor validates, forwards once and mirrors the destination response.
 - **Protect:** ingestor validates and persists before returning `202`; the worker owns retries,
   dead-letter and recovery.
-- **Monitor:** the worker runs bounded active checks; it never proxies normal API traffic.
+- **Monitor:** the worker runs bounded HTTP/HTTPS or ICMP checks; it never proxies normal API
+  traffic. The worker alone receives the `NET_RAW` capability required by ICMP.
 
 Inbound provider attempts and outbound destination deliveries are separate records. This prevents a
 backend `503` from being mistaken for failure to receive the provider request.

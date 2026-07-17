@@ -1,24 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useParams } from 'react-router-dom';
 import { Brand } from '../components/Brand';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { apiRequest, readableError } from '../lib/api';
 import { timeAgo } from '../lib/format';
-import type { PublicMonitorStatus } from '../lib/types';
+import { useI18n } from '../i18n/I18nContext';
+import type { PublicMonitorStatus, PublicStatusPage } from '../lib/types';
+
+type StatusResponse = { page?: PublicStatusPage; status?: PublicMonitorStatus };
 
 export function StatusPage() {
+  const { t } = useI18n();
   const { token = '' } = useParams();
-  const [status, setStatus] = useState<PublicMonitorStatus | null>(null);
+  const [page, setPage] = useState<PublicStatusPage | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
     const load = () =>
-      apiRequest<{ status: PublicMonitorStatus }>(`/v1/status/${token}`)
+      apiRequest<StatusResponse>(`/v1/status/${token}`)
         .then((response) => {
-          if (!cancelled) {
-            setStatus(response.status);
-            setError('');
+          if (cancelled) return;
+          if (response.page) setPage(response.page);
+          else if (response.status) {
+            setPage({
+              name: response.status.name,
+              headline: response.status.name,
+              description: t('Live availability and incident history.'),
+              accentColor: '#36e37e',
+              state: response.status.state,
+              monitors: [response.status],
+              generatedAt: response.status.generatedAt,
+            });
           }
+          setError('');
         })
         .catch((requestError) => {
           if (!cancelled) setError(readableError(requestError));
@@ -29,106 +44,48 @@ export function StatusPage() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [token]);
+  }, [t, token]);
 
   return (
-    <main className="ht-status-page">
+    <main
+      className="ht-status-page"
+      style={{ '--status-accent': page?.accentColor ?? '#36e37e' } as CSSProperties}
+    >
       <header>
         <Brand />
-        <a href="https://cubepath.com/" target="_blank" rel="noreferrer">
-          Hosted on CubePath
-        </a>
+        <div className="ht-public-tools">
+          <LanguageSwitcher compact />
+          <a href="https://cubepath.com/" target="_blank" rel="noreferrer">
+            Hosted on CubePath
+          </a>
+        </div>
       </header>
       {error ? (
         <section className="ht-status-missing">
           <h1>Status page unavailable</h1>
           <p>The link may have been rotated or disabled by its owner.</p>
         </section>
-      ) : !status ? (
+      ) : !page ? (
         <div className="ht-skeleton tall" aria-label="Loading public status" />
       ) : (
-        <article className="ht-public-status">
+        <article className="ht-public-status ht-public-status-page">
           <header>
             <div>
-              <p className="ht-kicker">Public integration status</p>
-              <h1>{status.name}</h1>
-              <span>
-                {status.resourceType.replaceAll('_', ' ')} · {status.environment} ·{' '}
-                {status.displayHost}
-              </span>
+              <p className="ht-kicker">Public service status</p>
+              <h1>{page.headline}</h1>
+              {page.description ? <p>{page.description}</p> : null}
             </div>
-            <strong className={`ht-public-state ${status.state}`}>{status.state}</strong>
+            <strong className={`ht-public-state ${page.state}`}>{t(page.state)}</strong>
           </header>
-          <section className="ht-status-metrics">
-            <div>
-              <span>Availability 24h</span>
-              <b>{status.metrics.availability24h ?? '—'}%</b>
-            </div>
-            <div>
-              <span>Average latency</span>
-              <b>{status.metrics.averageLatencyMs ?? '—'} ms</b>
-            </div>
-            <div>
-              <span>p95 latency</span>
-              <b>{status.metrics.p95LatencyMs ?? '—'} ms</b>
-            </div>
-            <div>
-              <span>Checks 24h</span>
-              <b>{status.metrics.checks24h}</b>
-            </div>
-          </section>
-          <section className="ht-status-history">
-            <header>
-              <h2>Latest checks</h2>
-              <span>Updates every 30 seconds</span>
-            </header>
-            {status.checks.length === 0 ? (
-              <p>No public check evidence yet.</p>
-            ) : (
-              <div className="ht-status-bars" aria-label="Recent check outcomes">
-                {[...status.checks].reverse().map((check) => (
-                  <i
-                    key={check.id}
-                    className={check.outcome}
-                    title={`${check.outcome} · ${timeAgo(check.startedAt)}`}
-                  />
-                ))}
-              </div>
-            )}
-            {status.metrics.latest ? (
-              <p>
-                Latest check {timeAgo(status.metrics.latest.startedAt)} ·{' '}
-                {status.metrics.latest.outcome} · {status.metrics.latest.latencyMs ?? '—'} ms
-              </p>
-            ) : null}
-          </section>
-          <section className="ht-status-incidents">
-            <header>
-              <h2>Incident history</h2>
-              <span>{status.incidents.length} retained</span>
-            </header>
-            {status.incidents.length === 0 ? (
-              <p>No incident recorded in the shared history.</p>
-            ) : (
-              status.incidents.map((incident) => (
-                <article key={incident.id}>
-                  <span
-                    className={`ht-monitor-state ${incident.status === 'open' ? 'down' : 'healthy'}`}
-                  >
-                    {incident.status}
-                  </span>
-                  <div>
-                    <b>{incident.summary}</b>
-                    <small>
-                      {incident.cause} · opened {timeAgo(incident.openedAt)}
-                    </small>
-                  </div>
-                </article>
-              ))
-            )}
+          <section className="ht-public-components" aria-label="Published monitors">
+            {page.monitors.map((monitor) => (
+              <PublicMonitorCard key={monitor.id ?? monitor.name} monitor={monitor} />
+            ))}
           </section>
           <footer>
-            <span>Evidence generated by HookTrials · refreshed {timeAgo(status.generatedAt)}</span>
+            <span>
+              {t('Evidence generated by HookTrials')} · {t('refreshed')} {timeAgo(page.generatedAt)}
+            </span>
             <a href="https://github.com/IKER-36/hooktrials" target="_blank" rel="noreferrer">
               Open-source reliability control plane
             </a>
@@ -136,5 +93,93 @@ export function StatusPage() {
         </article>
       )}
     </main>
+  );
+}
+
+function PublicMonitorCard({ monitor }: { monitor: Omit<PublicMonitorStatus, 'generatedAt'> }) {
+  const { t } = useI18n();
+  return (
+    <article className="ht-public-component">
+      <header>
+        <div>
+          <h2>{monitor.name}</h2>
+          <span>
+            {(monitor.protocol ?? 'http').toUpperCase()} · {t(monitor.environment)} ·{' '}
+            {monitor.displayHost}
+          </span>
+        </div>
+        <strong className={`ht-monitor-state ${monitor.state}`}>{t(monitor.state)}</strong>
+      </header>
+      <section className="ht-status-metrics">
+        <div>
+          <span>Availability 24h</span>
+          <b>{monitor.metrics.availability24h ?? '—'}%</b>
+        </div>
+        <div>
+          <span>Average latency</span>
+          <b>{monitor.metrics.averageLatencyMs ?? '—'} ms</b>
+        </div>
+        <div>
+          <span>p95 latency</span>
+          <b>{monitor.metrics.p95LatencyMs ?? '—'} ms</b>
+        </div>
+        <div>
+          <span>Checks 24h</span>
+          <b>{monitor.metrics.checks24h}</b>
+        </div>
+      </section>
+      <section className="ht-status-history">
+        <header>
+          <h3>Latest checks</h3>
+          <span>Updates every 30 seconds</span>
+        </header>
+        {monitor.checks.length === 0 ? (
+          <p>No public check evidence yet.</p>
+        ) : (
+          <div className="ht-status-bars" aria-label="Recent check outcomes">
+            {[...monitor.checks].reverse().map((check) => (
+              <i
+                key={check.id}
+                className={check.outcome}
+                title={`${t(check.outcome)} · ${timeAgo(check.startedAt)}`}
+              />
+            ))}
+          </div>
+        )}
+        {monitor.metrics.latest ? (
+          <p>
+            {t('Latest check')} {timeAgo(monitor.metrics.latest.startedAt)} ·{' '}
+            {t(monitor.metrics.latest.outcome)} · {monitor.metrics.latest.latencyMs ?? '—'} ms
+          </p>
+        ) : null}
+      </section>
+      <section className="ht-status-incidents">
+        <header>
+          <h3>Incident history</h3>
+          <span>
+            {monitor.incidents.length} {t('retained')}
+          </span>
+        </header>
+        {monitor.incidents.length === 0 ? (
+          <p>No incident recorded in the shared history.</p>
+        ) : (
+          monitor.incidents.map((incident) => (
+            <article key={incident.id}>
+              <span
+                className={`ht-monitor-state ${incident.status === 'open' ? 'down' : 'healthy'}`}
+              >
+                {t(incident.status)}
+              </span>
+              <div>
+                <b>{incident.summary}</b>
+                <small>
+                  {incident.cause} · {t('opened')} {timeAgo(incident.openedAt)}
+                </small>
+              </div>
+            </article>
+          ))
+        )}
+      </section>
+    </article>
   );
 }

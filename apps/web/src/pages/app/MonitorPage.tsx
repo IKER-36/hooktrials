@@ -1,8 +1,16 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { timeAgo } from '../../lib/format';
@@ -12,6 +20,7 @@ import type {
   MonitorCheck,
   MonitorState,
   MonitorSummary,
+  StatusPageConfig,
 } from '../../lib/types';
 
 const STATE_LABEL: Record<MonitorState, string> = {
@@ -45,14 +54,18 @@ export function MonitorPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
   const [deleting, setDeleting] = useState<MonitorSummary | null>(null);
+  const [editing, setEditing] = useState<MonitorSummary | null>(null);
+  const [statusPages, setStatusPages] = useState<StatusPageConfig[]>([]);
 
   const loadMonitors = useCallback(async () => {
-    const [response, integrationResponse] = await Promise.all([
+    const [response, integrationResponse, statusPageResponse] = await Promise.all([
       apiRequest<{ monitors: MonitorSummary[] }>('/v1/monitors'),
       apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations'),
+      apiRequest<{ pages: StatusPageConfig[] }>('/v1/status-pages'),
     ]);
     setMonitors(response.monitors);
     setRoutes(integrationResponse.integrations);
+    setStatusPages(statusPageResponse.pages);
     setSelectedId((current) =>
       response.monitors.some((monitor) => monitor.id === current)
         ? current
@@ -185,15 +198,17 @@ export function MonitorPage() {
         </p>
       ) : null}
       {showCreate ? (
-        <CreateMonitorForm
+        <MonitorForm
           selfHosted={setup?.deploymentMode === 'selfhost'}
-          onCreated={async (id) => {
+          onSaved={async (id) => {
             setShowCreate(false);
             await loadMonitors();
             setSelectedId(id);
           }}
         />
       ) : null}
+
+      <StatusPagesPanel monitors={monitors} pages={statusPages} onChanged={loadMonitors} />
 
       {routes.length > 0 ? (
         <section className="ht-managed-routes" aria-label="Managed webhook routes">
@@ -277,6 +292,7 @@ export function MonitorPage() {
               onRun={() => void action(`/v1/monitors/${detail.monitor.id}/run`, 'run')}
               onPause={() => void action(`/v1/monitors/${detail.monitor.id}/pause`, 'pause')}
               onResume={() => void action(`/v1/monitors/${detail.monitor.id}/resume`, 'resume')}
+              onEdit={() => setEditing(detail.monitor)}
               onDelete={() =>
                 setDeleting(monitors.find((monitor) => monitor.id === selectedId) ?? detail.monitor)
               }
@@ -296,6 +312,30 @@ export function MonitorPage() {
         onConfirm={() => void confirmDelete()}
         onCancel={() => setDeleting(null)}
       />
+      {editing ? (
+        <div className="ht-backdrop" role="presentation" onMouseDown={() => setEditing(null)}>
+          <div
+            className="ht-monitor-edit-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-monitor-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="ht-modal-close" onClick={() => setEditing(null)}>
+              ×
+            </button>
+            <MonitorForm
+              monitor={editing}
+              selfHosted={setup?.deploymentMode === 'selfhost'}
+              onSaved={async (id) => {
+                setEditing(null);
+                await loadMonitors();
+                await loadDetail(id);
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -361,28 +401,284 @@ function UnifiedIntegrationTable({
   );
 }
 
-function CreateMonitorForm({
+function StatusPagesPanel({
+  monitors,
+  pages,
+  onChanged,
+}: {
+  monitors: MonitorSummary[];
+  pages: StatusPageConfig[];
+  onChanged(): Promise<void>;
+}) {
+  const { t } = useI18n();
+  const [editing, setEditing] = useState<StatusPageConfig | 'new' | null>(null);
+  const [name, setName] = useState('');
+  const [headline, setHeadline] = useState(() => t('All systems operational'));
+  const [description, setDescription] = useState(() =>
+    t('Live availability and incident history.'),
+  );
+  const [accentColor, setAccentColor] = useState('#36e37e');
+  const [monitorIds, setMonitorIds] = useState<string[]>([]);
+  const [enabled, setEnabled] = useState(true);
+  const [busy, setBusy] = useState('');
+  const [message, setMessage] = useState('');
+
+  function openEditor(page?: StatusPageConfig) {
+    setEditing(page ?? 'new');
+    setName(page?.name ?? t('Service status'));
+    setHeadline(page?.headline ?? t('All systems operational'));
+    setDescription(page?.description ?? t('Live availability and incident history.'));
+    setAccentColor(page?.accentColor ?? '#36e37e');
+    setMonitorIds(page?.monitorIds ?? monitors.slice(0, 1).map((monitor) => monitor.id));
+    setEnabled(page?.enabled ?? true);
+    setMessage('');
+  }
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (monitorIds.length === 0) {
+      setMessage('Choose at least one monitor.');
+      return;
+    }
+    setBusy('save');
+    setMessage('');
+    try {
+      const current = editing === 'new' ? null : editing;
+      await apiRequest(current ? `/v1/status-pages/${current.id}` : '/v1/status-pages', {
+        method: current ? 'PUT' : 'POST',
+        body: JSON.stringify({
+          name,
+          headline,
+          description: description || null,
+          accentColor,
+          monitorIds,
+          enabled,
+        }),
+      });
+      setEditing(null);
+      await onChanged();
+    } catch (requestError) {
+      setMessage(readableError(requestError));
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function remove(page: StatusPageConfig) {
+    if (!window.confirm(`Delete status page “${page.name}”?`)) return;
+    setBusy(page.id);
+    try {
+      await apiRequest(`/v1/status-pages/${page.id}`, { method: 'DELETE' });
+      await onChanged();
+    } catch (requestError) {
+      setMessage(readableError(requestError));
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function rotate(page: StatusPageConfig) {
+    if (!window.confirm('Rotate this public link? The previous URL will stop working.')) return;
+    setBusy(page.id);
+    try {
+      await apiRequest(`/v1/status-pages/${page.id}/rotate`, {
+        method: 'POST',
+        body: JSON.stringify({ confirm: true }),
+      });
+      await onChanged();
+    } catch (requestError) {
+      setMessage(readableError(requestError));
+    } finally {
+      setBusy('');
+    }
+  }
+
+  return (
+    <section className="ht-status-pages">
+      <header>
+        <div>
+          <p className="ht-kicker">Public communication</p>
+          <h2>Status pages</h2>
+          <p>Publish a branded, read-only view containing only the monitors you choose.</p>
+        </div>
+        <button
+          type="button"
+          className="button"
+          disabled={monitors.length === 0}
+          onClick={() => openEditor()}
+        >
+          New status page
+        </button>
+      </header>
+      {pages.length === 0 ? (
+        <p className="ht-status-pages-empty">
+          {monitors.length === 0
+            ? 'Create a monitor before publishing a status page.'
+            : 'No custom status page yet. Create one to share selected service health.'}
+        </p>
+      ) : (
+        <div className="ht-status-page-list">
+          {pages.map((page) => (
+            <article key={page.id} style={{ '--status-accent': page.accentColor } as CSSProperties}>
+              <i />
+              <div>
+                <strong>{page.name}</strong>
+                <span>{page.headline}</span>
+                <small>
+                  {page.monitorIds.length}{' '}
+                  {t(page.monitorIds.length === 1 ? 'monitor' : 'monitors')} ·{' '}
+                  {t(page.enabled ? 'public' : 'disabled')}
+                </small>
+              </div>
+              <div className="ht-status-page-actions">
+                {page.shareUrl ? (
+                  <>
+                    <a href={page.shareUrl} target="_blank" rel="noreferrer">
+                      Open
+                    </a>
+                    <CopyButton value={page.shareUrl} label="Copy link" />
+                  </>
+                ) : null}
+                <button type="button" onClick={() => openEditor(page)}>
+                  Edit
+                </button>
+                <button type="button" onClick={() => void rotate(page)} disabled={busy === page.id}>
+                  Rotate
+                </button>
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => void remove(page)}
+                  disabled={busy === page.id}
+                >
+                  Delete
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      {message && !editing ? <p className="ht-form-error">{message}</p> : null}
+      {editing ? (
+        <form className="ht-status-page-form" onSubmit={(event) => void save(event)}>
+          <div className="ht-monitor-form-grid">
+            <label className="ht-field">
+              Internal name
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+                minLength={2}
+                maxLength={80}
+              />
+            </label>
+            <label className="ht-field">
+              Public headline
+              <input
+                value={headline}
+                onChange={(event) => setHeadline(event.target.value)}
+                required
+                minLength={2}
+                maxLength={120}
+              />
+            </label>
+            <label className="ht-field ht-field-wide">
+              Description
+              <textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                maxLength={500}
+              />
+            </label>
+            <label className="ht-field">
+              Accent color
+              <input
+                type="color"
+                value={accentColor}
+                onChange={(event) => setAccentColor(event.target.value)}
+              />
+            </label>
+            <label className="ht-inline-check">
+              <input
+                type="checkbox"
+                checked={enabled}
+                onChange={(event) => setEnabled(event.target.checked)}
+              />{' '}
+              Public page enabled
+            </label>
+          </div>
+          <fieldset className="ht-status-monitor-picker">
+            <legend>Monitors shown publicly</legend>
+            {monitors.map((monitor) => (
+              <label key={monitor.id}>
+                <input
+                  type="checkbox"
+                  checked={monitorIds.includes(monitor.id)}
+                  onChange={(event) =>
+                    setMonitorIds((current) =>
+                      event.target.checked
+                        ? [...current, monitor.id]
+                        : current.filter((id) => id !== monitor.id),
+                    )
+                  }
+                />
+                <span className={`ht-monitor-state ${monitor.state}`}>
+                  {STATE_LABEL[monitor.state]}
+                </span>
+                <strong>{monitor.name}</strong>
+                <small>
+                  {monitor.protocol.toUpperCase()} · {monitor.displayHost}
+                </small>
+              </label>
+            ))}
+          </fieldset>
+          {message ? <p className="ht-form-error">{message}</p> : null}
+          <div className="ht-form-actions">
+            <button type="button" onClick={() => setEditing(null)}>
+              Cancel
+            </button>
+            <button type="submit" className="button primary" disabled={busy === 'save'}>
+              {busy === 'save' ? 'Saving…' : 'Save status page'}
+            </button>
+          </div>
+        </form>
+      ) : null}
+    </section>
+  );
+}
+
+function MonitorForm({
   selfHosted,
-  onCreated,
+  monitor,
+  onSaved,
 }: {
   selfHosted: boolean;
-  onCreated(id: string): Promise<void>;
+  monitor?: MonitorSummary;
+  onSaved(id: string): Promise<void>;
 }) {
-  const [name, setName] = useState('');
+  const [name, setName] = useState(monitor?.name ?? '');
   const [url, setUrl] = useState('');
-  const [resourceType, setResourceType] = useState('external_api');
-  const [environment, setEnvironment] = useState('test');
-  const [method, setMethod] = useState('GET');
-  const [intervalSeconds, setIntervalSeconds] = useState('300');
-  const [timeoutMs, setTimeoutMs] = useState('10000');
-  const [expectedMinStatus, setExpectedMinStatus] = useState('200');
-  const [expectedMaxStatus, setExpectedMaxStatus] = useState('299');
-  const [expectedText, setExpectedText] = useState('');
-  const [expectedJsonPath, setExpectedJsonPath] = useState('');
+  const [protocol, setProtocol] = useState(monitor?.protocol ?? 'http');
+  const [resourceType, setResourceType] = useState(monitor?.resourceType ?? 'external_api');
+  const [environment, setEnvironment] = useState(monitor?.environment ?? 'test');
+  const [method, setMethod] = useState(monitor?.method ?? 'GET');
+  const [intervalSeconds, setIntervalSeconds] = useState(String(monitor?.intervalSeconds ?? 300));
+  const [timeoutMs, setTimeoutMs] = useState(String(monitor?.timeoutMs ?? 10000));
+  const [expectedMinStatus, setExpectedMinStatus] = useState(
+    String(monitor?.expectedMinStatus ?? 200),
+  );
+  const [expectedMaxStatus, setExpectedMaxStatus] = useState(
+    String(monitor?.expectedMaxStatus ?? 299),
+  );
+  const [expectedText, setExpectedText] = useState(monitor?.expectedText ?? '');
+  const [expectedJsonPath, setExpectedJsonPath] = useState(monitor?.expectedJsonPath ?? '');
   const [headers, setHeaders] = useState('');
-  const [failureThreshold, setFailureThreshold] = useState('2');
-  const [allowPrivate, setAllowPrivate] = useState(false);
-  const [privateCidrs, setPrivateCidrs] = useState('');
+  const [clearHeaders, setClearHeaders] = useState(false);
+  const [failureThreshold, setFailureThreshold] = useState(
+    String(monitor?.consecutiveFailuresToOpen ?? 2),
+  );
+  const [allowPrivate, setAllowPrivate] = useState(monitor?.allowPrivateNetworks ?? false);
+  const [privateCidrs, setPrivateCidrs] = useState(monitor?.allowedPrivateCidrs.join(', ') ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -398,32 +694,37 @@ function CreateMonitorForm({
           throw new Error('Headers must be a JSON object.');
         parsedHeaders = value as Record<string, string>;
       }
-      const response = await apiRequest<{ monitor: { id: string } }>('/v1/monitors', {
-        method: 'POST',
-        body: JSON.stringify({
-          name,
-          resourceType,
-          environment,
-          url,
-          method,
-          intervalSeconds: Number(intervalSeconds),
-          timeoutMs: Number(timeoutMs),
-          expectedMinStatus: Number(expectedMinStatus),
-          expectedMaxStatus: Number(expectedMaxStatus),
-          expectedText: expectedText || undefined,
-          expectedJsonPath: expectedJsonPath || undefined,
-          headers: parsedHeaders,
-          consecutiveFailuresToOpen: Number(failureThreshold),
-          allowPrivateNetworks: allowPrivate,
-          allowedPrivateCidrs: allowPrivate
-            ? privateCidrs
-                .split(',')
-                .map((value) => value.trim())
-                .filter(Boolean)
-            : [],
-        }),
-      });
-      await onCreated(response.monitor.id);
+      const payload = {
+        name,
+        protocol,
+        resourceType,
+        environment,
+        ...(!monitor || url.trim() ? { url } : {}),
+        method,
+        intervalSeconds: Number(intervalSeconds),
+        timeoutMs: Number(timeoutMs),
+        expectedMinStatus: Number(expectedMinStatus),
+        expectedMaxStatus: Number(expectedMaxStatus),
+        expectedText: expectedText || undefined,
+        expectedJsonPath: expectedJsonPath || undefined,
+        ...(!monitor || headers.trim() || clearHeaders ? { headers: parsedHeaders } : {}),
+        consecutiveFailuresToOpen: Number(failureThreshold),
+        allowPrivateNetworks: allowPrivate,
+        allowedPrivateCidrs: allowPrivate
+          ? privateCidrs
+              .split(',')
+              .map((value) => value.trim())
+              .filter(Boolean)
+          : [],
+      };
+      const response = await apiRequest<{ monitor: { id: string } }>(
+        monitor ? `/v1/monitors/${monitor.id}` : '/v1/monitors',
+        {
+          method: monitor ? 'PUT' : 'POST',
+          body: JSON.stringify(payload),
+        },
+      );
+      await onSaved(response.monitor.id);
     } catch (requestError) {
       setFormError(
         requestError instanceof SyntaxError ||
@@ -442,8 +743,10 @@ function CreateMonitorForm({
     <form className="ht-monitor-create" onSubmit={(event) => void submit(event)}>
       <header>
         <div>
-          <p className="ht-kicker">New integration</p>
-          <h2>Configure active monitoring</h2>
+          <p className="ht-kicker">{monitor ? 'Edit integration' : 'New integration'}</p>
+          <h2 id={monitor ? 'edit-monitor-title' : undefined}>
+            {monitor ? 'Update active monitoring' : 'Configure active monitoring'}
+          </h2>
         </div>
         <span>Secrets encrypted at rest</span>
       </header>
@@ -460,43 +763,71 @@ function CreateMonitorForm({
           />
         </label>
         <label className="ht-field">
+          Check type
+          <select
+            value={protocol}
+            onChange={(event) => {
+              const next = event.target.value as 'http' | 'icmp';
+              setProtocol(next);
+              setResourceType(next === 'icmp' ? 'icmp_host' : 'external_api');
+              setUrl('');
+            }}
+          >
+            <option value="http">HTTP / HTTPS</option>
+            <option value="icmp">ICMP ping</option>
+          </select>
+        </label>
+        <label className="ht-field">
           Resource type
-          <select value={resourceType} onChange={(event) => setResourceType(event.target.value)}>
-            <option value="external_api">External API</option>
-            <option value="internal_api">Internal API</option>
-            <option value="http_route">HTTP route</option>
-            <option value="webhook_destination">Webhook destination</option>
+          <select
+            value={resourceType}
+            disabled={protocol === 'icmp'}
+            onChange={(event) =>
+              setResourceType(event.target.value as MonitorSummary['resourceType'])
+            }
+          >
+            {protocol === 'icmp' ? <option value="icmp_host">ICMP host</option> : null}
+            {protocol === 'http' ? (
+              <>
+                <option value="external_api">External API</option>
+                <option value="internal_api">Internal API</option>
+                <option value="http_route">HTTP route</option>
+                <option value="webhook_destination">Webhook destination</option>
+              </>
+            ) : null}
           </select>
         </label>
         <label className="ht-field">
           Environment
-          <select value={environment} onChange={(event) => setEnvironment(event.target.value)}>
+          <select
+            value={environment}
+            onChange={(event) =>
+              setEnvironment(event.target.value as MonitorSummary['environment'])
+            }
+          >
             <option value="test">Test</option>
             <option value="staging">Staging</option>
             <option value="production">Production</option>
           </select>
         </label>
         <label className="ht-field ht-field-wide">
-          Target URL
+          {protocol === 'icmp' ? 'Hostname or IP' : 'Target URL'}
           <input
-            type="url"
+            type={protocol === 'icmp' ? 'text' : 'url'}
             value={url}
             onChange={(event) => setUrl(event.target.value)}
-            placeholder="https://api.example.com/health"
-            required
+            placeholder={
+              protocol === 'icmp' ? 'service.example.com' : 'https://api.example.com/health'
+            }
+            required={!monitor || protocol !== monitor.protocol}
           />
           <small>
-            Cloud permits public HTTPS targets only. Query values remain encrypted and are hidden
-            from UI.
+            {monitor && !url
+              ? `Current target: ${monitor.displayUrl}. Leave blank to keep it unchanged.`
+              : protocol === 'icmp'
+                ? 'Cloud permits publicly routable hosts only. ICMP must be enabled by the target network.'
+                : 'Cloud permits public HTTPS targets only. Query values remain encrypted and are hidden from UI.'}
           </small>
-        </label>
-        <label className="ht-field">
-          Method
-          <select value={method} onChange={(event) => setMethod(event.target.value)}>
-            <option>GET</option>
-            <option>HEAD</option>
-            <option>POST</option>
-          </select>
         </label>
         <label className="ht-field">
           Frequency
@@ -530,52 +861,77 @@ function CreateMonitorForm({
             onChange={(event) => setFailureThreshold(event.target.value)}
           />
         </label>
-        <label className="ht-field">
-          Expected status from
-          <input
-            type="number"
-            min="100"
-            max="599"
-            value={expectedMinStatus}
-            onChange={(event) => setExpectedMinStatus(event.target.value)}
-          />
-        </label>
-        <label className="ht-field">
-          Expected status to
-          <input
-            type="number"
-            min="100"
-            max="599"
-            value={expectedMaxStatus}
-            onChange={(event) => setExpectedMaxStatus(event.target.value)}
-          />
-        </label>
-        <label className="ht-field">
-          Expected text (optional)
-          <input
-            value={expectedText}
-            onChange={(event) => setExpectedText(event.target.value)}
-            placeholder="operational"
-            maxLength={256}
-          />
-        </label>
-        <label className="ht-field">
-          JSON path (optional)
-          <input
-            value={expectedJsonPath}
-            onChange={(event) => setExpectedJsonPath(event.target.value)}
-            placeholder="$.data.ready"
-          />
-        </label>
-        <label className="ht-field ht-field-wide">
-          Authentication headers (optional JSON)
-          <textarea
-            value={headers}
-            onChange={(event) => setHeaders(event.target.value)}
-            placeholder='{"authorization":"Bearer …"}'
-          />
-          <small>Values are write-only after creation and never returned by API.</small>
-        </label>
+        {protocol === 'http' ? (
+          <>
+            <label className="ht-field">
+              Method
+              <select
+                value={method}
+                onChange={(event) => setMethod(event.target.value as MonitorSummary['method'])}
+              >
+                <option>GET</option>
+                <option>HEAD</option>
+                <option>POST</option>
+              </select>
+            </label>
+            <label className="ht-field">
+              Expected status from
+              <input
+                type="number"
+                min="100"
+                max="599"
+                value={expectedMinStatus}
+                onChange={(event) => setExpectedMinStatus(event.target.value)}
+              />
+            </label>
+            <label className="ht-field">
+              Expected status to
+              <input
+                type="number"
+                min="100"
+                max="599"
+                value={expectedMaxStatus}
+                onChange={(event) => setExpectedMaxStatus(event.target.value)}
+              />
+            </label>
+            <label className="ht-field">
+              Expected text (optional)
+              <input
+                value={expectedText}
+                onChange={(event) => setExpectedText(event.target.value)}
+                placeholder="operational"
+                maxLength={256}
+              />
+            </label>
+            <label className="ht-field">
+              JSON path (optional)
+              <input
+                value={expectedJsonPath}
+                onChange={(event) => setExpectedJsonPath(event.target.value)}
+                placeholder="$.data.ready"
+              />
+            </label>
+            <label className="ht-field ht-field-wide">
+              Authentication headers (optional JSON)
+              <textarea
+                value={headers}
+                onChange={(event) => setHeaders(event.target.value)}
+                placeholder='{"authorization":"Bearer …"}'
+              />
+              <small>Values are write-only after creation and never returned by API.</small>
+              {monitor?.hasAuthenticationHeaders ? (
+                <label className="ht-inline-check">
+                  <input
+                    type="checkbox"
+                    checked={clearHeaders}
+                    onChange={(event) => setClearHeaders(event.target.checked)}
+                  />{' '}
+                  Remove stored authentication headers
+                </label>
+              ) : null}
+            </label>
+          </>
+        ) : null}
       </div>
       {selfHosted ? (
         <div className="ht-private-monitor">
@@ -609,7 +965,7 @@ function CreateMonitorForm({
         </p>
       ) : null}
       <button type="submit" className="button primary" disabled={submitting}>
-        {submitting ? 'Validating target…' : 'Create monitor'}
+        {submitting ? 'Validating target…' : monitor ? 'Save changes' : 'Create monitor'}
       </button>
     </form>
   );
@@ -622,6 +978,7 @@ function MonitorDetail({
   onRun,
   onPause,
   onResume,
+  onEdit,
   onDelete,
 }: {
   summary: MonitorSummary;
@@ -630,6 +987,7 @@ function MonitorDetail({
   onRun(): void;
   onPause(): void;
   onResume(): void;
+  onEdit(): void;
   onDelete(): void;
 }) {
   const latestIncident = detail.incidents[0] ?? null;
@@ -689,6 +1047,9 @@ function MonitorDetail({
           <code>{summary.displayUrl}</code>
         </div>
         <div className="ht-monitor-actions">
+          <button type="button" onClick={onEdit} disabled={Boolean(busy)}>
+            Edit
+          </button>
           <button
             type="button"
             onClick={onRun}
@@ -746,11 +1107,14 @@ function MonitorDetail({
       <section className="ht-monitor-config">
         <span>{summary.resourceType.replaceAll('_', ' ')}</span>
         <span>{summary.environment}</span>
-        <span>{summary.method}</span>
+        <span>{summary.protocol.toUpperCase()}</span>
+        {summary.protocol === 'http' ? <span>{summary.method}</span> : null}
         <span>every {summary.intervalSeconds / 60}m</span>
-        <span>
-          HTTP {summary.expectedMinStatus}–{summary.expectedMaxStatus}
-        </span>
+        {summary.protocol === 'http' ? (
+          <span>
+            HTTP {summary.expectedMinStatus}–{summary.expectedMaxStatus}
+          </span>
+        ) : null}
         {summary.hasAuthenticationHeaders ? <span>auth configured</span> : null}
       </section>
       <section className="ht-status-share">
@@ -842,11 +1206,19 @@ function MonitorDetail({
                   {check.outcome.toUpperCase()}
                 </span>
                 <time>{timeAgo(check.startedAt)}</time>
-                <code>{check.statusCode ?? check.errorCategory ?? 'ERROR'}</code>
+                <code>
+                  {check.statusCode ??
+                    check.errorCategory ??
+                    (summary.protocol === 'icmp' ? 'ICMP' : 'ERROR')}
+                </code>
                 <strong>{check.latencyMs === null ? '—' : `${check.latencyMs}ms`}</strong>
                 <small>
                   {check.contractResult.failures?.[0] ??
-                    (check.contractResult.passed ? 'Contract passed' : 'Network check')}
+                    (summary.protocol === 'icmp'
+                      ? 'Host reachable'
+                      : check.contractResult.passed
+                        ? 'Contract passed'
+                        : 'Network check')}
                 </small>
               </article>
             ))}

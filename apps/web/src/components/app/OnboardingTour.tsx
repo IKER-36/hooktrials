@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 
 const steps = [
@@ -119,9 +120,11 @@ export function OnboardingTour({ onFinish }: { onFinish(): Promise<void> }) {
     }
   }
 
-  return (
-    <div className="ht-tour-layer">
-      <div className="ht-tour-scrim" aria-hidden="true" />
+  return createPortal(
+    <>
+      <div className="ht-tour-layer" aria-hidden="true">
+        <div className="ht-tour-scrim" />
+      </div>
       <section
         ref={panelRef}
         className="ht-tour-panel"
@@ -195,6 +198,7 @@ export function OnboardingTour({ onFinish }: { onFinish(): Promise<void> }) {
           <BookOpen aria-hidden="true" /> Open the full guide
         </Link>
       </section>
-    </div>
+    </>,
+    document.body,
   );
 }

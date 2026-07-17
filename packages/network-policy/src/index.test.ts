@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createServer } from 'node:http';
 import type { RequestListener } from 'node:http';
-import { isBlockedAddress, NetworkPolicyError, safeRequest, validateTarget } from './index.js';
+import {
+  isBlockedAddress,
+  NetworkPolicyError,
+  safeRequest,
+  validateHostTarget,
+  validateTarget,
+} from './index.js';
 
 const publicResolver = async () => [{ address: '93.184.216.34', family: 4 as const }];
 
@@ -95,6 +101,32 @@ describe('validateTarget', () => {
     await expect(validateTarget('https://example.com', { resolver })).rejects.toMatchObject({
       category: 'blocked',
     });
+  });
+});
+
+describe('validateHostTarget', () => {
+  it('accepts a public ICMP hostname and strips the scheme', async () => {
+    const target = await validateHostTarget('icmp://example.com', { resolver: publicResolver });
+    expect(target.hostname).toBe('example.com');
+    expect(target.addresses[0]?.address).toBe('93.184.216.34');
+  });
+
+  it.each(['localhost', 'service.local', '127.0.0.1', 'example.com/path', 'user@example.com'])(
+    'rejects unsafe ICMP target %s',
+    async (target) => {
+      await expect(validateHostTarget(target, { resolver: publicResolver })).rejects.toBeInstanceOf(
+        NetworkPolicyError,
+      );
+    },
+  );
+
+  it('allows only an explicitly allowlisted private ICMP address', async () => {
+    const target = await validateHostTarget('internal.example', {
+      allowPrivateNetworks: true,
+      allowedPrivateCidrs: ['10.20.0.0/16'],
+      resolver: async () => [{ address: '10.20.4.7', family: 4 }],
+    });
+    expect(target.addresses[0]?.address).toBe('10.20.4.7');
   });
 });
 

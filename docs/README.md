@@ -7,7 +7,8 @@
 - [Trial mode](trial-mode.md)
 - [Observe mode](observe-mode.md)
 - [Protect mode](protect-mode.md)
-- [Monitoring APIs and HTTP integrations](monitoring.md)
+- [Monitoring HTTP and ICMP services](monitoring.md)
+- [English and Spanish interface](internationalization.md)
 - [Reliability Replay](reliability-replay.md)
 - [Production readiness](production-readiness.md)
 - [Public status pages](public-status-pages.md)
@@ -36,6 +37,7 @@ This directory contains documentation intended to be published with the source c
 | [Reliability Replay](reliability-replay.md)     | Causal diagnosis, impact and operator runbook |
 | [Production readiness](production-readiness.md) | Explainable route controls and next actions   |
 | [Public status pages](public-status-pages.md)   | Revocable monitor health sharing              |
+| [Internationalization](internationalization.md) | English and Spanish interface behavior        |
 
 Private notes, credentials, provider identifiers and internal planning never belong here. Local
 internal context lives under the ignored .pdocs directory.

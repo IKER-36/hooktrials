@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Brand } from '../components/Brand';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useAuth } from '../context/AuthContext';
 import { readableError } from '../lib/api';
 
@@ -93,6 +94,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
       </section>
 
       <section className="ht-auth-panel">
+        <LanguageSwitcher />
         <div className="ht-auth-card">
           <p className="ht-kicker">
             {ownerSetup ? 'Initial setup' : registerMode ? 'Create account' : 'Log in'}
