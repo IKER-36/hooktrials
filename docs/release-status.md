@@ -183,11 +183,10 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server and dashboard `v0.8.2` with landing `v0.5.0`. The backup-first promotion
-applied migration `0009`, retained the previous immutable images and passed all four public origins,
-authenticated EN/ES, live ICMP, monitor editing, multi-monitor status publication and the corrected
-tour interaction. A post-migration backup restored 16 tables and two users in isolation; watchdog
-and recent application logs were clean.
+Managed Cloud currently runs server and dashboard `v0.8.1` with landing `v0.5.0`. Public release
+`v0.8.2` is validated locally and queued for backup-first promotion once its multi-architecture web
+image finishes publishing. The current deployment remains healthy across all four public origins;
+watchdog and recent application logs are clean.
 
 Patch `v0.3.6` also accepts authenticated empty payload ciphertext during report analysis. Empty
 webhook bodies now produce normal deterministic evidence instead of a failed background job.
