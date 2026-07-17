@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate, NavLink, Outlet, useOutletContext } from 'react-router-dom';
+import { Navigate, NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import {
   Activity,
   BellRing,
@@ -46,6 +46,7 @@ export function useDashboard(): DashboardContext {
 }
 
 export function AppLayout() {
+  const location = useLocation();
   const { user, loading: authLoading, setup, logout, clearSession, completeOnboarding } = useAuth();
   const [endpoints, setEndpoints] = useState<Endpoint[]>([]);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -66,6 +67,10 @@ export function AppLayout() {
     document.documentElement.style.colorScheme = theme;
     localStorage.setItem('ht.theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
 
   useEffect(() => {
     if (authLoading || !user || tourDecided) return;

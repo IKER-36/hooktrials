@@ -9,6 +9,7 @@ import './styles.css';
 import './styles/app.css';
 import './styles/modern.css';
 import './styles/theme.css';
+import './styles/refined.css';
 
 const storedTheme = localStorage.getItem('ht.theme');
 const initialTheme =

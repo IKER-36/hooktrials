@@ -2,6 +2,27 @@
 
 Updated: 17 July 2026.
 
+## Release `v0.8.0`
+
+Release `v0.8.0` replaces the mixed glass/terminal presentation with one sober product system:
+
+- solid semantic surfaces and restrained borders across dashboard, authentication, event drawers,
+  evidence and public status pages;
+- distinct light and dark surface hierarchies with repaired contrast for replay cards, monitor
+  states, metrics, public evidence and status badges;
+- a fixed full-height workspace rail, clearer page rhythm, larger operational copy and consistent
+  controls, tables, forms and cards;
+- a compact event inspector that preserves context without the light-card-on-dark failure shown in
+  earlier builds;
+- responsive two-column and single-column fallbacks for templates, readiness, metrics and drawers;
+- route-level scroll restoration so a newly opened module never inherits the previous screen's
+  vertical position.
+
+The release gate passes ESLint, strict TypeScript, 129 automated tests and the production web build.
+Browser validation covers all seven authenticated routes, the event inspector and customizable
+public status pages in light and dark modes. The production-shaped self-hosted stack remained
+healthy throughout the review.
+
 ## Release `v0.7.0`
 
 Release `v0.7.0` expands Monitor from individual HTTP checks into a bilingual service-health
@@ -132,7 +153,7 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server and dashboard `v0.7.0` with landing `v0.5.0`. The backup-first promotion
+Managed Cloud runs server and dashboard `v0.8.0` with landing `v0.5.0`. The backup-first promotion
 applied migration `0009`, retained the previous immutable images and passed all four public origins,
 authenticated EN/ES, live ICMP, monitor editing, multi-monitor status publication and the corrected
 tour interaction. A post-migration backup restored 16 tables and two users in isolation; watchdog
