@@ -6,7 +6,7 @@
   --ht-glass: rgba(255, 255, 255, 0.68);
   --ht-ink: #111827;
   --ht-muted: #657084;
-  --ht-faint: #96a0b3;
+  --ht-faint: #697589;
   --ht-hairline: rgba(15, 23, 42, 0.08);
   --ht-hairline-bright: rgba(15, 23, 42, 0.14);
   --ht-green: #22c55e;
@@ -17,6 +17,56 @@
   --ht-amber: #d97706;
   --ht-stone: #111827;
   --ht-shadow: rgba(25, 41, 72, 0.12);
+  --ht-surface-1: rgba(255, 255, 255, 0.78);
+  --ht-surface-2: rgba(248, 250, 252, 0.88);
+  --ht-surface-3: #eef3f7;
+  --ht-surface-hover: #f0fbf4;
+  --ht-overlay: rgba(10, 18, 30, 0.56);
+  --ht-positive-bg: #eafbf0;
+  --ht-warning-bg: #fff7e7;
+  --ht-danger-bg: #fff1f2;
+  --ht-focus: #08783d;
+  --ht-radius-sm: 10px;
+  --ht-radius-md: 14px;
+  --ht-radius-lg: 20px;
+  --ht-space-1: 4px;
+  --ht-space-2: 8px;
+  --ht-space-3: 12px;
+  --ht-space-4: 16px;
+  --ht-space-5: 20px;
+  --ht-space-6: 24px;
+  --ht-space-8: 32px;
+  --ht-space-10: 40px;
   --ht-sans: 'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --ht-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+:root[data-theme='dark'] {
+  --ht-bg: #07100d;
+  --ht-bg-deep: #040906;
+  --ht-panel: rgba(13, 24, 20, 0.9);
+  --ht-panel-solid: #0d1814;
+  --ht-glass: rgba(14, 26, 21, 0.78);
+  --ht-ink: #edf7f1;
+  --ht-muted: #a3b3aa;
+  --ht-faint: #738279;
+  --ht-hairline: rgba(219, 247, 229, 0.09);
+  --ht-hairline-bright: rgba(219, 247, 229, 0.16);
+  --ht-green: #36d878;
+  --ht-green-dim: #25b963;
+  --ht-green-deep: #74e69f;
+  --ht-blue: #9397ff;
+  --ht-red: #ff7d85;
+  --ht-amber: #f6b94b;
+  --ht-stone: #edf7f1;
+  --ht-shadow: rgba(0, 0, 0, 0.38);
+  --ht-surface-1: rgba(14, 26, 21, 0.86);
+  --ht-surface-2: rgba(20, 34, 28, 0.9);
+  --ht-surface-3: #172820;
+  --ht-surface-hover: #173326;
+  --ht-overlay: rgba(0, 0, 0, 0.7);
+  --ht-positive-bg: rgba(54, 216, 120, 0.12);
+  --ht-warning-bg: rgba(246, 185, 75, 0.12);
+  --ht-danger-bg: rgba(255, 125, 133, 0.12);
+  --ht-focus: #74e69f;
 }

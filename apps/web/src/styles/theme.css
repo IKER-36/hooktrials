@@ -1,0 +1,846 @@
+/* Final semantic layer. Keeps every product module on one spacing, surface and theme system. */
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+body {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease;
+}
+html[data-theme='dark'] body {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(54, 216, 120, 0.1), transparent 28rem),
+    radial-gradient(circle at 92% 5%, rgba(147, 151, 255, 0.08), transparent 32rem),
+    linear-gradient(180deg, #09130f 0%, #07100d 55%, #040906 100%);
+}
+
+/* Accessible interaction baseline */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--ht-focus) !important;
+  outline-offset: 2px;
+}
+:where(button, a, input, select, textarea) {
+  accent-color: var(--ht-green-dim);
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Consistent application geometry */
+.ht-shell {
+  gap: var(--ht-space-5);
+  padding: var(--ht-space-5);
+  grid-template-columns: 264px minmax(0, 1fr);
+}
+.ht-main {
+  width: 100%;
+  max-width: 1540px;
+  padding: var(--ht-space-2) clamp(4px, 1.7vw, 28px) 72px;
+}
+.ht-page {
+  gap: var(--ht-space-6);
+}
+.ht-page-head {
+  min-height: 72px;
+  gap: var(--ht-space-5);
+}
+.ht-page-head > div:first-child {
+  min-width: 0;
+}
+.ht-page-head .ht-muted-line {
+  max-width: 760px;
+  margin-top: var(--ht-space-2);
+}
+.ht-systembar {
+  display: flex;
+  align-items: center;
+  gap: var(--ht-space-4);
+}
+.ht-systembar > span:nth-child(2) {
+  margin-left: auto;
+}
+.ht-system-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 10px;
+  color: var(--ht-muted);
+  border: 1px solid var(--ht-hairline);
+  border-radius: var(--ht-radius-sm);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.ht-system-help svg {
+  width: 14px;
+  height: 14px;
+}
+.ht-system-help:hover,
+.ht-system-help.active {
+  color: var(--ht-green-deep);
+  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--ht-positive-bg);
+}
+
+.ht-sidebar {
+  gap: var(--ht-space-5);
+  padding: var(--ht-space-4);
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline-bright);
+}
+.ht-sidebar nav {
+  gap: var(--ht-space-1);
+}
+.ht-sidebar nav a {
+  min-height: 42px;
+  color: var(--ht-muted);
+}
+.ht-sidebar nav a > svg {
+  color: var(--ht-faint);
+}
+.ht-sidebar nav a > small,
+.ht-runtime-state {
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+}
+.ht-sidebar nav a:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+}
+.ht-sidebar nav a.active {
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+}
+.ht-sidebar-brand > span {
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+}
+.ht-sidebar-foot {
+  gap: var(--ht-space-1);
+}
+.ht-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  color: var(--ht-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  font: 500 11px var(--ht-sans);
+  cursor: pointer;
+}
+.ht-theme-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+.ht-theme-toggle:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+}
+.ht-theme-toggle.icon-only {
+  width: 38px;
+  justify-content: center;
+  padding: 8px;
+}
+.ht-logout:hover {
+  color: var(--ht-red);
+  background: var(--ht-danger-bg);
+}
+.ht-tour-restart:hover {
+  background: var(--ht-surface-2);
+}
+
+/* Every large module surface uses the same semantic material. */
+html[data-theme]
+  :where(
+    .ht-control-center,
+    .ht-operation-panel,
+    .ht-monitor-create,
+    .ht-monitor-list,
+    .ht-monitor-detail,
+    .ht-studio-library,
+    .ht-studio-editor,
+    .ht-endpoint-card,
+    .ht-template-section,
+    .ht-create-card,
+    .ht-endpoint-list,
+    .ht-events,
+    .ht-demo-rail,
+    .ht-demo-console,
+    .ht-route-config,
+    .ht-alert-panel,
+    .ht-managed-routes,
+    .ht-webhook-journey,
+    .ht-onboarding,
+    .ht-guided-demo,
+    .ht-score-card,
+    .ht-inspector,
+    .ht-share-evidence,
+    .ht-integration-table,
+    .ht-readiness,
+    .ht-operation-summary,
+    .ht-monitor-summary,
+    .ht-metrics article,
+    .ht-status-share,
+    .ht-docs-nav,
+    .ht-docs-article
+  ) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline-bright);
+  box-shadow:
+    0 16px 44px var(--ht-shadow),
+    inset 0 0 0 1px var(--ht-hairline);
+}
+html[data-theme]
+  :where(
+    .ht-control-center,
+    .ht-operation-panel,
+    .ht-monitor-create,
+    .ht-monitor-list,
+    .ht-monitor-detail,
+    .ht-studio-library,
+    .ht-studio-editor,
+    .ht-endpoint-card,
+    .ht-template-section,
+    .ht-create-card,
+    .ht-endpoint-list,
+    .ht-events,
+    .ht-demo-rail,
+    .ht-demo-console,
+    .ht-route-config,
+    .ht-alert-panel,
+    .ht-managed-routes,
+    .ht-webhook-journey,
+    .ht-onboarding,
+    .ht-guided-demo,
+    .ht-score-card,
+    .ht-share-evidence,
+    .ht-integration-table,
+    .ht-readiness,
+    .ht-operation-summary,
+    .ht-monitor-summary,
+    .ht-status-share,
+    .ht-docs-nav,
+    .ht-docs-article
+  ) {
+  border-radius: var(--ht-radius-md);
+}
+
+html[data-theme]
+  :where(
+    .ht-control-center > header,
+    .ht-operation-panel > header,
+    .ht-events > header,
+    .ht-template-section > header,
+    .ht-managed-routes > header,
+    .ht-monitor-create > header,
+    .ht-integration-table > header,
+    .ht-inspector-head,
+    .ht-sequence-head
+  ) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline);
+}
+.ht-integration-table-head {
+  color: var(--ht-muted);
+  background: var(--ht-surface-3);
+}
+.ht-integration-table > button {
+  color: var(--ht-muted);
+  border-color: var(--ht-hairline);
+}
+.ht-integration-table > button:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+}
+
+/* Inputs and controls */
+html[data-theme]
+  :where(
+    .ht-field input,
+    .ht-field select,
+    .ht-field textarea,
+    .ht-switcher select,
+    .ht-studio-editor input,
+    .ht-studio-editor select,
+    .ht-studio-editor textarea,
+    .ht-docs-search input
+  ) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline-bright);
+}
+html[data-theme]
+  :where(
+    .ht-field input,
+    .ht-field select,
+    .ht-field textarea,
+    .ht-switcher select,
+    .ht-studio-editor input,
+    .ht-studio-editor select,
+    .ht-studio-editor textarea,
+    .ht-docs-search input
+  ):focus {
+  color: var(--ht-ink);
+  background: var(--ht-panel-solid);
+}
+.button.secondary,
+.ht-close {
+  color: var(--ht-muted);
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline-bright);
+}
+.button.secondary:hover,
+.ht-close:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+}
+.ht-form-error {
+  color: var(--ht-red);
+  background: var(--ht-danger-bg);
+}
+.ht-form-note,
+.ht-external-warning {
+  color: var(--ht-amber);
+  background: var(--ht-warning-bg);
+}
+.ht-form-success {
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+}
+
+/* Dark theme repairs for legacy component literals. */
+html[data-theme='dark']
+  :where(
+    .ht-route-mode-help article,
+    .ht-template-grid button,
+    .ht-endpoint-item,
+    .ht-step-card,
+    .ht-monitor-list button,
+    .ht-monitor-history article,
+    .ht-monitor-incident,
+    .ht-check-list article,
+    .ht-readiness-checks article,
+    .ht-replay-impact div,
+    .ht-replay-steps li,
+    .ht-replay-runbook,
+    .ht-attempt-compare,
+    .ht-attempt-facts,
+    .ht-contract-evidence,
+    .ht-body-viewer,
+    .ht-headers,
+    .ht-attempt,
+    .ht-report-card,
+    .ht-public-status article,
+    .ht-status-metrics article,
+    .ht-status-incidents article
+  ) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline);
+}
+html[data-theme='dark']
+  :where(
+    .ht-control-metrics article,
+    .ht-operation-summary article,
+    .ht-monitor-summary article,
+    .ht-monitor-metrics article,
+    .ht-metrics article,
+    .ht-demo-proof div,
+    .ht-evidence-summary div,
+    .ht-operation-list article,
+    .ht-scenario-option,
+    .ht-route-security,
+    .ht-provider-presets button,
+    .ht-endpoint-actions button,
+    .ht-monitor-actions button,
+    .ht-step-card > header
+  ) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline);
+}
+html[data-theme='dark']
+  :where(
+    .ht-route-mode-help article.active,
+    .ht-scenario-option.selected,
+    .ht-endpoint-item.selected,
+    .ht-studio-library > button.selected,
+    .ht-monitor-list > button.selected,
+    .ht-provider-presets button.active,
+    .ht-provider-presets button:hover
+  ) {
+  color: var(--ht-ink);
+  background: var(--ht-positive-bg);
+  border-color: rgba(116, 230, 159, 0.38);
+}
+html[data-theme='dark']
+  :where(
+    .ht-monitor-state.healthy,
+    .ht-listen,
+    .ht-demo-safety,
+    .ht-readiness-grid article.passed > span
+  ) {
+  color: var(--ht-green);
+  background: var(--ht-positive-bg);
+}
+html[data-theme='dark']
+  :where(
+    .ht-monitor-state.degraded,
+    .ht-readiness-level,
+    .ht-readiness-checks > footer,
+    .ht-private-monitor,
+    .ht-demo-message
+  ) {
+  color: #f8c66c;
+  background: var(--ht-warning-bg);
+  border-color: rgba(248, 198, 108, 0.25);
+}
+html[data-theme='dark']
+  :where(.ht-monitor-state.down, .ht-monitor-incident, .ht-readiness-grid article.missing > span) {
+  color: #ff9299;
+  background: var(--ht-danger-bg);
+  border-color: rgba(255, 146, 153, 0.24);
+}
+html[data-theme='dark']
+  :where(.ht-provider-note, .ht-demo-recovered, .ht-share-evidence, .ht-demo-links a) {
+  color: var(--ht-green);
+  background: var(--ht-positive-bg);
+  border-color: rgba(116, 230, 159, 0.22);
+}
+html[data-theme='dark'] .ht-route-mode-help article.active,
+html[data-theme='dark'] .ht-scenario-option.selected,
+html[data-theme='dark'] .ht-endpoint-item.selected,
+html[data-theme='dark'] .ht-studio-library > button.selected,
+html[data-theme='dark'] .ht-monitor-list > button.selected {
+  color: var(--ht-ink);
+  background: var(--ht-positive-bg);
+  border-color: rgba(116, 230, 159, 0.38);
+}
+html[data-theme='dark']
+  :where(
+    .ht-guided-action,
+    .ht-integration-table-head,
+    .ht-event-row:hover,
+    .ht-endpoint-item:hover,
+    .ht-template-grid button:hover,
+    .ht-monitor-list button:hover
+  ) {
+  background: var(--ht-surface-3);
+}
+html[data-theme='dark'] :where(.ht-url, .ht-request-line, .ht-payload, pre, .ht-body-viewer pre) {
+  color: #d8f8e4;
+  background: #030806;
+  border-color: var(--ht-hairline-bright);
+}
+html[data-theme='dark'] .brand-mark {
+  background: #effaf3;
+}
+html[data-theme='dark'] .ht-backdrop {
+  background: rgba(0, 0, 0, 0.66);
+}
+html[data-theme='dark'] .ht-auth-aside,
+html[data-theme='dark'] .ht-auth-card,
+html[data-theme='dark'] .ht-public-evidence > header,
+html[data-theme='dark'] .ht-public-evidence > article,
+html[data-theme='dark'] .ht-public-status > article {
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline-bright);
+}
+
+/* Contextual onboarding: live UI stays visible and is the visual. */
+.ht-tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: auto;
+  pointer-events: none;
+}
+.ht-tour-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--ht-overlay);
+  pointer-events: auto;
+}
+[data-tour-active='true'] {
+  position: relative;
+  z-index: 1001;
+  isolation: isolate;
+  border-radius: var(--ht-radius-lg);
+  box-shadow:
+    0 0 0 4px var(--ht-green),
+    0 28px 90px rgba(0, 0, 0, 0.38) !important;
+}
+.ht-tour-panel {
+  position: absolute;
+  z-index: 1002;
+  right: clamp(18px, 3vw, 46px);
+  bottom: clamp(18px, 3vw, 42px);
+  width: min(430px, calc(100vw - 36px));
+  max-height: calc(100dvh - 36px);
+  overflow: auto;
+  padding: var(--ht-space-6);
+  color: var(--ht-ink);
+  background: var(--ht-panel-solid);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-lg);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+.ht-tour-panel > header,
+.ht-tour-panel > footer,
+.ht-tour-panel > footer nav,
+.ht-tour-context,
+.ht-tour-docs {
+  display: flex;
+  align-items: center;
+}
+.ht-tour-panel > header,
+.ht-tour-panel > footer {
+  justify-content: space-between;
+  gap: var(--ht-space-4);
+}
+.ht-tour-panel > header > span {
+  color: var(--ht-green-deep);
+  font: 700 10px/1 var(--ht-mono);
+  letter-spacing: 0.11em;
+}
+.ht-tour-close,
+.ht-tour-panel footer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 38px;
+  gap: 6px;
+  padding: 9px 12px;
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-sm);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.ht-tour-close {
+  padding: 8px;
+}
+.ht-tour-close svg,
+.ht-tour-panel footer button svg,
+.ht-tour-docs svg {
+  width: 15px;
+  height: 15px;
+}
+.ht-tour-panel footer button.primary {
+  color: #06130b;
+  background: var(--ht-green);
+  border-color: var(--ht-green);
+}
+.ht-tour-panel footer button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.ht-tour-context {
+  gap: 10px;
+  margin: var(--ht-space-6) 0 var(--ht-space-4);
+  color: var(--ht-faint);
+  font: 700 10px var(--ht-mono);
+}
+.ht-tour-context i {
+  width: 52px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ht-green), var(--ht-hairline-bright));
+}
+.ht-tour-panel h2 {
+  margin: 0;
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.06;
+}
+.ht-tour-panel > p {
+  margin: var(--ht-space-4) 0;
+  color: var(--ht-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.ht-tour-panel > aside {
+  margin: 0 0 var(--ht-space-6);
+  padding: var(--ht-space-3) var(--ht-space-4);
+  color: var(--ht-ink);
+  background: var(--ht-positive-bg);
+  border-left: 3px solid var(--ht-green);
+  border-radius: 0 var(--ht-radius-sm) var(--ht-radius-sm) 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.ht-tour-panel > footer > div:first-child {
+  display: grid;
+  gap: 7px;
+}
+.ht-tour-panel > footer strong {
+  color: var(--ht-muted);
+  font-size: 10px;
+}
+.ht-tour-panel > footer nav {
+  gap: 8px;
+}
+.ht-tour-progress {
+  display: flex;
+  gap: 4px;
+}
+.ht-tour-progress i {
+  width: 17px;
+  height: 3px;
+  background: var(--ht-hairline-bright);
+  border-radius: 99px;
+}
+.ht-tour-progress i.active {
+  background: var(--ht-green);
+}
+.ht-tour-docs {
+  justify-content: center;
+  gap: 7px;
+  margin-top: var(--ht-space-5);
+  padding-top: var(--ht-space-4);
+  color: var(--ht-muted);
+  border-top: 1px solid var(--ht-hairline);
+  font-size: 11px;
+  font-weight: 650;
+}
+.ht-tour-docs:hover {
+  color: var(--ht-green-deep);
+}
+
+/* In-product documentation */
+.ht-docs-search {
+  display: flex;
+  align-items: center;
+  gap: var(--ht-space-3);
+  max-width: 720px;
+  padding: 0 var(--ht-space-4);
+  color: var(--ht-faint);
+  background: var(--ht-surface-1);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-md);
+  box-shadow: 0 10px 30px var(--ht-shadow);
+}
+.ht-docs-search svg {
+  width: 18px;
+  flex: 0 0 auto;
+}
+.ht-docs-search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
+.ht-docs-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.36fr) minmax(0, 1fr);
+  gap: var(--ht-space-5);
+  align-items: start;
+}
+.ht-docs-nav {
+  display: grid;
+  gap: var(--ht-space-1);
+  padding: var(--ht-space-2);
+  position: sticky;
+  top: var(--ht-space-5);
+}
+.ht-docs-nav button {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: var(--ht-space-3);
+  align-items: start;
+  width: 100%;
+  padding: var(--ht-space-3);
+  color: var(--ht-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--ht-radius-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.ht-docs-nav button:hover,
+.ht-docs-nav button.active {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+}
+.ht-docs-nav button.active {
+  box-shadow: inset 3px 0 var(--ht-green);
+}
+.ht-docs-nav svg {
+  width: 18px;
+  color: var(--ht-green-deep);
+}
+.ht-docs-nav span {
+  display: grid;
+  gap: 4px;
+}
+.ht-docs-nav strong {
+  font-size: 12px;
+}
+.ht-docs-nav small {
+  color: var(--ht-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.ht-docs-nav > p {
+  margin: 0;
+  padding: var(--ht-space-4);
+  color: var(--ht-muted);
+  font-size: 12px;
+}
+.ht-docs-article {
+  display: grid;
+  gap: var(--ht-space-6);
+  padding: clamp(22px, 4vw, 44px);
+}
+.ht-docs-article > header {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: var(--ht-space-4);
+  align-items: start;
+  padding-bottom: var(--ht-space-6);
+  border-bottom: 1px solid var(--ht-hairline);
+}
+.ht-docs-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+  border-radius: var(--ht-radius-md);
+}
+.ht-docs-icon svg {
+  width: 22px;
+}
+.ht-docs-article h2,
+.ht-docs-article h3,
+.ht-docs-article p {
+  margin-top: 0;
+}
+.ht-docs-article h2 {
+  margin-bottom: var(--ht-space-2);
+  font-size: clamp(25px, 3vw, 34px);
+}
+.ht-docs-article > header p:last-child,
+.ht-docs-article section li,
+.ht-docs-result p {
+  color: var(--ht-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.ht-docs-article section {
+  display: grid;
+  gap: var(--ht-space-3);
+}
+.ht-docs-article h3 {
+  margin-bottom: 0;
+  font-size: 15px;
+}
+.ht-docs-article ol,
+.ht-docs-article ul {
+  display: grid;
+  gap: var(--ht-space-3);
+  margin: 0;
+  padding-left: 21px;
+}
+.ht-docs-result {
+  padding: var(--ht-space-4);
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+  border: 1px solid rgba(34, 197, 94, 0.16);
+  border-radius: var(--ht-radius-md);
+}
+.ht-docs-result p {
+  margin: var(--ht-space-1) 0 0;
+}
+.ht-docs-article > .button {
+  width: fit-content;
+}
+
+@media (max-width: 980px) {
+  .ht-docs-layout {
+    grid-template-columns: 1fr;
+  }
+  .ht-docs-nav {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .ht-shell {
+    padding: 0;
+  }
+  .ht-system-help,
+  .ht-systembar > span:nth-child(2) {
+    display: none;
+  }
+  .ht-main {
+    padding-bottom: 100px;
+  }
+  .ht-page {
+    gap: var(--ht-space-4);
+    width: 100%;
+    min-width: 0;
+  }
+  .ht-page > *,
+  .ht-route-config form,
+  .ht-route-mode-help,
+  .ht-provider-presets,
+  .ht-control-metrics,
+  .ht-readiness-grid,
+  .ht-field,
+  .ht-field input,
+  .ht-field select,
+  .ht-field textarea {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .ht-provider-presets {
+    grid-template-columns: 1fr;
+  }
+  .ht-page-head {
+    min-height: auto;
+    align-items: flex-start;
+  }
+  .ht-tour-panel {
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: min(62dvh, 620px);
+    border-radius: var(--ht-radius-lg) var(--ht-radius-lg) 0 0;
+  }
+  [data-tour-active='true'] {
+    box-shadow: 0 0 0 3px var(--ht-green) !important;
+  }
+  .ht-docs-nav {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+  .ht-docs-nav button {
+    min-width: 230px;
+    scroll-snap-align: start;
+  }
+  .ht-docs-article {
+    padding: var(--ht-space-5);
+  }
+}

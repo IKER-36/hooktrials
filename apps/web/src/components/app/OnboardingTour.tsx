@@ -1,55 +1,70 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { BookOpen, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const steps = [
   {
-    eyebrow: '01 / CONTROL CENTER',
-    title: 'One place for integration reliability',
-    body: 'HookTrials combines controlled failure trials, safe webhook operation and active API monitoring. Start here to see health, incidents and recoveries.',
+    eyebrow: '01 / OVERVIEW',
+    title: 'See reliability at a glance',
+    body: 'The Control Center combines active routes, monitor health, incidents, dead letters and recent recoveries. Start here when you need to know what needs attention.',
     path: '/app',
-    note: 'The overview answers what is failing, why and whether traffic was recovered.',
+    target: 'overview',
+    selector: '.ht-control-center',
+    note: 'Production Readiness turns configuration and recorded evidence into one transparent checklist.',
   },
   {
-    eyebrow: '02 / ROUTES',
-    title: 'Choose how each webhook behaves',
-    body: 'Trial simulates failures. Observe forwards synchronously and records the journey. Protect persists first, retries downstream and dead-letters exhausted deliveries.',
+    eyebrow: '02 / ENDPOINTS',
+    title: 'Create a safe webhook route',
+    body: 'Every route starts in Trial. Copy its private ingestion URL, choose a deterministic scenario and only move to Observe or Protect when a destination is ready.',
     path: '/app/endpoints',
-    note: 'New routes start safely in Trial. Production changes require explicit confirmation.',
+    target: 'endpoints',
+    selector: '.ht-endpoints-grid',
+    note: 'Trial returns controlled failures. Observe forwards once. Protect persists first and retries safely.',
   },
   {
-    eyebrow: '03 / TRIALS',
-    title: 'Break integrations before production does',
-    body: 'Use built-in scenarios or compose deterministic status, latency, headers and response bodies. Your sender performs retries; HookTrials records every attempt.',
+    eyebrow: '03 / SCENARIOS',
+    title: 'Design the failure you need to prove',
+    body: 'Use built-in recipes or create an exact sequence of status codes, delays, headers and response bodies. Repeating the same test produces the same evidence.',
     path: '/app/scenarios',
-    note: 'The simulator lets you demonstrate a complete retry flow without another provider.',
+    target: 'scenarios',
+    selector: '.ht-studio-grid',
+    note: 'The sender performs the retry; HookTrials correlates every attempt using the same event ID.',
   },
   {
     eyebrow: '04 / MONITOR',
-    title: 'Monitor APIs, routes and destinations',
-    body: 'Create active checks for external APIs, internal allowlisted services and HTTP routes. Availability, latency, contracts and incidents produce an explainable score.',
+    title: 'Measure APIs and destinations',
+    body: 'Active checks track availability, latency and contracts. Degradation opens an incident; recovery closes it and preserves the measured history.',
     path: '/app/monitor',
-    note: 'Every score deduction links to measured availability, latency, contract or incident evidence.',
+    target: 'monitor',
+    selector: '.ht-monitor-grid',
+    note: 'Every score deduction links to concrete check or incident evidence—never a hidden grade.',
   },
   {
     eyebrow: '05 / OPERATIONS',
-    title: 'Recover from one operational queue',
-    body: 'Triage open and recovered incidents, retry or replay unresolved dead letters, configure the alert webhook and audit every outgoing notification.',
+    title: 'Recover from one queue',
+    body: 'Triage incidents, retry or replay dead letters and audit outgoing notifications without searching across separate tools.',
     path: '/app/operations',
-    note: 'Manual recovery requires confirmation and records the requesting user, source delivery and time.',
+    target: 'operations',
+    selector: '.ht-operation-summary',
+    note: 'Manual recovery always requires confirmation and records who requested it.',
   },
   {
-    eyebrow: '06 / EVIDENCE',
-    title: 'Follow the full delivery journey',
-    body: 'Open an event to separate provider receipt, signature and contract validation from downstream delivery, retry and recovery. Share a redacted 24-hour evidence link when needed.',
-    path: '/app',
-    note: 'Payloads, credentials, sensitive headers and destination URLs never enter public evidence.',
+    eyebrow: '06 / DEMO LAB',
+    title: 'Explore the whole product safely',
+    body: 'Demo Lab creates isolated synthetic resources across Trial, Observe, Protect, Monitor, Operations and Evidence. It never replaces your real resources.',
+    path: '/app/demo',
+    target: 'demo',
+    selector: '.ht-demo-grid',
+    note: 'Use it to learn, then reset only its user-owned workspace when you are finished.',
   },
   {
-    eyebrow: '07 / READY',
-    title: 'Run the guided demonstration',
-    body: 'Create a template endpoint, send the included provider simulation, then promote the route to Observe or Protect when you are ready to connect a destination.',
-    path: '/app/endpoints',
-    note: 'You can restart this tour from the sidebar. Full guides live in the public docs folder.',
+    eyebrow: '07 / DOCS',
+    title: 'Keep the operating guide beside the product',
+    body: 'Docs explains what each module does, when to use it, the exact workflow and what to check when a result is unexpected.',
+    path: '/app/docs',
+    target: 'docs',
+    selector: '.ht-docs-layout',
+    note: 'You can reopen this tour or Docs at any time from the sidebar.',
   },
 ] as const;
 
@@ -57,11 +72,43 @@ export function OnboardingTour({ onFinish }: { onFinish(): Promise<void> }) {
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
+  const panelRef = useRef<HTMLElement>(null);
   const current = steps[index] ?? steps[0]!;
 
   useEffect(() => {
     navigate(current.path);
-  }, [current.path, navigate]);
+    let active: HTMLElement | null = null;
+    let attempts = 0;
+    const findTarget = window.setInterval(() => {
+      active =
+        document.querySelector<HTMLElement>(current.selector) ??
+        document.querySelector<HTMLElement>(`[data-tour-section="${current.target}"]`);
+      if (active || attempts > 20) {
+        window.clearInterval(findTarget);
+        active?.setAttribute('data-tour-active', 'true');
+        active?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
+      attempts += 1;
+    }, 75);
+    panelRef.current?.focus();
+    return () => {
+      window.clearInterval(findTarget);
+      active?.removeAttribute('data-tour-active');
+      document
+        .querySelectorAll<HTMLElement>('[data-tour-active]')
+        .forEach((element) => element.removeAttribute('data-tour-active'));
+    };
+  }, [current.path, current.selector, current.target, navigate]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') void finish();
+      if (event.key === 'ArrowRight' && index < steps.length - 1) setIndex((value) => value + 1);
+      if (event.key === 'ArrowLeft' && index > 0) setIndex((value) => value - 1);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
 
   async function finish() {
     setBusy(true);
@@ -73,41 +120,64 @@ export function OnboardingTour({ onFinish }: { onFinish(): Promise<void> }) {
   }
 
   return (
-    <div className="ht-tour-backdrop" role="presentation">
-      <section className="ht-tour" role="dialog" aria-modal="true" aria-labelledby="ht-tour-title">
+    <div className="ht-tour-layer">
+      <div className="ht-tour-scrim" aria-hidden="true" />
+      <section
+        ref={panelRef}
+        className="ht-tour-panel"
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="ht-tour-title"
+        aria-describedby="ht-tour-body"
+        tabIndex={-1}
+      >
         <header>
           <span>{current.eyebrow}</span>
-          <button type="button" onClick={() => void finish()} disabled={busy}>
-            Skip tour
+          <button
+            type="button"
+            className="ht-tour-close"
+            onClick={() => void finish()}
+            disabled={busy}
+            aria-label="Close product tour"
+          >
+            <X aria-hidden="true" />
           </button>
         </header>
-        <div className="ht-tour-visual" aria-hidden="true">
-          <span>TRIAL</span>
-          <i /> <span>CONTROL</span>
-          <i /> <span>MONITOR</span>
+        <div className="ht-tour-context" aria-hidden="true">
+          <span>{String(index + 1).padStart(2, '0')}</span>
+          <i />
+          <span>{String(steps.length).padStart(2, '0')}</span>
         </div>
         <h2 id="ht-tour-title">{current.title}</h2>
-        <p>{current.body}</p>
+        <p id="ht-tour-body">{current.body}</p>
         <aside>{current.note}</aside>
         <footer>
-          <div className="ht-tour-progress" aria-label={`Step ${index + 1} of ${steps.length}`}>
-            {steps.map((step, stepIndex) => (
-              <i key={step.eyebrow} className={stepIndex <= index ? 'active' : ''} />
-            ))}
-          </div>
           <div>
-            {index > 0 ? (
-              <button type="button" onClick={() => setIndex((value) => value - 1)}>
-                Back
-              </button>
-            ) : null}
+            <strong>
+              {index + 1} of {steps.length}
+            </strong>
+            <div className="ht-tour-progress" aria-hidden="true">
+              {steps.map((step, stepIndex) => (
+                <i key={step.eyebrow} className={stepIndex <= index ? 'active' : ''} />
+              ))}
+            </div>
+          </div>
+          <nav aria-label="Tour controls">
+            <button
+              type="button"
+              onClick={() => setIndex((value) => value - 1)}
+              disabled={index === 0}
+              aria-label="Previous step"
+            >
+              <ChevronLeft aria-hidden="true" />
+            </button>
             {index < steps.length - 1 ? (
               <button
                 type="button"
                 className="primary"
                 onClick={() => setIndex((value) => value + 1)}
               >
-                Next
+                Next <ChevronRight aria-hidden="true" />
               </button>
             ) : (
               <button
@@ -116,11 +186,14 @@ export function OnboardingTour({ onFinish }: { onFinish(): Promise<void> }) {
                 onClick={() => void finish()}
                 disabled={busy}
               >
-                {busy ? 'Saving…' : 'Start using HookTrials'}
+                {busy ? 'Saving…' : 'Finish'}
               </button>
             )}
-          </div>
+          </nav>
         </footer>
+        <Link className="ht-tour-docs" to="/app/docs" onClick={() => void finish()}>
+          <BookOpen aria-hidden="true" /> Open the full guide
+        </Link>
       </section>
     </div>
   );

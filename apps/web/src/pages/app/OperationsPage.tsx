@@ -58,7 +58,7 @@ export function OperationsPage() {
   }
 
   return (
-    <section className="ht-page">
+    <section className="ht-page" data-tour-section="operations">
       <header className="ht-page-head">
         <div>
           <p className="ht-kicker">Recovery control</p>

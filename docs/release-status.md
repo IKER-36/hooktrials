@@ -1,8 +1,24 @@
 # Current release status
 
-Updated: 15 July 2026.
+Updated: 17 July 2026.
 
-## Release `v0.5.0`
+## Release `v0.6.0`
+
+Release `v0.6.0` makes the complete reliability control plane easier to learn and operate:
+
+- consistent responsive geometry and semantic surfaces across every dashboard module;
+- persistent accessible light and dark themes, stronger focus indicators and labelled controls;
+- a seven-step contextual tour that exposes and highlights the real module being explained;
+- searchable in-product Docs with purpose, workflow, expected result and troubleshooting;
+- a public operator guide for self-hosted users.
+
+The release gate passes formatting, ESLint, strict TypeScript, 115 automated tests and every
+production build. Browser validation covered all seven authenticated routes in both themes, the
+contextual tour, zero horizontal overflow, endpoint and scenario creation, real Trial ingestion,
+event inspection, a real Protect delivery, active external API monitoring and a redacted public
+status page. The production-shaped local stack remained healthy throughout.
+
+## Previous release `v0.5.0`
 
 Release `v0.5.0` turns existing reliability evidence into an operator-facing decision layer:
 
@@ -93,7 +109,7 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server and dashboard `v0.5.0` with landing `v0.4.0`. Public HTTPS smoke,
+Managed Cloud runs server and dashboard `v0.6.0` with landing `v0.4.0`. Public HTTPS smoke,
 migration `0008`, authenticated Production Readiness, Reliability Replay, persistent Demo Lab and a
 revocable public monitor status page passed after deployment. The retained jury workspace contains
 synthetic data only.

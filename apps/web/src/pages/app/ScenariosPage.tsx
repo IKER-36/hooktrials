@@ -109,7 +109,7 @@ export function ScenariosPage() {
   const readOnlyBuiltIn = Boolean(selected?.builtIn);
 
   return (
-    <section className="ht-page">
+    <section className="ht-page" data-tour-section="scenarios">
       <header className="ht-page-head">
         <div>
           <p className="ht-kicker">Failure orchestration</p>

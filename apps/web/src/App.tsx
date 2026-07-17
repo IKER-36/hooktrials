@@ -9,6 +9,7 @@ import { OperationsPage } from './pages/app/OperationsPage';
 import { MonitorPage } from './pages/app/MonitorPage';
 import { ScenariosPage } from './pages/app/ScenariosPage';
 import { DemoPage } from './pages/app/DemoPage';
+import { DocsPage } from './pages/app/DocsPage';
 import { useAuth } from './context/AuthContext';
 
 function RootRedirect() {
@@ -33,6 +34,7 @@ export function App() {
         <Route path="monitor" element={<MonitorPage />} />
         <Route path="operations" element={<OperationsPage />} />
         <Route path="demo" element={<DemoPage />} />
+        <Route path="docs" element={<DocsPage />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />

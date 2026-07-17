@@ -352,7 +352,7 @@ export function DemoPage() {
   const hasActiveDemo = Boolean(run || activeDemo);
 
   return (
-    <section className="ht-page ht-demo-lab">
+    <section className="ht-page ht-demo-lab" data-tour-section="demo">
       <header className="ht-page-head">
         <div>
           <p className="ht-kicker">Demo Lab</p>

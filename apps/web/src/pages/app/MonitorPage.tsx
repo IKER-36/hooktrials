@@ -130,7 +130,7 @@ export function MonitorPage() {
   }
 
   return (
-    <section className="ht-page">
+    <section className="ht-page" data-tour-section="monitor">
       <header className="ht-page-head">
         <div>
           <p className="ht-kicker">Integration health</p>

@@ -97,7 +97,7 @@ export function OverviewPage() {
 
   if (loading) {
     return (
-      <section className="ht-page" aria-label="Loading">
+      <section className="ht-page" aria-label="Loading" data-tour-section="overview">
         <div className="ht-skeleton wide" />
         <div className="ht-skeleton tall" />
       </section>
@@ -106,7 +106,7 @@ export function OverviewPage() {
 
   if (!selected) {
     return (
-      <section className="ht-page">
+      <section className="ht-page" data-tour-section="overview">
         <header className="ht-page-head">
           <div>
             <p className="ht-kicker">Overview</p>
@@ -138,7 +138,7 @@ export function OverviewPage() {
   }
 
   return (
-    <section className="ht-page">
+    <section className="ht-page" data-tour-section="overview">
       <header className="ht-page-head">
         <div>
           <p className="ht-kicker">Overview</p>

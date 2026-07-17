@@ -82,7 +82,7 @@ export function EndpointsPage() {
   }
 
   return (
-    <section className="ht-page">
+    <section className="ht-page" data-tour-section="endpoints">
       <header className="ht-page-head">
         <div>
           <p className="ht-kicker">Configuration</p>

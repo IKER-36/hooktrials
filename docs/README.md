@@ -3,6 +3,7 @@
 ## Product guides
 
 - [Getting started](getting-started.md)
+- [In-product and operator guide](product-guide.md)
 - [Trial mode](trial-mode.md)
 - [Observe mode](observe-mode.md)
 - [Protect mode](protect-mode.md)

@@ -8,9 +8,12 @@ import {
   GitBranch,
   Code2,
   HelpCircle,
+  BookOpen,
   LogOut,
+  Moon,
   Radar,
   ServerCog,
+  Sun,
 } from 'lucide-react';
 import { Brand } from '../components/Brand';
 import { OnboardingTour } from '../components/app/OnboardingTour';
@@ -53,6 +56,15 @@ export function AppLayout() {
   const [banner, setBanner] = useState('');
   const [tourOpen, setTourOpen] = useState(false);
   const [tourDecided, setTourDecided] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
+  );
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    localStorage.setItem('ht.theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     if (authLoading || !user || tourDecided) return;
@@ -194,6 +206,7 @@ export function AppLayout() {
     { to: '/app/monitor', label: 'Monitor', icon: Radar },
     { to: '/app/operations', label: 'Operations', icon: BellRing },
     { to: '/app/demo', label: 'Demo Lab', icon: Activity },
+    { to: '/app/docs', label: 'Docs', icon: BookOpen },
   ];
 
   return (
@@ -208,6 +221,15 @@ export function AppLayout() {
             aria-label="Open product tour"
           >
             <HelpCircle aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="ht-theme-toggle icon-only"
+            onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
+            aria-label={`Use ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-pressed={theme === 'dark'}
+          >
+            {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
           </button>
           <button
             type="button"
@@ -261,6 +283,15 @@ export function AppLayout() {
           <button type="button" className="ht-tour-restart" onClick={() => setTourOpen(true)}>
             <HelpCircle aria-hidden="true" /> Product tour
           </button>
+          <button
+            type="button"
+            className="ht-theme-toggle"
+            onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
+            aria-pressed={theme === 'dark'}
+          >
+            {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
           <a
             className="ht-cubepath-mini"
             href="https://cubepath.com/"
@@ -288,6 +319,9 @@ export function AppLayout() {
           <span>
             <i /> systems nominal
           </span>
+          <NavLink to="/app/docs" className="ht-system-help">
+            <BookOpen aria-hidden="true" /> Help &amp; docs
+          </NavLink>
         </header>
         {banner ? (
           <div className="ht-banner" role="alert">

@@ -7,6 +7,17 @@ import './styles/tokens.css';
 import './styles.css';
 import './styles/app.css';
 import './styles/modern.css';
+import './styles/theme.css';
+
+const storedTheme = localStorage.getItem('ht.theme');
+const initialTheme =
+  storedTheme === 'light' || storedTheme === 'dark'
+    ? storedTheme
+    : window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+document.documentElement.dataset.theme = initialTheme;
+document.documentElement.style.colorScheme = initialTheme;
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element not found');

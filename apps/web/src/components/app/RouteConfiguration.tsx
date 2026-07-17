@@ -459,6 +459,7 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
             </label>
             {allowPrivate ? (
               <input
+                aria-label="Allowed private CIDRs for this route"
                 value={privateCidrs}
                 onChange={(event) => setPrivateCidrs(event.target.value)}
                 placeholder="10.0.0.0/24, 172.20.0.0/16"

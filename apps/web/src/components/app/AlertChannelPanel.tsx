@@ -167,6 +167,7 @@ export function AlertChannelPanel() {
             </label>
             {allowPrivate ? (
               <input
+                aria-label="Allowed private CIDRs for this alert channel"
                 value={cidrs}
                 onChange={(event) => setCidrs(event.target.value)}
                 required
