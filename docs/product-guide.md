@@ -13,6 +13,13 @@ evidence generation and incident state.
 
 ## Endpoints and route modes
 
+For real integrations, start in **Live Webhooks**. Webhook Hub creates the provider-facing URL,
+encrypted destination, validation and delivery strategy atomically, then explains exactly where to
+paste the URL. The route appears beside every other provider connection in the concentrator view.
+
+Use **Endpoints** and **Scenario Studio** for deterministic Trial work. A Trial route can still be
+promoted manually after its destination and production controls are ready.
+
 1. Create an endpoint from a starter or choose a scenario explicitly.
 2. Copy its stable ingestion URL.
 3. Send a synthetic request and inspect its retry timeline.
@@ -70,4 +77,5 @@ only resources owned by Demo Lab.
 5. Open Operations for incident or dead-letter recovery.
 
 Continue with [Getting started](getting-started.md), [Monitoring](monitoring.md),
-[Protect mode](protect-mode.md) and [External access](external-access.md).
+[Webhook Hub](live-webhook-hub.md), [Protect mode](protect-mode.md) and
+[External access](external-access.md).

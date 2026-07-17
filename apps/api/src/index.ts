@@ -1630,10 +1630,18 @@ app.get('/v1/endpoints', async (request, reply) => {
   return {
     endpoints: items.map(({ encryptedToken, resourceMetadata, ...item }) => {
       const token = decryptToken(encryptedToken);
-      const metadata = resourceMetadata as { demoRunId?: unknown } | null;
+      const metadata = resourceMetadata as { demoRunId?: unknown; provider?: unknown } | null;
+      const provider = ['generic', 'stripe', 'github', 'shopify', 'slack'].includes(
+        String(metadata?.provider),
+      )
+        ? String(metadata?.provider)
+        : item.signatureProvider === 'github' || item.signatureProvider === 'stripe'
+          ? item.signatureProvider
+          : 'generic';
       return {
         ...item,
         demoOwned: typeof metadata?.demoRunId === 'string',
+        provider,
         ingestUrl: token ? `${config.INGEST_ORIGIN}/i/${token}` : null,
       };
     }),
@@ -2192,12 +2200,25 @@ app.post('/v1/endpoints', async (request, reply) => {
     .limit(1);
   if (!allowedScenario[0]) return reply.code(400).send({ error: 'invalid_scenario' });
 
+  if (input.destinationUrl) {
+    await validateTarget(
+      input.destinationUrl,
+      monitorNetworkOptions({ allowPrivateNetworks: false, allowedPrivateCidrs: [] }),
+    );
+  }
+
   const publicToken = `ht_${nanoid(32)}`;
   const created = await database.db.transaction(async (tx) => {
     const resource = (
       await tx
         .insert(integrationResources)
-        .values({ userId: user.id, type: 'webhook_route', name: input.name })
+        .values({
+          userId: user.id,
+          type: 'webhook_route',
+          name: input.name,
+          environment: input.environment,
+          metadata: { provider: input.provider },
+        })
         .returning({ id: integrationResources.id })
     )[0];
     if (!resource) throw new Error('Endpoint resource creation returned no record');
@@ -2212,6 +2233,32 @@ app.post('/v1/endpoints', async (request, reply) => {
           publicTokenHash: sha256(publicToken),
           publicTokenPrefix: publicToken.slice(0, 12),
           encryptedToken: encryptValue(publicToken, config.PAYLOAD_ENCRYPTION_KEY),
+          mode: input.mode,
+          environment: input.environment,
+          encryptedDestinationUrl: input.destinationUrl
+            ? encryptValue(input.destinationUrl, config.PAYLOAD_ENCRYPTION_KEY)
+            : null,
+          encryptedDestinationHeaders:
+            Object.keys(input.destinationHeaders).length > 0
+              ? encryptHeaders(input.destinationHeaders)
+              : null,
+          displayDestinationHost: input.destinationUrl ? new URL(input.destinationUrl).host : null,
+          destinationTimeoutMs: input.destinationTimeoutMs,
+          retryMaxAttempts: input.retryMaxAttempts,
+          retryBaseDelayMs: input.retryBaseDelayMs,
+          retryMaxDelayMs: input.retryMaxDelayMs,
+          encryptedContract: input.contract
+            ? encryptValue(JSON.stringify(input.contract), config.PAYLOAD_ENCRYPTION_KEY)
+            : null,
+          signatureProvider: input.signatureProvider,
+          encryptedSignatureSecret: input.signatureSecret
+            ? encryptValue(input.signatureSecret, config.PAYLOAD_ENCRYPTION_KEY)
+            : null,
+          signatureToleranceSeconds: input.signatureToleranceSeconds,
+          destinationExpectedMinStatus: input.destinationExpectedMinStatus,
+          destinationExpectedMaxStatus: input.destinationExpectedMaxStatus,
+          productionConfirmedAt:
+            input.environment === 'production' && input.mode !== 'trial' ? new Date() : null,
         })
         .returning({
           id: endpoints.id,
@@ -2223,7 +2270,7 @@ app.post('/v1/endpoints', async (request, reply) => {
     if (!endpoint) throw new Error('Endpoint creation returned no record');
     await tx
       .update(integrationResources)
-      .set({ metadata: { endpointId: endpoint.id } })
+      .set({ metadata: { endpointId: endpoint.id, provider: input.provider } })
       .where(eq(integrationResources.id, resource.id));
     return endpoint;
   });
@@ -2232,26 +2279,30 @@ app.post('/v1/endpoints', async (request, reply) => {
     endpoint: {
       ...created,
       tokenPrefix: publicToken.slice(0, 12),
+      provider: input.provider,
       scenarioId,
       scenarioName: allowedScenario[0].name,
       active: true,
-      mode: 'trial',
-      environment: 'test',
-      destinationHost: null,
-      destinationConfigured: false,
-      destinationTimeoutMs: 10_000,
-      retryMaxAttempts: 5,
-      retryBaseDelayMs: 2_000,
-      retryMaxDelayMs: 300_000,
-      contractConfigured: false,
-      signatureProvider: 'none',
-      signatureConfigured: false,
-      signatureToleranceSeconds: 300,
-      destinationExpectedMinStatus: 200,
-      destinationExpectedMaxStatus: 299,
+      mode: input.mode,
+      environment: input.environment,
+      destinationHost: input.destinationUrl ? new URL(input.destinationUrl).host : null,
+      destinationConfigured: Boolean(input.destinationUrl),
+      destinationTimeoutMs: input.destinationTimeoutMs,
+      retryMaxAttempts: input.retryMaxAttempts,
+      retryBaseDelayMs: input.retryBaseDelayMs,
+      retryMaxDelayMs: input.retryMaxDelayMs,
+      contractConfigured: Boolean(input.contract),
+      signatureProvider: input.signatureProvider,
+      signatureConfigured: Boolean(input.signatureSecret),
+      signatureToleranceSeconds: input.signatureToleranceSeconds,
+      destinationExpectedMinStatus: input.destinationExpectedMinStatus,
+      destinationExpectedMaxStatus: input.destinationExpectedMaxStatus,
       allowPrivateNetworks: false,
       allowedPrivateCidrs: [],
-      productionConfirmedAt: null,
+      productionConfirmedAt:
+        input.environment === 'production' && input.mode !== 'trial'
+          ? new Date().toISOString()
+          : null,
       ingestUrl: `${config.INGEST_ORIGIN}/i/${publicToken}`,
     },
   });

@@ -8,6 +8,7 @@ import {
   Gauge,
   GitBranch,
   Radar,
+  RadioTower,
   Search,
   ShieldCheck,
 } from 'lucide-react';
@@ -44,6 +45,29 @@ const guides: Guide[] = [
     troubleshooting: [
       'A new endpoint has little evidence until it receives traffic.',
       'A local-only self-hosted URL cannot be reached by a cloud provider; configure HTTPS first.',
+    ],
+  },
+  {
+    id: 'live-webhooks',
+    title: 'Webhook Hub & live traffic',
+    summary: 'Concentrate real providers, inspect every request and control delivery.',
+    icon: RadioTower,
+    route: '/app/live-webhooks',
+    purpose:
+      'Webhook Hub places HookTrials between a provider and your real backend. One public ingestion URL captures, validates and forwards every request while preserving an operational trail.',
+    steps: [
+      'Choose the provider and enter the current public webhook destination.',
+      'Use Observe for synchronous forwarding or Protect for durable acceptance and retries.',
+      'Add the Stripe or GitHub signing secret when native verification is required.',
+      'Copy the generated HookTrials URL into the provider webhook settings.',
+      'Send a provider test, then open the live inspector to verify both sides.',
+    ],
+    result:
+      'Real webhook traffic is centralized without losing visibility, validation or recovery evidence.',
+    troubleshooting: [
+      'The provider must call the HookTrials URL; traffic cannot be intercepted passively.',
+      'Cloud destinations must use public HTTPS and the final backend should be idempotent.',
+      'Observe returns the destination response; Protect returns 202 and delivers asynchronously.',
     ],
   },
   {

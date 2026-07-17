@@ -33,10 +33,61 @@ export const webhookContractSchema = z.object({
   jsonPaths: z.record(jsonPathSchema, contractValueSchema).default({}),
 });
 
-export const createEndpointInputSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  scenarioId: z.string().uuid().optional(),
-});
+export const createEndpointInputSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80),
+    scenarioId: z.string().uuid().optional(),
+    provider: z.enum(['generic', 'stripe', 'github', 'shopify', 'slack']).default('generic'),
+    mode: z.enum(['trial', 'observe', 'protect']).default('trial'),
+    environment: z.enum(['test', 'staging', 'production']).default('test'),
+    destinationUrl: z.string().url().max(2_048).optional(),
+    destinationHeaders: outboundHeadersSchema.default({}),
+    destinationTimeoutMs: z.number().int().min(1_000).max(30_000).default(10_000),
+    retryMaxAttempts: z.number().int().min(1).max(8).default(5),
+    retryBaseDelayMs: z.number().int().min(1_000).max(300_000).default(2_000),
+    retryMaxDelayMs: z.number().int().min(5_000).max(3_600_000).default(300_000),
+    contract: webhookContractSchema.optional(),
+    signatureProvider: z.enum(['none', 'github', 'stripe']).default('none'),
+    signatureSecret: z.string().min(8).max(512).optional(),
+    signatureToleranceSeconds: z.number().int().min(30).max(3_600).default(300),
+    destinationExpectedMinStatus: z.number().int().min(100).max(599).default(200),
+    destinationExpectedMaxStatus: z.number().int().min(100).max(599).default(299),
+    confirmProductionImpact: z.boolean().default(false),
+  })
+  .superRefine((value, context) => {
+    if (value.mode !== 'trial' && !value.destinationUrl) {
+      context.addIssue({
+        code: 'custom',
+        path: ['destinationUrl'],
+        message: 'Destination required',
+      });
+    }
+    if (value.signatureProvider !== 'none' && !value.signatureSecret) {
+      context.addIssue({
+        code: 'custom',
+        path: ['signatureSecret'],
+        message: 'Signing secret required',
+      });
+    }
+    if (value.destinationExpectedMinStatus > value.destinationExpectedMaxStatus) {
+      context.addIssue({
+        code: 'custom',
+        path: ['destinationExpectedMaxStatus'],
+        message: 'Invalid status range',
+      });
+    }
+    if (
+      value.environment === 'production' &&
+      value.mode !== 'trial' &&
+      !value.confirmProductionImpact
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['confirmProductionImpact'],
+        message: 'Production confirmation required',
+      });
+    }
+  });
 
 export const updateEndpointInputSchema = z
   .object({

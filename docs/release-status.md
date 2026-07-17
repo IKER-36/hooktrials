@@ -2,7 +2,34 @@
 
 Updated: 17 July 2026.
 
-## Release `v0.8.2`
+## Release `v0.9.0`
+
+Release `v0.9.0` makes real webhook intermediation the primary product experience:
+
+- a dedicated Webhook Hub concentrates Stripe, GitHub, Shopify, Slack and generic providers in one
+  operational workspace;
+- live routes are created atomically with their encrypted destination, provider contract,
+  environment, Observe/Protect strategy and optional signing secret;
+- the activation panel provides the private ingestion URL, provider replacement instructions and a
+  second-stage signature flow for providers that issue secrets only after URL registration;
+- Observe captures and synchronously mirrors a real destination response; Protect persists first,
+  retries durably and exposes exhausted work through Operations;
+- the live-route inventory shows provider → HookTrials → destination topology and opens the existing
+  authenticated request, validation, delivery and recovery inspector;
+- application, in-product Docs, public operator documentation and marketing positioning are complete
+  in English and Spanish.
+
+The release preserves the separate deterministic Trial laboratory and the one-command self-hosted
+deployment. A production-shaped end-to-end check created a real Observe route, sent a synthetic
+`payment.completed` request, captured its complete JSON and headers, passed the inbound contract,
+forwarded it to a public HTTPS destination, mirrored `HTTP 204` and produced a successful delivery
+journey and report. The temporary validation data was removed afterwards.
+
+The release gate passes formatting, ESLint, strict TypeScript, the expanded automated suite and all
+production builds. Browser validation covers the Webhook Hub in Spanish, atomic route creation,
+public URL activation, live traffic interception and the final event inspector.
+
+## Previous release `v0.8.2`
 
 Release `v0.8.2` makes the authenticated workspace denser and removes redundant chrome:
 

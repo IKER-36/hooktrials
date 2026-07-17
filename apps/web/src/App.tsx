@@ -10,6 +10,7 @@ import { MonitorPage } from './pages/app/MonitorPage';
 import { ScenariosPage } from './pages/app/ScenariosPage';
 import { DemoPage } from './pages/app/DemoPage';
 import { DocsPage } from './pages/app/DocsPage';
+import { LiveWebhooksPage } from './pages/app/LiveWebhooksPage';
 import { useAuth } from './context/AuthContext';
 
 function RootRedirect() {
@@ -29,6 +30,7 @@ export function App() {
       <Route path="/status/:token" element={<StatusPage />} />
       <Route path="/app" element={<AppLayout />}>
         <Route index element={<OverviewPage />} />
+        <Route path="live-webhooks" element={<LiveWebhooksPage />} />
         <Route path="endpoints" element={<EndpointsPage />} />
         <Route path="scenarios" element={<ScenariosPage />} />
         <Route path="monitor" element={<MonitorPage />} />

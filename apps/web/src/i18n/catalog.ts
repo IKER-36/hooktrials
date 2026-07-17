@@ -115,6 +115,115 @@ export const es: Record<string, string> = {
   'Restoring session…': 'Restaurando sesión…',
   Dashboard: 'Panel',
   Overview: 'Resumen',
+  'Live Webhooks': 'Webhooks reales',
+  'Webhook Hub & live traffic': 'Concentrador de webhooks y tráfico real',
+  'Concentrate real providers, inspect every request and control delivery.':
+    'Concentra proveedores reales, inspecciona cada petición y controla la entrega.',
+  'Webhook Hub places HookTrials between a provider and your real backend. One public ingestion URL captures, validates and forwards every request while preserving an operational trail.':
+    'El concentrador sitúa HookTrials entre un proveedor y tu backend real. Una URL pública captura, valida y reenvía cada petición mientras conserva una trazabilidad operativa.',
+  'Choose the provider and enter the current public webhook destination.':
+    'Elige el proveedor e introduce el destino público actual del webhook.',
+  'Use Observe for synchronous forwarding or Protect for durable acceptance and retries.':
+    'Usa Observar para el reenvío síncrono o Proteger para la aceptación duradera y los reintentos.',
+  'Add the Stripe or GitHub signing secret when native verification is required.':
+    'Añade el secreto de firma de Stripe o GitHub cuando necesites verificación nativa.',
+  'Copy the generated HookTrials URL into the provider webhook settings.':
+    'Copia la URL generada por HookTrials en la configuración de webhooks del proveedor.',
+  'Send a provider test, then open the live inspector to verify both sides.':
+    'Envía una prueba desde el proveedor y abre el inspector en directo para verificar ambos lados.',
+  'Real webhook traffic is centralized without losing visibility, validation or recovery evidence.':
+    'El tráfico webhook real queda centralizado sin perder visibilidad, validación ni evidencias de recuperación.',
+  'The provider must call the HookTrials URL; traffic cannot be intercepted passively.':
+    'El proveedor debe llamar a la URL de HookTrials; el tráfico no puede interceptarse de forma pasiva.',
+  'Cloud destinations must use public HTTPS and the final backend should be idempotent.':
+    'Los destinos de Cloud deben usar HTTPS público y el backend final debe ser idempotente.',
+  'Observe returns the destination response; Protect returns 202 and delivers asynchronously.':
+    'Observar devuelve la respuesta del destino; Proteger devuelve 202 y realiza la entrega de forma asíncrona.',
+  'Live traffic': 'Tráfico real',
+  'Webhook Hub': 'Concentrador de webhooks',
+  'Put HookTrials between every provider and your backend. Inspect the complete request, validate it and forward it with an auditable delivery trail.':
+    'Sitúa HookTrials entre cada proveedor y tu backend. Inspecciona la petición completa, valídala y reenvíala con una trazabilidad auditable.',
+  'Live webhook summary': 'Resumen de webhooks reales',
+  'live routes': 'rutas activas',
+  protected: 'protegidas',
+  'Webhook traffic flow': 'Flujo de tráfico webhook',
+  'Provider sends': 'El proveedor envía',
+  'Stripe, GitHub, Shopify, Slack or any service':
+    'Stripe, GitHub, Shopify, Slack o cualquier servicio',
+  'HookTrials intercepts': 'HookTrials intercepta',
+  'Capture, signature, contract and delivery evidence':
+    'Captura, firma, contrato y evidencia de entrega',
+  'Your backend receives': 'Tu backend recibe',
+  'Forward once or deliver durably with retries': 'Reenvío único o entrega duradera con reintentos',
+  'New live connection': 'Nueva conexión real',
+  'Connect a real webhook': 'Conectar un webhook real',
+  'HookTrials gives you one public URL. Replace the destination in your provider and all traffic will pass through the reliability hub.':
+    'HookTrials te proporciona una URL pública. Sustituye el destino en tu proveedor y todo el tráfico pasará por el concentrador de fiabilidad.',
+  Provider: 'Proveedor',
+  Generic: 'Genérico',
+  'Any HTTPS webhook provider': 'Cualquier proveedor de webhooks HTTPS',
+  'Native Stripe-Signature verification': 'Verificación nativa de Stripe-Signature',
+  'Topic and delivery header contract': 'Contrato de headers de tema y entrega',
+  'Timestamp and signature header contract': 'Contrato de headers de fecha y firma',
+  'Connection name': 'Nombre de la conexión',
+  'Your current webhook destination': 'Tu destino webhook actual',
+  'Encrypted at rest and never returned to the browser.':
+    'Cifrado en reposo y nunca devuelto al navegador.',
+  'Delivery strategy': 'Estrategia de entrega',
+  'Forward synchronously and return your backend response to the provider.':
+    'Reenvía de forma síncrona y devuelve al proveedor la respuesta de tu backend.',
+  'Accept first, queue durably and retry safely if your backend is down.':
+    'Acepta primero, encola de forma duradera y reintenta de forma segura si tu backend está caído.',
+  'Stripe endpoint signing secret (optional now)':
+    'Secreto de firma del endpoint de Stripe (opcional ahora)',
+  'GitHub webhook secret (optional now)': 'Secreto del webhook de GitHub (opcional ahora)',
+  'At least 8 characters': 'Al menos 8 caracteres',
+  'Write-only and encrypted. You can add it after the provider has accepted the new HookTrials URL.':
+    'Cifrado y de solo escritura. Puedes añadirlo después de que el proveedor acepte la nueva URL de HookTrials.',
+  'Finish signature verification': 'Completar la verificación de firma',
+  'After registering the HookTrials URL, paste the provider signing secret here. Incoming traffic remains visible, but it is not cryptographically verified until this step is complete.':
+    'Después de registrar la URL de HookTrials, pega aquí el secreto de firma del proveedor. El tráfico entrante seguirá siendo visible, pero no se verificará criptográficamente hasta completar este paso.',
+  'Enable signature verification': 'Activar verificación de firma',
+  'Enabling…': 'Activando…',
+  'I understand that this route becomes part of the production delivery path and my destination must handle idempotency.':
+    'Entiendo que esta ruta pasa a formar parte del flujo de entrega de producción y que mi destino debe gestionar la idempotencia.',
+  'Hosted limit reached — remove an endpoint first.':
+    'Límite de Cloud alcanzado: elimina primero un endpoint.',
+  'Creating secure route…': 'Creando ruta segura…',
+  'Create live connection': 'Crear conexión real',
+  Activation: 'Activación',
+  'Your route is ready': 'Tu ruta está lista',
+  'ready to receive': 'lista para recibir',
+  'Open the webhook settings in': 'Abre la configuración de webhooks en',
+  'your provider': 'tu proveedor',
+  'Replace the current URL with the HookTrials URL above.':
+    'Sustituye la URL actual por la URL de HookTrials mostrada arriba.',
+  'Send a test event and open the connection to inspect the complete journey.':
+    'Envía un evento de prueba y abre la conexión para inspeccionar el recorrido completo.',
+  'Delete endpoint': 'Eliminar endpoint',
+  'What happens next': 'Qué ocurre después',
+  'Public HookTrials URL': 'URL pública de HookTrials',
+  'Create the route': 'Crea la ruta',
+  'Choose a provider, your real destination and a delivery strategy.':
+    'Elige un proveedor, tu destino real y una estrategia de entrega.',
+  'Copy one public URL': 'Copia una URL pública',
+  'Paste it into the provider instead of your current backend URL.':
+    'Pégala en el proveedor en lugar de la URL actual de tu backend.',
+  'Watch real traffic': 'Observa el tráfico real',
+  'Inspect requests, validation, destination responses, retries and recovery.':
+    'Inspecciona peticiones, validación, respuestas del destino, reintentos y recuperación.',
+  'Open live inspector': 'Abrir inspector en directo',
+  'Payloads and secrets are encrypted at rest. Private network destinations remain blocked in HookTrials Cloud.':
+    'Los payloads y secretos están cifrados en reposo. Los destinos de redes privadas permanecen bloqueados en HookTrials Cloud.',
+  Concentrator: 'Concentrador',
+  'Live connections': 'Conexiones reales',
+  'One control plane for every provider and backend.':
+    'Un único plano de control para todos los proveedores y backends.',
+  'No live routes yet.': 'Todavía no hay rutas reales.',
+  'Create the first connection above. Trial endpoints remain separate and safe.':
+    'Crea arriba la primera conexión. Los endpoints de prueba permanecen separados y seguros.',
+  LIVE: 'ACTIVA',
+  Inspect: 'Inspeccionar',
   Endpoints: 'Endpoints',
   'Scenario Studio': 'Estudio de escenarios',
   Monitor: 'Monitorización',

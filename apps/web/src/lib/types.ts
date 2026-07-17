@@ -24,6 +24,7 @@ export interface Endpoint {
   tokenPrefix?: string;
   ingestUrl: string | null;
   active: boolean;
+  provider?: 'generic' | 'stripe' | 'github' | 'shopify' | 'slack';
   mode: 'trial' | 'observe' | 'protect';
   environment: 'test' | 'staging' | 'production';
   destinationHost?: string | null;

@@ -14,6 +14,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Radar,
+  RadioTower,
   Sun,
 } from 'lucide-react';
 import { Brand } from '../components/Brand';
@@ -33,7 +34,11 @@ export interface DashboardContext {
   selected: Endpoint | null;
   selectEndpoint(id: string): void;
   refresh(): Promise<void>;
-  createEndpoint(name: string, scenarioId: string): Promise<Endpoint>;
+  createEndpoint(
+    name: string,
+    scenarioId: string,
+    configuration?: Record<string, unknown>,
+  ): Promise<Endpoint>;
   toggleEndpoint(endpoint: Endpoint): Promise<void>;
   updateEndpoint(endpoint: Endpoint, input: Record<string, unknown>): Promise<Endpoint>;
   deleteEndpoint(endpoint: Endpoint): Promise<void>;
@@ -138,10 +143,10 @@ export function AppLayout() {
       selected: endpoints.find((endpoint) => endpoint.id === selectedId) ?? null,
       selectEndpoint,
       refresh,
-      async createEndpoint(name, scenarioId) {
+      async createEndpoint(name, scenarioId, configuration = {}) {
         const response = await apiRequest<{ endpoint: Endpoint }>('/v1/endpoints', {
           method: 'POST',
-          body: JSON.stringify({ name, scenarioId }),
+          body: JSON.stringify({ name, scenarioId, ...configuration }),
         });
         setEndpoints((items) => [response.endpoint, ...items]);
         selectEndpoint(response.endpoint.id);
@@ -215,6 +220,7 @@ export function AppLayout() {
 
   const navigation = [
     { to: '/app', label: 'Overview', icon: Gauge, end: true },
+    { to: '/app/live-webhooks', label: 'Live Webhooks', icon: RadioTower },
     { to: '/app/endpoints', label: 'Endpoints', icon: GitBranch, count: endpoints.length },
     { to: '/app/scenarios', label: 'Scenarios', icon: FlaskConical, count: scenarios.length },
     { to: '/app/monitor', label: 'Monitor', icon: Radar },
