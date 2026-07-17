@@ -2,7 +2,18 @@
 
 Updated: 17 July 2026.
 
-## Release `v0.8.0`
+## Release `v0.8.1`
+
+Patch `v0.8.1` keeps selectable containers inside the active theme's contrast range. Template,
+scenario, endpoint, monitor, studio, integration and route-mode cards now use a restrained semantic
+hover surface instead of inheriting a white legacy background. Selected cards preserve their
+green-tinted state while hovered, so their headings, descriptions and response sequences remain
+legible in both light and dark modes.
+
+The release gate passes formatting, ESLint, strict TypeScript, 129 automated tests and the
+production web build. Browser validation covers template and scenario selection in both themes.
+
+## Previous release `v0.8.0`
 
 Release `v0.8.0` replaces the mixed glass/terminal presentation with one sober product system:
 
@@ -153,7 +164,7 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server and dashboard `v0.8.0` with landing `v0.5.0`. The backup-first promotion
+Managed Cloud runs server and dashboard `v0.8.1` with landing `v0.5.0`. The backup-first promotion
 applied migration `0009`, retained the previous immutable images and passed all four public origins,
 authenticated EN/ES, live ICMP, monitor editing, multi-monitor status publication and the corrected
 tour interaction. A post-migration backup restored 16 tables and two users in isolation; watchdog

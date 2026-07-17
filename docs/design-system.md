@@ -47,6 +47,8 @@ colors.
 7. Respect `prefers-reduced-motion`; no workflow may depend on animation.
 8. A route change starts at the top of the workspace. Scroll position from another module must not
    leak into the next screen.
+9. Hover and selected container states use semantic surface tokens. A dark-theme interaction must
+   never fall back to a literal white background, and selection remains visible while hovered.
 
 ## Accessibility and verification
 

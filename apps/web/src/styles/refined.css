@@ -548,17 +548,44 @@ html[data-theme]
   box-shadow: none;
 }
 
-html[data-theme]
-  :where(
-    .ht-endpoint-item.selected,
-    .ht-monitor-list > button.selected,
-    .ht-studio-library > button.selected,
-    .ht-scenario-option.selected,
-    .ht-template-card.selected
-  ) {
+html[data-theme] .ht-endpoint-item.selected,
+html[data-theme] .ht-monitor-list > button.selected,
+html[data-theme] .ht-studio-library > button.selected,
+html[data-theme] .ht-scenario-option.selected,
+html[data-theme] .ht-template-card.selected,
+html[data-theme] .ht-provider-presets button.active,
+html[data-theme] .ht-route-mode-help article.active {
   color: var(--ht-ink);
   background: var(--ht-positive-bg);
   border-color: color-mix(in srgb, var(--ht-green) 42%, var(--ht-hairline));
+  box-shadow: inset 3px 0 var(--ht-green);
+}
+
+/* Interactive containers stay inside the active theme's contrast range. */
+html[data-theme] .ht-template-card:hover:not(:disabled),
+html[data-theme] .ht-scenario-option:hover,
+html[data-theme] .ht-endpoint-item:hover,
+html[data-theme] .ht-monitor-list > button:hover,
+html[data-theme] .ht-studio-library > button:hover,
+html[data-theme] .ht-integration-table > button:hover,
+html[data-theme] .ht-provider-presets button:hover,
+html[data-theme] .ht-route-mode-help article:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+  border-color: color-mix(in srgb, var(--ht-green) 28%, var(--ht-hairline-bright));
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-theme] .ht-template-card.selected:hover:not(:disabled),
+html[data-theme] .ht-scenario-option.selected:hover,
+html[data-theme] .ht-endpoint-item.selected:hover,
+html[data-theme] .ht-monitor-list > button.selected:hover,
+html[data-theme] .ht-studio-library > button.selected:hover,
+html[data-theme] .ht-provider-presets button.active:hover,
+html[data-theme] .ht-route-mode-help article.active:hover {
+  background: var(--ht-positive-bg);
+  border-color: color-mix(in srgb, var(--ht-green) 48%, var(--ht-hairline));
   box-shadow: inset 3px 0 var(--ht-green);
 }
 
@@ -575,11 +602,6 @@ html[data-theme]
 
 .ht-template-card:last-child {
   border-right: 0;
-}
-
-.ht-template-card:hover:not(:disabled) {
-  background: var(--ht-surface-hover);
-  transform: none;
 }
 
 /* Readiness and replay */

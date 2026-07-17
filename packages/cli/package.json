@@ -1,6 +1,6 @@
 {
   "name": "@hooktrials/cli",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Run deterministic webhook reliability trials from a terminal or CI.",
   "license": "AGPL-3.0-only",
   "type": "module",
