@@ -230,12 +230,10 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server and dashboard `v0.8.2` with landing `v0.5.0`. The server uses the official
-release image; after GitHub's web multi-architecture job remained blocked, the dashboard was built
-natively on the AMD64 host from the exact public `v0.8.2` tag and its image digest was recorded.
-Backup-first promotion, four-origin smoke, authenticated expanded/collapsed navigation, zero
-restarts and clean recent logs passed in production. The previous `v0.8.1` images remain available
-for rollback.
+Managed Cloud runs server `v0.9.0`, dashboard `v0.10.0` and landing `v0.6.0`. Immutable image
+references and rollback copies are recorded only in the private Cloud repository. Backup-first
+promotion, four-origin smoke, real Observe forwarding, authenticated desktop/mobile validation,
+zero restarts and clean recent logs passed on 17–18 July 2026.
 
 Patch `v0.3.6` also accepts authenticated empty payload ciphertext during report analysis. Empty
 webhook bodies now produce normal deterministic evidence instead of a failed background job.

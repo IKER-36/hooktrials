@@ -1,7 +1,7 @@
 # Guided competition demonstration
 
 This guide covers the focused provider-retry simulator on one endpoint. For the complete
-Test → Observe → Protect → Monitor → Recover journey, use [Demo Lab](demo-lab.md).
+Test → Observe → Protect → Monitor → Recover journey, use [Guided Demo](demo-lab.md).
 
 HookTrials is the webhook receiver. It does not retry outgoing requests: it returns controlled HTTP
 responses so a webhook provider can demonstrate its own retry behavior. HookTrials correlates
@@ -77,7 +77,7 @@ manual delivery source, retry state and recovery without mixing them with inboun
 
 ## Part 4: monitor and explain
 
-1. Open **Monitor** and add a public API, HTTP route, ICMP host or explicitly allowlisted internal
+1. Open **Monitoring** and add a public API, HTTP route, ICMP host or explicitly allowlisted internal
    service.
 2. Run a passing check to establish a baseline.
 3. Make the synthetic target fail long enough to cross its incident threshold.

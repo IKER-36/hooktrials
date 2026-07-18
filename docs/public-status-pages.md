@@ -5,7 +5,7 @@ can combine any selected HTTP or ICMP monitors owned by the signed-in account.
 
 ## Create a page
 
-1. Open **Monitor** and find **Status pages**.
+1. Open **Monitoring** and find **Status pages**.
 2. Select **New status page**.
 3. Set an internal name, public headline, optional description and accent color.
 4. Choose the monitors to publish and keep the page enabled.

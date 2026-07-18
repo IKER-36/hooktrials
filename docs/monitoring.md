@@ -1,11 +1,11 @@
 # Monitoring HTTP and ICMP services
 
-Monitor performs bounded active checks without proxying ordinary traffic. It supports external
+Monitoring performs bounded active checks without proxying ordinary traffic. It supports external
 APIs, internal APIs, HTTP routes, webhook destinations and ICMP hosts.
 
 ## Create or edit a monitor
 
-Open **Monitor** and choose **New monitor**. Select one check type:
+Open **Monitoring** and choose **New monitor**. Select one check type:
 
 - **HTTP / HTTPS:** configure a URL, method, timeout, expected status range and optional response
   text or JSON-path expectations. Authentication headers are encrypted and write-only.

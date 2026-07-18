@@ -56,7 +56,7 @@ Required public paths:
 sudo install -d -m 0755 -o "$USER" -g "$USER" /opt/hooktrials
 git clone https://github.com/IKER-36/hooktrials.git /opt/hooktrials
 cd /opt/hooktrials
-git checkout v0.3.6
+git checkout v0.10.0
 ./hooktrials doctor
 ./hooktrials configure domain trials.example.com operator@example.com
 ./hooktrials up
@@ -67,7 +67,7 @@ The helper generates `.hooktrials/runtime.env` once with mode `0600`, builds the
 migrations and starts Caddy with automatic HTTPS. Preserve this file: it contains the encryption key
 required to read retained payloads.
 
-Release `v0.3.6` includes the worker egress topology required by Monitor, Protect and outgoing
+The current release includes the worker egress topology required by Monitoring, Protect and outgoing
 alerts.
 
 ## 5. Verify outside the VPS
@@ -79,7 +79,7 @@ curl --head https://trials.example.com/
 ```
 
 From a browser, create the first owner account, run a template Trial and confirm an external webhook
-can reach `/i/*`. Then test Monitor/Protect only after applying the release networking note.
+can reach `/i/*`. Then test Monitoring and Protect from the Product workspace.
 
 If Cloudflare proxies the hostname, enable it after origin validation and use `Full (strict)` TLS;
 never use `Flexible`.

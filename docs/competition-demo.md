@@ -6,18 +6,19 @@ a second tab. Do not show secrets, private runtime files, VPS addresses or admin
 ## 0:00-0:25 — the problem
 
 “A request bin proves one request arrived. HookTrials proves how an integration behaves across
-failure, retries, monitoring and recovery.” Show the unified Overview and the Test, Observe, Protect,
-Monitor and Recover language.
+failure, retries, monitoring and recovery.” Start in **Product → Webhook Hub** and show the explicit
+provider → HookTrials → backend flow. Explain that Product contains live work while Lab contains
+safe deterministic experiments.
 
 ## 0:25-1:35 — one complete control loop
 
-Open **Demo Lab** and select **Run full demo**. Explain each state as it turns green:
+Open **Lab → Guided Demo** and select **Run full demo**. Explain each state as it turns green:
 
-- Scenario Studio receives a custom cascading-outage recipe.
+- Failure scenarios receives a custom cascading-outage recipe.
 - Trial groups the provider-style `500 -> 503 -> 429 -> 200` sequence.
 - Observe exposes the real downstream failure synchronously.
 - Protect returns `202`, persists first and retries without losing the event.
-- Monitor fills external API, internal API, HTTP route and webhook-destination rows across healthy,
+- Monitoring fills external API, internal API, HTTP route and webhook-destination rows across healthy,
   degraded, down and recovered states.
 - Recovery queue receives a separate protected event after it exhausts all three delivery attempts.
 - Operations reconciles open/recovered incidents, protected recovery, safe alert audit and the
@@ -29,8 +30,8 @@ Pause on **Journey verified** and the six operational counters.
 ## 1:35-2:15 — evidence, not animation
 
 Open **Inspect timelines** and pause on **Reliability Replay**: diagnosis, impact, four causal stages
-and evidence-based runbook. Expand the first-to-last attempt comparison. Return to Overview and show
-the Production Readiness checklist with its highest-impact next action. Open **Monitor** to show all
+and evidence-based runbook. Expand the first-to-last attempt comparison. Return to **Control Center**
+and show the Production Readiness checklist with its highest-impact next action. Open **Monitoring** to show all
 four demo resource types plus a live ICMP target, create a customizable status page with two
 selected monitors and then show Operations with one
 actionable dead letter. Finish on the redacted evidence link.
@@ -46,7 +47,7 @@ the same exact trial runs from the CLI or bundled GitHub Action and fails CI if 
 automatic-HTTPS domain modes. The managed version runs on CubePath with isolated ingestion,
 PostgreSQL, Redis/BullMQ workers, append-only backups, restore testing and a public health watch.”
 
-Finish on the landing statement: **Test failure. Protect delivery. Prove recovery.**
+Finish on the landing statement: **See every webhook. Never lose the delivery.**
 
 After recording, use **Clean only this demo run** and confirm the scoped-cleanup message. Reload once
 before cleanup during rehearsal to prove that HookTrials recovers the private run safely.

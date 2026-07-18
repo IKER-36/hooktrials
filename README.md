@@ -64,7 +64,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
 - Deterministic `500`, `503`, `429` and recovery scenarios.
-- Scenario Studio for custom multi-step status, delay, header and body recipes.
+- Failure scenarios for custom multi-step status, delay, header and body recipes.
 - Guided endpoint templates and an integrated provider simulator.
 - Live event stream, retry timeline and encrypted payload inspector.
 - Reliability Replay turning each event into a causal diagnosis, impact statement and runbook.
@@ -100,7 +100,7 @@ Every generated resource belongs to the signed-in account and receives a private
 **Clean only this demo run** removes that exact workspace without matching names or touching other
 user data. Demo incidents never call a real alert webhook configured by the user.
 
-See [Full Demo Lab](docs/demo-lab.md) for the generated dataset, safety boundary and cleanup model.
+See [Guided Demo](docs/demo-lab.md) for the generated dataset, safety boundary and cleanup model.
 
 ## Why HookTrials is different
 
@@ -112,11 +112,17 @@ destination failure, protect delivery, observe recovery and preserve shareable e
 Readiness** scores only controls and evidence the user can inspect. Neither feature invents an AI
 conclusion or hides a grading formula.
 
-### See the evidence, not a black-box score
+### See the product, not a mock-up
 
-![Production Readiness showing nine of ten verifiable controls](docs/assets/production-readiness.png)
+The current `v0.10.0` interface keeps real delivery work in **Product** and deterministic
+experiments in **Lab**. These captures come from the deployed Cloud application; the same dashboard
+is included in the self-hosted distribution.
 
-![Reliability Replay reconstructing a recovered delivery](docs/assets/reliability-replay.png)
+![Webhook Hub connecting providers, HookTrials and a backend](docs/assets/webhook-hub.jpg)
+
+![Production Readiness showing its verifiable controls and highest-impact next action](docs/assets/production-readiness.jpg)
+
+![Reliability Replay reconstructing a recorded delivery](docs/assets/reliability-replay.jpg)
 
 ## Repository model
 
@@ -137,10 +143,10 @@ the marketing website are outside its scope and are not required to run HookTria
 - [Incidents, alerts and evidence](docs/incidents-alerts-evidence.md)
 - [Architecture](docs/architecture.md)
 - [Guided demonstration](docs/guided-demo.md)
-- [Full Demo Lab](docs/demo-lab.md)
+- [Guided Demo](docs/demo-lab.md)
 - [CLI and GitHub Actions](docs/cli-and-ci.md)
 - [Competition demonstration script](docs/competition-demo.md)
-- [Scenario Studio](docs/scenario-studio.md)
+- [Failure scenarios](docs/scenario-studio.md)
 - [Self-hosting](docs/self-hosting.md)
 - [Configuration](docs/configuration.md)
 - [Development](docs/development.md)

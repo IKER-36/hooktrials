@@ -46,7 +46,7 @@ and records both sides. **Protect** persists the event first, retries with bound
 exhausted deliveries to the dead-letter inbox. Destination URLs, headers, contracts and signing
 secrets are encrypted and write-only.
 
-## Failure Scenario Studio
+## Failure scenarios
 
 Built-in scenarios cover basic inspection, rate limiting, temporary outage and unstable services.
 Custom scenarios define an ordered sequence of status, delay, headers and response body. Use the
@@ -67,12 +67,12 @@ Retry continues an existing protected delivery. Replay creates a new delivery fr
 event. Both require explicit confirmation and record operator/source metadata. Check destination
 health and idempotency before either action.
 
-## Guided Demo Lab
+## Guided Demo
 
-Demo Lab creates isolated, user-owned synthetic resources that exercise Trial, Observe, Protect,
+Guided Demo creates isolated, user-owned synthetic resources that exercise Trial, Observe, Protect,
 Monitoring, Operations and Evidence through the normal API, queue and worker paths. It is a learning and
 competition-demonstration workspace, not a substitute for real endpoints and monitors. Reset removes
-only resources owned by Demo Lab.
+only resources owned by the current demo run.
 
 ## Security and data handling
 

@@ -34,5 +34,5 @@ In Protect mode HookTrials owns downstream recovery. Monitor its queue, incident
 Back up PostgreSQL because event and delivery state is durable there; Redis coordinates work but is
 not the source of truth.
 
-Release `v0.3.6` includes the dual-network worker topology required for protected deliveries. Keep
+The current release includes the dual-network worker topology required for protected deliveries. Keep
 the data network internal and the edge network egress-capable.

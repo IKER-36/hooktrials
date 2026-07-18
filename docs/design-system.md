@@ -12,12 +12,13 @@ The system prioritizes operational clarity, legibility and predictable hierarchy
   measured evidence.
 - Light mode uses a neutral gray canvas and white surfaces. Dark mode uses distinct charcoal
   surface levels instead of flattening every module into black.
-- Surfaces are solid, borders are quiet and elevation is reserved for overlays. Standard cards use
-  7–14px radii and never depend on glass effects for hierarchy.
+- Operational pages use open sections, structural dividers and data rows. Contained surfaces are
+  reserved for forms, dialogs, confirmations and safety-critical controls; hierarchy never depends
+  on glass effects.
 - Green is the product action and healthy-state color. Amber and red only communicate real warning
   or failure states.
 - Icons come from Lucide and accompany navigation or meaning. They are not decorative filler.
-- Motion is short and purposeful: lift on actionable cards, focus feedback and live-state pulses.
+- Motion is short and purposeful: focus feedback, state transitions and live-state pulses.
 
 ## Source layout
 
@@ -35,10 +36,10 @@ colors.
 
 ## Component rules
 
-1. Use solid surfaces. Nested content changes one semantic surface level or uses a divider; it does
-   not introduce a new shadow.
-2. Use a pill only for statuses, badges and compact counters; use 7–14px corners for controls and
-   cards.
+1. Prefer the open Webhook Hub workspace language. Nested content changes one semantic surface
+   level or uses a divider; it does not introduce a new floating card or shadow.
+2. Use a pill only for statuses and compact counters; use restrained corners for controls and
+   intentionally contained surfaces.
 3. Keep body copy in Inter. Use mono only where exact characters or timing matter.
 4. Never use green for decoration beside a red or amber operational state that needs attention.
 5. Every interactive element requires a visible focus state and at least a 36px touch target.
@@ -58,5 +59,6 @@ colors.
 ## Accessibility and verification
 
 Every visual change must be checked at desktop and mobile widths, with authenticated and public
-surfaces. The required gate is `pnpm check`; local browser validation should cover login, Overview,
-Endpoints, Scenario Studio, Monitor, Operations, Demo Lab and public evidence.
+surfaces. The required gate is `pnpm check`; local browser validation should cover login, Control
+Center, Webhook Hub, Monitoring, Operations, Trial endpoints, Failure scenarios, Guided Demo and
+public evidence/status views.

@@ -10,7 +10,7 @@ webhook traffic and monitor HTTP or ICMP dependencies from one dashboard.
 | Test how a sender retries    | Trial      | A deterministic failure scenario and retry evidence |
 | Inspect real webhook traffic | Observe    | A synchronous provider-to-destination journey       |
 | Avoid losing webhook events  | Protect    | Durable queueing, retries and a dead-letter inbox   |
-| Check an API or HTTP route   | Monitor    | Availability, latency, contracts and incidents      |
+| Check an API or HTTP route   | Monitoring | Availability, latency, contracts and incidents      |
 
 ## First safe demonstration
 
@@ -18,7 +18,7 @@ webhook traffic and monitor HTTP or ICMP dependencies from one dashboard.
 2. Keep the endpoint in **Trial** and choose `Temporary outage then recovery`.
 3. Click **Run 3-attempt demo**. No external provider is required.
 4. Open the generated event. Inspect inbound attempts, payload stability and the resilience score.
-5. Open **Monitor** and create a public HTTP check, or use a self-host allowlist for an internal
+5. Open **Monitoring** and create a public HTTP check, or use a self-host allowlist for an internal
    destination.
 6. Open **Operations** to inspect incident recovery, dead letters and outgoing alert evidence.
 

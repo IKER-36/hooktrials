@@ -25,10 +25,10 @@ This directory contains documentation intended to be published with the source c
 | [Product design system](design-system.md)       | Visual language, tokens and UI conventions    |
 | [External access](external-access.md)           | Public domains, HTTPS and tunnel options      |
 | [Guided demo](guided-demo.md)                   | Templates and complete retry demonstration    |
-| [Full Demo Lab](demo-lab.md)                    | Complete product control-loop demonstration   |
+| [Guided Demo](demo-lab.md)                      | Complete product control-loop demonstration   |
 | [CLI and CI](cli-and-ci.md)                     | Terminal and GitHub Action reliability gates  |
 | [Competition demo](competition-demo.md)         | Reproducible three-minute judging script      |
-| [Scenario Studio](scenario-studio.md)           | Custom response-sequence authoring            |
+| [Failure scenarios](scenario-studio.md)         | Custom response-sequence authoring            |
 | [Deployment](deployment.md)                     | Production deployment with Docker Compose     |
 | [VPS bootstrap](vps-bootstrap.md)               | Prepare a clean Ubuntu server                 |
 | [Security](security.md)                         | Threat model and security controls            |

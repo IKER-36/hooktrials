@@ -1,6 +1,6 @@
-# Scenario Studio
+# Failure scenarios
 
-Scenario Studio controls what HookTrials returns on each delivery attempt. It lets you reproduce
+The **Failure scenarios** Lab module controls what HookTrials returns on each delivery attempt. It lets you reproduce
 temporary outages, rate limits, slow responses and eventual recovery without changing the webhook
 sender.
 
