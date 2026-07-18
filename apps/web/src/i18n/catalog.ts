@@ -115,6 +115,24 @@ export const es: Record<string, string> = {
   'Restoring session…': 'Restaurando sesión…',
   Dashboard: 'Panel',
   Overview: 'Resumen',
+  'Control plane': 'Plano de control',
+  'Control plane · selected route': 'Plano de control · ruta seleccionada',
+  'Live operations': 'Operaciones en vivo',
+  Product: 'Producto',
+  'Production workspace': 'Espacio productivo',
+  Lab: 'Laboratorio',
+  Monitoring: 'Monitorización',
+  'Reliability Lab': 'Laboratorio de fiabilidad',
+  'Reliability Lab · guided demo': 'Laboratorio de fiabilidad · demo guiada',
+  'Trial endpoints': 'Endpoints de prueba',
+  'Failure scenarios': 'Escenarios de fallo',
+  'Guided demo': 'Demo guiada',
+  Documentation: 'Documentación',
+  'Current module': 'Módulo actual',
+  'Exercise failure and retry behaviour with synthetic traffic, completely separate from your live webhook routes.':
+    'Ejercita fallos y reintentos con tráfico sintético, completamente separado de tus rutas webhook reales.',
+  'trial endpoints': 'endpoints de prueba',
+  'Your trial endpoints': 'Tus endpoints de prueba',
   'Live Webhooks': 'Webhooks reales',
   'Webhook Hub & live traffic': 'Concentrador de webhooks y tráfico real',
   'Concentrate real providers, inspect every request and control delivery.':
@@ -470,6 +488,16 @@ export const es: Record<string, string> = {
   'Open inventory': 'Abrir inventario',
   'Open operations': 'Abrir operaciones',
   'See reliability at a glance': 'Consulta la fiabilidad de un vistazo',
+  'Connect real traffic safely': 'Conecta tráfico real con seguridad',
+  'Webhook Hub creates the public provider URL, encrypted destination, validation and Observe or Protect delivery strategy as one live connection.':
+    'El Concentrador de webhooks crea la URL pública del proveedor, el destino cifrado, la validación y la estrategia Observar o Proteger como una única conexión real.',
+  'Live connections stay in Product and never appear inside the synthetic Trial inventory.':
+    'Las conexiones reales permanecen en Producto y nunca aparecen en el inventario sintético de Prueba.',
+  'Build a deterministic trial': 'Crea una prueba determinista',
+  'Trial endpoints receive synthetic traffic and return controlled failures without forwarding requests into your real delivery path.':
+    'Los endpoints de prueba reciben tráfico sintético y devuelven fallos controlados sin reenviar peticiones a tu ruta de entrega real.',
+  'The Lab stays isolated from Product while preserving the same request and retry evidence.':
+    'El Laboratorio permanece aislado de Producto y conserva las mismas evidencias de peticiones y reintentos.',
   'Create a safe webhook route': 'Crea una ruta webhook segura',
   'Design the failure you need to prove': 'Diseña el fallo que necesitas demostrar',
   'Measure APIs and destinations': 'Mide APIs y destinos',
@@ -1052,6 +1080,26 @@ export const es: Record<string, string> = {
   'Native signature verification · add your whsec_ secret':
     'Verificación de firma nativa · añade tu secreto whsec_',
   'Native X-Hub-Signature-256 verification': 'Verificación nativa X-Hub-Signature-256',
+  'Control Center & Readiness': 'Centro de control y preparación',
+  'Control Center combines route state, active monitoring, incidents, recovery evidence and Production Readiness for the selected endpoint.':
+    'El Centro de control combina estado de rutas, monitorización activa, incidentes, evidencias de recuperación y preparación para producción del endpoint seleccionado.',
+  'Test deterministic failure behaviour in an isolated laboratory.':
+    'Prueba un comportamiento de fallo determinista en un laboratorio aislado.',
+  'Trial endpoints are isolated receivers for synthetic traffic. They return deterministic scenario responses without forwarding requests to a real backend.':
+    'Los endpoints de prueba son receptores aislados para tráfico sintético. Devuelven respuestas deterministas sin reenviar peticiones a un backend real.',
+  'Inspect the correlated retry timeline and compare every attempt.':
+    'Inspecciona la cronología correlacionada de reintentos y compara cada intento.',
+  'Move to Webhook Hub when the integration is ready for Observe or Protect.':
+    'Pasa al Concentrador de webhooks cuando la integración esté lista para Observar o Proteger.',
+  'Failure behaviour is proven without mixing laboratory traffic with live connections.':
+    'El comportamiento ante fallos se demuestra sin mezclar tráfico de laboratorio con conexiones reales.',
+  'Reuse the same event identifier so sender retries stay in one timeline.':
+    'Reutiliza el mismo identificador de evento para mantener los reintentos del emisor en una cronología.',
+  'Real provider traffic belongs in Webhook Hub, not in a Trial endpoint.':
+    'El tráfico real de proveedores pertenece al Concentrador de webhooks, no a un endpoint de prueba.',
+  'Guided Demo Lab': 'Laboratorio demo guiado',
+  'Open Control Center, Monitoring and Operations to inspect the generated evidence.':
+    'Abre Centro de control, Monitorización y Operaciones para inspeccionar las evidencias generadas.',
   'Contract starter · HMAC header presence captured':
     'Contrato inicial · presencia del header HMAC capturada',
   'Contract starter · signing headers captured': 'Contrato inicial · headers de firma capturados',
@@ -1066,6 +1114,10 @@ export const es: Record<string, string> = {
 
 export const phrasePatterns: Array<[RegExp, (match: RegExpMatchArray) => string]> = [
   [/^(\d+) of (\d+)$/, (m) => `${m[1]} de ${m[2]}`],
+  [
+    /^(\d+) trial endpoints?( · unlimited)?$/,
+    (m) => `${m[1]} endpoint${m[1] === '1' ? '' : 's'} de prueba${m[2] ? ' · ilimitados' : ''}`,
+  ],
   [/^every (\d+)m$/, (m) => `cada ${m[1]} min`],
   [
     /^(\d+) monitors? · (public|disabled)$/,

@@ -42,11 +42,11 @@ keeping PostgreSQL and Redis on the internal data network.
 
 ## First useful trial
 
-1. Open **Endpoints** and choose a starter template.
+1. Open **Trial endpoints** in the Lab workspace and choose a starter template.
 2. Copy the generated ingestion URL.
 3. Use the integrated simulator with synthetic data, or configure that URL in your webhook sender.
-4. Watch attempts arrive in **Overview** and inspect the retry timeline.
-5. Open **Scenario Studio** to create the exact failure/recovery sequence needed by your system.
+4. Watch attempts arrive in **Control Center** and inspect the retry timeline.
+5. Open **Failure scenarios** to create the exact failure/recovery sequence needed by your system.
 
 ## Operations
 

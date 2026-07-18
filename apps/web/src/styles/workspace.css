@@ -1,0 +1,482 @@
+/*
+ * HookTrials workspace v3
+ *
+ * The product is organised as a control plane, live operations and a safe reliability lab.
+ * Layout relies on rhythm and dividers; contained surfaces are reserved for forms and overlays.
+ */
+
+/* Module navigation */
+.ht-sidebar > nav {
+  display: grid;
+  gap: 14px;
+}
+
+.ht-nav-group {
+  display: grid;
+  gap: 2px;
+}
+
+.ht-nav-group > p {
+  margin: 0 9px 4px;
+  overflow: hidden;
+  color: var(--ht-faint);
+  font: 650 8px/1.2 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ht-nav-group[data-area='product'] > p {
+  color: var(--ht-green-deep);
+}
+
+html[data-theme] .ht-shell.sidebar-collapsed .ht-sidebar > nav {
+  gap: 8px;
+}
+
+html[data-theme] .ht-shell.sidebar-collapsed .ht-nav-group {
+  padding-top: 8px;
+  border-top: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell.sidebar-collapsed .ht-nav-group:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+html[data-theme] .ht-shell.sidebar-collapsed .ht-nav-group > p {
+  display: none;
+}
+
+.ht-workspace-context {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  color: var(--ht-faint);
+  border-bottom: 1px solid var(--ht-hairline);
+  font: 650 9px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ht-workspace-context span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ht-workspace-context i {
+  width: 5px;
+  height: 5px;
+  background: var(--ht-faint);
+  border-radius: 50%;
+}
+
+.ht-workspace-context b {
+  color: var(--ht-hairline-bright);
+  font-weight: 400;
+}
+
+.ht-workspace-context strong {
+  color: var(--ht-muted);
+  font-weight: 650;
+}
+
+.ht-workspace-context.area-product i {
+  background: var(--ht-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ht-green) 10%, transparent);
+}
+
+.ht-workspace-context.area-lab i {
+  background: var(--ht-amber);
+}
+
+/* Open page rhythm */
+html[data-theme] .ht-shell .ht-page {
+  gap: 24px;
+}
+
+html[data-theme] .ht-shell .ht-page-head {
+  min-height: 122px;
+  align-items: end;
+  padding: 28px 0 22px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-page-head h1 {
+  font-size: clamp(32px, 3vw, 44px);
+}
+
+html[data-theme] .ht-shell .ht-page-head .ht-muted-line {
+  max-width: 760px;
+}
+
+html[data-theme] .ht-shell .ht-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+html[data-theme] .ht-shell .ht-kicker::before {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: currentColor;
+}
+
+/* Metrics read as one data strip, not as a row of cards. */
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-control-metrics,
+    .ht-operation-summary,
+    .ht-monitor-summary,
+    .ht-monitor-metrics,
+    .ht-metrics,
+    .ht-demo-proof
+  ) {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--ht-hairline-bright);
+  border-bottom: 1px solid var(--ht-hairline-bright);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-control-metrics article,
+    .ht-operation-summary article,
+    .ht-monitor-summary article,
+    .ht-monitor-metrics article,
+    .ht-metrics article,
+    .ht-demo-proof div
+  ) {
+  min-height: 88px;
+  background: transparent;
+}
+
+/* Sections use dividers and whitespace. Forms and dialogs remain intentionally contained. */
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-control-center,
+    .ht-operation-panel,
+    .ht-monitor-list,
+    .ht-monitor-detail,
+    .ht-studio-library,
+    .ht-studio-editor,
+    .ht-endpoint-card,
+    .ht-template-section,
+    .ht-endpoint-list,
+    .ht-events,
+    .ht-demo-rail,
+    .ht-demo-console,
+    .ht-route-config,
+    .ht-alert-panel,
+    .ht-managed-routes,
+    .ht-webhook-journey,
+    .ht-guided-demo,
+    .ht-integration-table,
+    .ht-readiness,
+    .ht-status-share,
+    .ht-docs-nav,
+    .ht-docs-article,
+    .ht-status-pages
+  ) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-control-center,
+    .ht-operation-panel,
+    .ht-template-section,
+    .ht-events,
+    .ht-demo-console,
+    .ht-route-config,
+    .ht-alert-panel,
+    .ht-managed-routes,
+    .ht-guided-demo,
+    .ht-integration-table,
+    .ht-readiness,
+    .ht-status-pages
+  ) {
+  overflow: hidden;
+  border-top: 1px solid var(--ht-hairline-bright);
+  border-bottom: 1px solid var(--ht-hairline-bright);
+}
+
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-control-center > header,
+    .ht-operation-panel > header,
+    .ht-events > header,
+    .ht-template-section > header,
+    .ht-managed-routes > header,
+    .ht-monitor-create > header,
+    .ht-integration-table > header
+  ) {
+  padding: 18px 0;
+}
+
+/* Keep task surfaces legible without making every section a floating card. */
+html[data-theme] .ht-shell :where(.ht-create-card, .ht-monitor-create) {
+  background: var(--ht-surface-1);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-md);
+  box-shadow: none;
+}
+
+html[data-theme] .ht-shell :where(.ht-create-card, .ht-monitor-create) > header {
+  padding-inline: 0;
+}
+
+/* Inventory rows */
+html[data-theme] .ht-shell :where(.ht-endpoint-list, .ht-monitor-list, .ht-studio-library) {
+  overflow: hidden;
+  border-top: 1px solid var(--ht-hairline-bright);
+  border-bottom: 1px solid var(--ht-hairline-bright);
+}
+
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-endpoint-item,
+    .ht-monitor-list > button,
+    .ht-studio-library > button,
+    .ht-operation-list article,
+    .ht-check-list article,
+    .ht-readiness-checks article
+  ) {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ht-hairline);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-endpoint-item:last-child,
+    .ht-monitor-list > button:last-child,
+    .ht-studio-library > button:last-child,
+    .ht-operation-list article:last-child,
+    .ht-check-list article:last-child,
+    .ht-readiness-checks article:last-child
+  ) {
+  border-bottom: 0;
+}
+
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-endpoint-item:hover,
+    .ht-monitor-list > button:hover,
+    .ht-studio-library > button:hover,
+    .ht-integration-table > button:hover
+  ) {
+  background: color-mix(in srgb, var(--ht-green) 5%, transparent);
+  border-color: var(--ht-hairline);
+}
+
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-endpoint-item.selected,
+    .ht-monitor-list > button.selected,
+    .ht-studio-library > button.selected
+  ) {
+  background: color-mix(in srgb, var(--ht-green) 8%, transparent);
+  border-color: var(--ht-hairline);
+}
+
+/* Endpoint templates behave like one horizontal chooser. */
+html[data-theme] .ht-shell .ht-template-grid {
+  border-top: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-template-card {
+  background: transparent;
+}
+
+html[data-theme] .ht-shell .ht-template-card:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ht-green) 5%, transparent);
+}
+
+html[data-theme] .ht-shell .ht-template-card.selected,
+html[data-theme] .ht-shell .ht-template-card.selected:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ht-green) 9%, transparent);
+}
+
+/* Split workspaces are joined by a single structural divider. */
+html[data-theme] .ht-shell :where(.ht-monitor-grid, .ht-studio-grid, .ht-docs-layout) {
+  gap: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--ht-hairline-bright);
+  border-bottom: 1px solid var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell :where(.ht-monitor-list, .ht-studio-library, .ht-docs-nav) {
+  border: 0;
+  border-right: 1px solid var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell :where(.ht-monitor-detail, .ht-studio-editor, .ht-docs-article) {
+  border: 0;
+}
+
+html[data-theme] .ht-shell .ht-docs-nav button {
+  border-radius: 0;
+}
+
+/* Readiness keeps hierarchy through contrast, not a floating shell. */
+html[data-theme] .ht-shell .ht-readiness-score {
+  border: 0;
+  border-right: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-score-card {
+  box-shadow: none;
+}
+
+/* Demo is a chronological lab rail rather than a collection of floating boxes. */
+html[data-theme] .ht-shell .ht-demo-rail {
+  padding: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--ht-hairline-bright);
+  border-bottom: 1px solid var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell .ht-demo-rail > * {
+  border-radius: 0;
+}
+
+html[data-theme] .ht-shell :where(.ht-demo-safety, .ht-demo-recovered, .ht-demo-message) {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* Operations queues and monitor rows keep compact scan density. */
+html[data-theme] .ht-shell .ht-operation-list {
+  gap: 0;
+}
+
+html[data-theme] .ht-shell .ht-operation-list article {
+  padding-inline: 0;
+}
+
+html[data-theme] .ht-shell .ht-integration-table-head,
+html[data-theme] .ht-shell .ht-integration-table > button {
+  background: transparent;
+}
+
+html[data-theme] .ht-shell .ht-integration-table > button:nth-of-type(even) {
+  background: color-mix(in srgb, var(--ht-surface-2) 65%, transparent);
+}
+
+/* Live Hub is the reference language; remove its last floating-card cues. */
+.ht-live-webhooks .ht-live-summary {
+  background: transparent;
+  border-color: var(--ht-hairline-bright);
+}
+
+.ht-live-webhooks .ht-live-flow article {
+  background: transparent;
+}
+
+.ht-live-webhooks .ht-live-connect,
+.ht-live-webhooks .ht-live-activation,
+.ht-live-webhooks .ht-live-routes {
+  box-shadow: none;
+}
+
+.ht-live-webhooks .ht-live-routes {
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+}
+
+/* Mobile navigation remains complete and scrollable instead of squeezing eight modules. */
+@media (max-width: 980px) {
+  .ht-workspace-context {
+    min-height: 32px;
+    margin-inline: 4px;
+  }
+
+  .ht-mobilenav {
+    display: flex;
+    justify-content: flex-start;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .ht-mobilenav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ht-mobilenav a {
+    flex: 0 0 72px;
+  }
+}
+
+@media (max-width: 760px) {
+  html[data-theme] .ht-shell .ht-page {
+    gap: 18px;
+  }
+
+  html[data-theme] .ht-shell .ht-page-head {
+    min-height: auto;
+    padding: 22px 4px 18px;
+  }
+
+  html[data-theme] .ht-shell .ht-page-head h1 {
+    font-size: 34px;
+  }
+
+  html[data-theme] .ht-shell :where(.ht-monitor-grid, .ht-studio-grid, .ht-docs-layout) {
+    gap: 18px;
+    overflow: visible;
+    border: 0;
+  }
+
+  html[data-theme] .ht-shell :where(.ht-monitor-list, .ht-studio-library, .ht-docs-nav) {
+    border: 0;
+    border-top: 1px solid var(--ht-hairline-bright);
+    border-bottom: 1px solid var(--ht-hairline-bright);
+  }
+
+  html[data-theme] .ht-shell .ht-readiness-score {
+    border-right: 0;
+    border-bottom: 1px solid var(--ht-hairline);
+  }
+}
+
+@media (max-width: 520px) {
+  html[data-theme] .ht-shell .ht-mobilenav a {
+    flex-basis: 84px;
+  }
+
+  html[data-theme] .ht-shell .ht-mobilenav a span {
+    display: block;
+    overflow: hidden;
+    max-width: 78px;
+    font-size: 7px;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

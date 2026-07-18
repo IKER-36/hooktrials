@@ -58,10 +58,10 @@ export function OperationsPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="operations">
+    <section className="ht-page" data-tour-section="operations" data-product-area="live">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Recovery control</p>
+          <p className="ht-kicker">Live operations</p>
           <h1>Operations</h1>
           <p className="ht-muted-line">
             Triage incidents, recover dead letters and verify alert delivery from one queue.

@@ -14,7 +14,7 @@ webhook traffic and monitor HTTP or ICMP dependencies from one dashboard.
 
 ## First safe demonstration
 
-1. Open **Endpoints** and create an endpoint from a template.
+1. Open **Trial endpoints** in the Lab workspace and create an endpoint from a template.
 2. Keep the endpoint in **Trial** and choose `Temporary outage then recovery`.
 3. Click **Run 3-attempt demo**. No external provider is required.
 4. Open the generated event. Inspect inbound attempts, payload stability and the resilience score.

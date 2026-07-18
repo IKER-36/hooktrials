@@ -13,7 +13,7 @@ your application and receives the configured scenario responses.
 ## Run a trial
 
 1. Create an endpoint and leave its mode set to **Trial**.
-2. Select a built-in scenario or create one in **Scenario Studio**.
+2. Select a built-in scenario or create one in **Failure scenarios**.
 3. Copy the ingest URL into a provider's webhook configuration, or use the dashboard simulator.
 4. Open the live event after the first request.
 5. Compare response sequence, delays, attempt count, correlation identifier and report deductions.

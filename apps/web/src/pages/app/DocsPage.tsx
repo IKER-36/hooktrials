@@ -29,12 +29,12 @@ interface Guide {
 const guides: Guide[] = [
   {
     id: 'overview',
-    title: 'Overview & Readiness',
+    title: 'Control Center & Readiness',
     summary: 'Understand current risk and the next highest-impact action.',
     icon: Gauge,
     route: '/app',
     purpose:
-      'Overview combines route state, active monitoring, incidents, recovery evidence and Production Readiness for the selected endpoint.',
+      'Control Center combines route state, active monitoring, incidents, recovery evidence and Production Readiness for the selected endpoint.',
     steps: [
       'Choose the endpoint from the selector at the top of the page.',
       'Read the Control Center for cross-product health and operational work.',
@@ -72,24 +72,24 @@ const guides: Guide[] = [
   },
   {
     id: 'endpoints',
-    title: 'Endpoints & route modes',
-    summary: 'Receive, observe or protect webhook traffic with one stable URL.',
+    title: 'Trial endpoints',
+    summary: 'Test deterministic failure behaviour in an isolated laboratory.',
     icon: GitBranch,
     route: '/app/endpoints',
     purpose:
-      'An endpoint is the private ingestion URL used by a provider. Its route mode controls whether HookTrials simulates, forwards or durably delivers the request.',
+      'Trial endpoints are isolated receivers for synthetic traffic. They return deterministic scenario responses without forwarding requests to a real backend.',
     steps: [
       'Create an endpoint from a template or choose a scenario manually.',
       'Copy the ingestion URL and send only synthetic data while testing.',
       'Use Trial for deterministic responses and retry verification.',
-      'Configure a destination before selecting Observe or Protect.',
-      'Add a contract and GitHub or Stripe signature verification where appropriate.',
+      'Inspect the correlated retry timeline and compare every attempt.',
+      'Move to Webhook Hub when the integration is ready for Observe or Protect.',
     ],
-    result: 'The same endpoint can mature from a safe trial into an observable or protected route.',
+    result: 'Failure behaviour is proven without mixing laboratory traffic with live connections.',
     troubleshooting: [
-      '401 means the configured provider signature did not verify.',
       '422 means the inbound method, headers or JSON contract did not match.',
-      'Protect returns 202 because delivery continues asynchronously.',
+      'Reuse the same event identifier so sender retries stay in one timeline.',
+      'Real provider traffic belongs in Webhook Hub, not in a Trial endpoint.',
     ],
   },
   {
@@ -114,7 +114,7 @@ const guides: Guide[] = [
   },
   {
     id: 'monitor',
-    title: 'Monitor',
+    title: 'Monitoring',
     summary: 'Measure availability, latency, contracts and incident recovery.',
     icon: Radar,
     route: '/app/monitor',
@@ -155,7 +155,7 @@ const guides: Guide[] = [
   },
   {
     id: 'demo',
-    title: 'Demo Lab',
+    title: 'Guided Demo Lab',
     summary: 'Learn every module with isolated synthetic resources.',
     icon: Activity,
     route: '/app/demo',
@@ -163,7 +163,7 @@ const guides: Guide[] = [
       'Demo Lab exercises the complete control loop without modifying normal resources or consuming the regular endpoint quota.',
     steps: [
       'Run the full demo and keep the page open while eight stages complete.',
-      'Open Overview, Monitor and Operations to inspect the generated evidence.',
+      'Open Control Center, Monitoring and Operations to inspect the generated evidence.',
       'Return to Demo Lab when you want to reset all demo-owned runs.',
     ],
     result:
@@ -230,10 +230,10 @@ export function DocsPage() {
   const Icon = selected.icon;
 
   return (
-    <section className="ht-page ht-docs" data-tour-section="docs">
+    <section className="ht-page ht-docs" data-tour-section="docs" data-product-area="resources">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Product guide</p>
+          <p className="ht-kicker">Resources</p>
           <h1>Docs</h1>
           <p className="ht-muted-line">
             What every module does, when to use it and how to verify the result.

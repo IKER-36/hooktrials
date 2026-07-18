@@ -29,7 +29,7 @@ multiple routes to concentrate different providers and backends in the same work
 
 ## Create a live connection
 
-1. Open **Live Webhooks** and select **Connect a real webhook**.
+1. Open **Webhook Hub** in the Product workspace and select **Connect a real webhook**.
 2. Choose the provider. Provider starters configure an inbound POST contract; Stripe and GitHub
    support native signature verification.
 3. Enter the public HTTPS URL that currently receives the webhook.

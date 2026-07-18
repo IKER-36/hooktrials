@@ -109,10 +109,10 @@ export function ScenariosPage() {
   const readOnlyBuiltIn = Boolean(selected?.builtIn);
 
   return (
-    <section className="ht-page" data-tour-section="scenarios">
+    <section className="ht-page" data-tour-section="scenarios" data-product-area="lab">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Failure orchestration</p>
+          <p className="ht-kicker">Reliability Lab</p>
           <h1>Scenario Studio</h1>
           <p className="ht-muted-line">
             Model the exact response sequence your webhook sender must survive.

@@ -1,7 +1,7 @@
 # HookTrials
 
 [![Hosted on CubePath](https://img.shields.io/badge/Hosted%20on-CubePath-22c55e?style=flat-square)](https://cubepath.com/)
-[![Release](https://img.shields.io/badge/release-v0.9.0-6366f1?style=flat-square)](docs/release-status.md)
+[![Release](https://img.shields.io/badge/release-v0.10.0-6366f1?style=flat-square)](docs/release-status.md)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-334155?style=flat-square)](LICENSE)
 
 Open-source integration reliability control plane. HookTrials tests failure behavior, safely
@@ -9,7 +9,7 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.9.0** (17 July 2026). The managed sandbox is available at
+Current public release: **v0.10.0** (18 July 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
 
 ## Run locally
@@ -55,7 +55,11 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Searchable in-product Docs with exact workflows, outcomes and troubleshooting.
 - Persistent accessible light and dark themes built from a sober, solid semantic design system.
 - Unified Control Center, integration inventory and Operations recovery queue.
-- One-click Demo Lab filling every product module with an isolated, realistic synthetic workspace.
+- Explicit Product / Lab / Resources workspaces, keeping real Observe/Protect connections separate
+  from synthetic Trial endpoints and failure scenarios.
+- Open operational layouts based on typography, whitespace and data dividers instead of repetitive
+  floating cards, with the same hierarchy on desktop and mobile.
+- One-click Guided Demo filling every product module with an isolated, realistic synthetic workspace.
 - Fastify API and isolated public ingestion service.
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
@@ -80,7 +84,7 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 
 ## One-click full product demo
 
-After signing in, open **Demo Lab** and select **Run full demo**. HookTrials creates and exercises a
+After signing in, open **Guided demo** and select **Run full demo**. HookTrials creates and exercises a
 complete synthetic workspace instead of showing static sample cards:
 
 - a custom cascading-outage scenario and a `500 → 503 → 429 → 200` Trial timeline;

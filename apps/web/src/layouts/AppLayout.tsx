@@ -16,6 +16,7 @@ import {
   Radar,
   RadioTower,
   Sun,
+  type LucideIcon,
 } from 'lucide-react';
 import { Brand } from '../components/Brand';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
@@ -25,6 +26,21 @@ import { apiRequest, isAuthError, readableError } from '../lib/api';
 import type { AccountLimits, Endpoint, Scenario } from '../lib/types';
 
 const SELECTED_KEY = 'ht.selectedEndpoint';
+
+interface NavigationItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  count?: number;
+  end?: boolean;
+}
+
+interface NavigationGroup {
+  id: 'product' | 'lab' | 'resources';
+  label: string;
+  contextLabel?: string;
+  items: NavigationItem[];
+}
 
 export interface DashboardContext {
   endpoints: Endpoint[];
@@ -218,16 +234,61 @@ export function AppLayout() {
   }
   if (!user) return <Navigate to="/login" replace />;
 
-  const navigation = [
-    { to: '/app', label: 'Overview', icon: Gauge, end: true },
-    { to: '/app/live-webhooks', label: 'Live Webhooks', icon: RadioTower },
-    { to: '/app/endpoints', label: 'Endpoints', icon: GitBranch, count: endpoints.length },
-    { to: '/app/scenarios', label: 'Scenarios', icon: FlaskConical, count: scenarios.length },
-    { to: '/app/monitor', label: 'Monitor', icon: Radar },
-    { to: '/app/operations', label: 'Operations', icon: BellRing },
-    { to: '/app/demo', label: 'Demo Lab', icon: Activity },
-    { to: '/app/docs', label: 'Docs', icon: BookOpen },
+  const navigation: NavigationGroup[] = [
+    {
+      id: 'product',
+      label: 'Product',
+      contextLabel: 'Production workspace',
+      items: [
+        { to: '/app', label: 'Control Center', icon: Gauge, end: true },
+        {
+          to: '/app/live-webhooks',
+          label: 'Webhook Hub',
+          icon: RadioTower,
+          count: endpoints.filter((endpoint) => endpoint.mode !== 'trial' && !endpoint.demoOwned)
+            .length,
+        },
+        { to: '/app/monitor', label: 'Monitoring', icon: Radar },
+        { to: '/app/operations', label: 'Operations', icon: BellRing },
+      ],
+    },
+    {
+      id: 'lab',
+      label: 'Lab',
+      contextLabel: 'Reliability Lab',
+      items: [
+        {
+          to: '/app/endpoints',
+          label: 'Trial endpoints',
+          icon: GitBranch,
+          count: endpoints.filter((endpoint) => endpoint.mode === 'trial').length,
+        },
+        {
+          to: '/app/scenarios',
+          label: 'Failure scenarios',
+          icon: FlaskConical,
+          count: scenarios.length,
+        },
+        { to: '/app/demo', label: 'Guided demo', icon: Activity },
+      ],
+    },
+    {
+      id: 'resources',
+      label: 'Resources',
+      items: [{ to: '/app/docs', label: 'Documentation', icon: BookOpen }],
+    },
   ];
+  const navigationItems = navigation.flatMap((group) =>
+    group.items.map((item) => ({
+      ...item,
+      area: group.id,
+      areaLabel: group.contextLabel ?? group.label,
+    })),
+  );
+  const activeModule =
+    navigationItems.find((item) =>
+      item.end ? location.pathname === item.to : location.pathname.startsWith(item.to),
+    ) ?? navigationItems[0]!;
 
   return (
     <div className={`ht-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -263,7 +324,7 @@ export function AppLayout() {
         </div>
       </header>
       <nav className="ht-mobilenav" aria-label="Dashboard sections">
-        {navigation.map(({ to, label, icon: Icon, end }) => (
+        {navigationItems.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} aria-label={label}>
             <Icon aria-hidden="true" />
             <span>{label}</span>
@@ -290,12 +351,17 @@ export function AppLayout() {
           </button>
         </div>
         <nav aria-label="Dashboard">
-          {navigation.map(({ to, label, icon: Icon, count, end }) => (
-            <NavLink key={to} to={to} end={end} title={sidebarCollapsed ? label : undefined}>
-              <Icon aria-hidden="true" />
-              <span>{label}</span>
-              {count !== undefined ? <small>{count}</small> : null}
-            </NavLink>
+          {navigation.map((group) => (
+            <div className="ht-nav-group" data-area={group.id} key={group.id}>
+              <p>{group.label}</p>
+              {group.items.map(({ to, label, icon: Icon, count, end }) => (
+                <NavLink key={to} to={to} end={end} title={sidebarCollapsed ? label : undefined}>
+                  <Icon aria-hidden="true" />
+                  <span>{label}</span>
+                  {count !== undefined ? <small>{count}</small> : null}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="ht-sidebar-foot">
@@ -380,6 +446,17 @@ export function AppLayout() {
             </button>
           </div>
         ) : null}
+        <div
+          className={`ht-workspace-context area-${activeModule.area}`}
+          aria-label="Current module"
+        >
+          <span>
+            <i aria-hidden="true" />
+            {activeModule.areaLabel}
+          </span>
+          <b aria-hidden="true">/</b>
+          <strong>{activeModule.label}</strong>
+        </div>
         <Outlet context={context} />
       </main>
       {tourOpen ? (

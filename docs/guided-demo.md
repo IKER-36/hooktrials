@@ -9,10 +9,10 @@ deliveries carrying the same event identifier into one timeline.
 
 ## Part 1: prove provider retry behavior
 
-1. Open **Endpoints**.
+1. Open **Trial endpoints** in the Lab workspace.
 2. Select **Worst-day sequence**.
 3. Create the prefilled `resilience-demo` endpoint.
-4. On **Overview**, press **Run 4-attempt demo**.
+4. In **Control Center**, press **Run 4-attempt demo**.
 5. Open the generated event in **Retry timelines**.
 
 The built-in provider simulator sends the same synthetic event four times. The endpoint responds:

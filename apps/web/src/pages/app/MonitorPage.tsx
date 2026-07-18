@@ -143,11 +143,11 @@ export function MonitorPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="monitor">
+    <section className="ht-page" data-tour-section="monitor" data-product-area="live">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Integration health</p>
-          <h1>Monitor</h1>
+          <p className="ht-kicker">Live operations</p>
+          <h1>Monitoring</h1>
           <p className="ht-muted-line">Know what failed, where it failed and when it recovered.</p>
         </div>
         <button

@@ -20,7 +20,7 @@ Example recipe:
 
 ## Create a custom scenario
 
-1. Open **Scenario Studio** from the dashboard.
+1. Open **Failure scenarios** from the Lab workspace.
 2. Select **New scenario**, or open a built-in and select **Duplicate to edit**.
 3. Give the recipe a descriptive name.
 4. Add up to 20 response steps. Each step supports an HTTP status, delay from 0–30 seconds,

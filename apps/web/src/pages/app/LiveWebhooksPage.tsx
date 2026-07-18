@@ -122,7 +122,11 @@ export function LiveWebhooksPage() {
   }
 
   return (
-    <section className="ht-page ht-live-webhooks">
+    <section
+      className="ht-page ht-live-webhooks"
+      data-product-area="live"
+      data-tour-section="live-webhooks"
+    >
       <header className="ht-page-head ht-live-head">
         <div>
           <p className="ht-kicker">Live traffic</p>

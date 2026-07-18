@@ -1,6 +1,6 @@
 # Production readiness
 
-Every managed webhook route has an explainable Production Readiness score in **Overview**. It is a
+Every managed webhook route has an explainable Production Readiness score in **Control Center**. It is a
 configuration-and-evidence checklist, not the operational reliability score shown in Monitor.
 
 The score totals 100 points:

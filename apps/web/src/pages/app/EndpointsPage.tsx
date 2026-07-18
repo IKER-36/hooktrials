@@ -37,6 +37,7 @@ export function EndpointsPage() {
 
   const limit = limits?.endpoints ?? 0;
   const limited = limit > 0;
+  const trialEndpoints = endpoints.filter((endpoint) => endpoint.mode === 'trial');
   const endpointUsage =
     limits?.endpointUsage ?? endpoints.filter((endpoint) => !endpoint.demoOwned).length;
   const atLimit = limited && endpointUsage >= limit;
@@ -82,18 +83,22 @@ export function EndpointsPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="endpoints">
+    <section className="ht-page" data-tour-section="endpoints" data-product-area="lab">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Configuration</p>
-          <h1>Endpoints</h1>
+          <p className="ht-kicker">Reliability Lab</p>
+          <h1>Trial endpoints</h1>
+          <p className="ht-muted-line">
+            Exercise failure and retry behaviour with synthetic traffic, completely separate from
+            your live webhook routes.
+          </p>
         </div>
         <span
           className="ht-limit"
           aria-label={
             limited
               ? `${endpointUsage} of ${limit} regular endpoints used`
-              : `${endpoints.length} endpoints`
+              : `${trialEndpoints.length} trial endpoints`
           }
         >
           {limited ? (
@@ -103,7 +108,7 @@ export function EndpointsPage() {
               ))}
             </span>
           ) : null}
-          {limited ? `${endpointUsage}/${limit} used` : `${endpoints.length} · unlimited`}
+          {limited ? `${endpointUsage}/${limit} used` : `${trialEndpoints.length} · unlimited`}
         </span>
       </header>
 
@@ -182,16 +187,16 @@ export function EndpointsPage() {
           <small className="ht-muted-line">Use synthetic payloads whenever possible.</small>
         </form>
 
-        <div className="ht-endpoint-list" aria-label="Your endpoints">
+        <div className="ht-endpoint-list" aria-label="Your trial endpoints">
           {loading ? (
             <div className="ht-skeleton tall" />
-          ) : endpoints.length === 0 ? (
+          ) : trialEndpoints.length === 0 ? (
             <div className="ht-events-empty">
               <h3>No endpoints yet.</h3>
               <p>Create your first trial endpoint with the form on this page.</p>
             </div>
           ) : (
-            endpoints.map((endpoint) => (
+            trialEndpoints.map((endpoint) => (
               <article
                 key={endpoint.id}
                 className={`ht-endpoint-item ${endpoint.id === selected?.id ? 'selected' : ''}`}

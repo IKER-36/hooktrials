@@ -106,11 +106,11 @@ export function OverviewPage() {
 
   if (!selected) {
     return (
-      <section className="ht-page" data-tour-section="overview">
+      <section className="ht-page" data-tour-section="overview" data-product-area="control">
         <header className="ht-page-head">
           <div>
-            <p className="ht-kicker">Overview</p>
-            <h1>Your webhook lab</h1>
+            <p className="ht-kicker">Control plane</p>
+            <h1>Control Center</h1>
           </div>
         </header>
         <ControlCenterSummary />
@@ -138,10 +138,10 @@ export function OverviewPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="overview">
+    <section className="ht-page" data-tour-section="overview" data-product-area="control">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Overview</p>
+          <p className="ht-kicker">Control plane · selected route</p>
           <h1>{selected.name}</h1>
         </div>
         <div className="ht-page-head-actions">

@@ -1,6 +1,26 @@
 # Current release status
 
-Updated: 17 July 2026.
+Updated: 18 July 2026.
+
+## Release `v0.10.0`
+
+Release `v0.10.0` reorganizes the authenticated application around an explicit operating boundary:
+
+- **Product** contains Control Center, Webhook Hub, Monitoring and Operations;
+- **Lab** contains Trial endpoints, Failure scenarios and the Guided Demo;
+- **Resources** contains the searchable product documentation;
+- Trial endpoints no longer list Observe/Protect connections, which remain centralized in Webhook
+  Hub, preventing synthetic laboratory work from being confused with a live delivery path;
+- every route carries a compact workspace/module context line and the mobile navigation retains all
+  destinations through an accessible horizontal rail;
+- the Webhook Hub visual language now covers the complete dashboard: metrics become data strips,
+  inventories become open rows, split workspaces use structural dividers and only forms, dialogs or
+  safety-critical controls remain deliberately contained;
+- English and Spanish labels and in-product guides describe the same Product/Lab boundary.
+
+Browser validation covers every authenticated route, the expanded and collapsed navigation,
+English/Spanish hierarchy, a 390 px mobile viewport and zero content overflow. Strict TypeScript,
+ESLint and the production web build pass before the full release gate.
 
 ## Release `v0.9.0`
 
