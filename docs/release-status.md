@@ -8,6 +8,9 @@ Release `v0.11.1` completes the dark-theme presentation used by the jury journey
 success, running and failure rows now use restrained semantic surfaces with readable text instead
 of inheriting light-theme fills. The complete eight-stage journey was repeated on the full local
 Compose stack in Spanish and finished with every stage passed.
+The patch was promoted backup-first to CubePath on 21 July 2026. Landing, dashboard, API and
+ingestion origins returned 200; the production Guided Demo completed all eight stages in Spanish
+and dark mode, and recent application logs contained no runtime errors.
 
 ## Previous release `v0.11.0`
 
