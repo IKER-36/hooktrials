@@ -364,6 +364,33 @@ html[data-theme] .ht-shell .ht-demo-rail > * {
   border-radius: 0;
 }
 
+html[data-theme='dark'] .ht-shell .ht-demo-rail article[data-state='running'] {
+  color: var(--ht-ink);
+  background: var(--ht-warning-bg);
+}
+
+html[data-theme='dark'] .ht-shell .ht-demo-rail article[data-state='passed'] {
+  color: var(--ht-ink);
+  background: var(--ht-positive-bg);
+}
+
+html[data-theme='dark'] .ht-shell .ht-demo-rail article[data-state='failed'] {
+  color: var(--ht-ink);
+  background: var(--ht-danger-bg);
+}
+
+html[data-theme='dark'] .ht-shell .ht-demo-rail article[data-state='running'] b {
+  color: var(--ht-amber);
+}
+
+html[data-theme='dark'] .ht-shell .ht-demo-rail article[data-state='passed'] b {
+  color: var(--ht-green);
+}
+
+html[data-theme='dark'] .ht-shell .ht-demo-rail article[data-state='failed'] b {
+  color: var(--ht-red);
+}
+
 html[data-theme] .ht-shell :where(.ht-demo-safety, .ht-demo-recovered, .ht-demo-message) {
   border-radius: 8px;
   box-shadow: none;

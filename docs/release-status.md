@@ -2,7 +2,14 @@
 
 Updated: 21 July 2026.
 
-## Release `v0.11.0`
+## Release `v0.11.1`
+
+Release `v0.11.1` completes the dark-theme presentation used by the jury journey. Guided Demo
+success, running and failure rows now use restrained semantic surfaces with readable text instead
+of inheriting light-theme fills. The complete eight-stage journey was repeated on the full local
+Compose stack in Spanish and finished with every stage passed.
+
+## Previous release `v0.11.0`
 
 Release `v0.11.0` makes the competition demonstration persist as a convincing, inspectable product
 state instead of disappearing into one rewritten endpoint:

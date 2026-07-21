@@ -56,7 +56,7 @@ Required public paths:
 sudo install -d -m 0755 -o "$USER" -g "$USER" /opt/hooktrials
 git clone https://github.com/IKER-36/hooktrials.git /opt/hooktrials
 cd /opt/hooktrials
-git checkout v0.11.0
+git checkout v0.11.1
 ./hooktrials doctor
 ./hooktrials configure domain trials.example.com operator@example.com
 ./hooktrials up
