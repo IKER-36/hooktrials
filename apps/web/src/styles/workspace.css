@@ -391,6 +391,39 @@ html[data-theme='dark'] .ht-shell .ht-demo-rail article[data-state='failed'] b {
   color: var(--ht-red);
 }
 
+html[data-theme='dark'] :where(.ht-auth-eyebrow, .ht-auth-sequence, .ht-cubepath-mini) {
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline-bright);
+  box-shadow: none;
+}
+
+html[data-theme='dark'] .ht-auth-eyebrow {
+  color: var(--ht-green);
+  background: var(--ht-positive-bg);
+  border-color: rgba(116, 230, 159, 0.24);
+}
+
+html[data-theme='dark'] .ht-auth-sequence code.err {
+  color: var(--ht-red);
+  background: var(--ht-danger-bg);
+}
+
+html[data-theme='dark'] .ht-auth-sequence code.warn {
+  color: var(--ht-amber);
+  background: var(--ht-warning-bg);
+}
+
+html[data-theme='dark'] .ht-auth-sequence code.ok {
+  color: var(--ht-green);
+  background: var(--ht-positive-bg);
+}
+
+html[data-theme='dark'] .ht-auth-sequence i,
+html[data-theme='dark'] .ht-auth-proof {
+  color: var(--ht-muted);
+}
+
 html[data-theme] .ht-shell :where(.ht-demo-safety, .ht-demo-recovered, .ht-demo-message) {
   border-radius: 8px;
   box-shadow: none;

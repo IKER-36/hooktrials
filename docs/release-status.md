@@ -2,7 +2,13 @@
 
 Updated: 21 July 2026.
 
-## Release `v0.11.1`
+## Release `v0.11.2`
+
+Release `v0.11.2` removes the remaining light-surface leakage from the dark authentication view.
+The platform badge, deterministic response sequence and CubePath attribution now use restrained
+dark semantic surfaces with accessible status colours.
+
+## Previous release `v0.11.1`
 
 Release `v0.11.1` completes the dark-theme presentation used by the jury journey. Guided Demo
 success, running and failure rows now use restrained semantic surfaces with readable text instead
