@@ -26,8 +26,9 @@ The full release gate passes formatting, ESLint, strict TypeScript, 133 automate
 production build. A browser-driven run on the complete self-hosted Compose stack passed all eight
 steps and produced three Webhook Hub routes, five monitor types, seven audited synthetic alerts, a
 protected recovery, one dead letter, a public status page and expiring redacted evidence. The
-selected recovery route scores 90/100 locally because localhost is intentionally not public HTTPS;
-the same check reaches 100/100 in Cloud.
+selected recovery route scores 90/100 locally because localhost is intentionally not public HTTPS.
+The release was promoted to CubePath on 21 July 2026; all four public origins passed, the full
+eight-step jury demo passed and the selected signed Protect recovery reached 100/100 in Cloud.
 
 ## Previous release `v0.10.0`
 
@@ -257,10 +258,11 @@ backup-first deployment and passed its authenticated post-deploy journey on 14 J
 The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
 prefer synthetic data.
 
-Managed Cloud runs server `v0.9.0`, dashboard `v0.10.0` and landing `v0.6.0`. Immutable image
+Managed Cloud runs server and dashboard `v0.11.0` with landing `v0.7.0`. Immutable image
 references and rollback copies are recorded only in the private Cloud repository. Backup-first
 promotion, four-origin smoke, real Observe forwarding, authenticated desktop/mobile validation,
-zero restarts and clean recent logs passed on 17–18 July 2026.
+zero restarts, restricted ingestion CORS and the authenticated eight-step jury journey passed on
+21 July 2026.
 
 Patch `v0.3.6` also accepts authenticated empty payload ciphertext during report analysis. Empty
 webhook bodies now produce normal deterministic evidence instead of a failed background job.
