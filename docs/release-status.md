@@ -7,6 +7,9 @@ Updated: 21 July 2026.
 Release `v0.11.2` removes the remaining light-surface leakage from the dark authentication view.
 The platform badge, deterministic response sequence and CubePath attribution now use restrained
 dark semantic surfaces with accessible status colours.
+The patch was promoted backup-first to CubePath on 21 July 2026. All four public origins passed,
+the production images became healthy and the exact authentication stylesheet was verified in the
+deployed web asset after visual validation on the complete local stack.
 
 ## Previous release `v0.11.1`
 
