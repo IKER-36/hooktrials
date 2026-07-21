@@ -513,6 +513,19 @@ html[data-theme='dark'] body {
   font: 500 9px/1.3 var(--font-mono);
 }
 
+.ht-demo-data-badge {
+  display: inline-flex;
+  margin-left: 7px;
+  padding: 2px 5px;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: 4px;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  vertical-align: 1px;
+}
+
 .ht-route-mini-flow {
   display: flex;
   gap: 7px;

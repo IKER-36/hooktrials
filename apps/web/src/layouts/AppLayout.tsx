@@ -245,8 +245,7 @@ export function AppLayout() {
           to: '/app/live-webhooks',
           label: 'Webhook Hub',
           icon: RadioTower,
-          count: endpoints.filter((endpoint) => endpoint.mode !== 'trial' && !endpoint.demoOwned)
-            .length,
+          count: endpoints.filter((endpoint) => endpoint.mode !== 'trial').length,
         },
         { to: '/app/monitor', label: 'Monitoring', icon: Radar },
         { to: '/app/operations', label: 'Operations', icon: BellRing },

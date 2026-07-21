@@ -23,9 +23,10 @@ Open **Lab → Guided Demo** and select **Run full demo**. Explain each state as
 - Recovery queue receives a separate protected event after it exhausts all three delivery attempts.
 - Operations reconciles open/recovered incidents, protected recovery, safe alert audit and the
   actionable dead letter.
-- Evidence creates a redacted 24-hour share link for the recovered Trial.
+- Evidence creates a redacted 24-hour share link for the signed Protect recovery.
 
-Pause on **Journey verified** and the six operational counters.
+Pause on **Journey verified** and the six operational counters. Then open Webhook Hub and show the
+three labelled demo connections without implying that they are production traffic.
 
 ## 1:35-2:15 — evidence, not animation
 
@@ -49,5 +50,6 @@ PostgreSQL, Redis/BullMQ workers, append-only backups, restore testing and a pub
 
 Finish on the landing statement: **See every webhook. Never lose the delivery.**
 
-After recording, use **Clean only this demo run** and confirm the scoped-cleanup message. Reload once
-before cleanup during rehearsal to prove that HookTrials recovers the private run safely.
+Use **Clean only this demo run** only in a disposable rehearsal account. Preserve the dedicated jury
+account so reviewers can inspect the populated workspace. During rehearsal, reload once before
+cleanup to prove that HookTrials recovers the private run safely.

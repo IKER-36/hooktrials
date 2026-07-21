@@ -1,4 +1,5 @@
 import { setTimeout as wait } from 'node:timers/promises';
+import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { readRuntimeConfig } from '@hooktrials/config';
@@ -43,6 +44,28 @@ const app = Fastify({
 
 await app.register(helmet, {
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+});
+const allowedOrigins = new Set([config.APP_ORIGIN]);
+if (config.NODE_ENV === 'development') {
+  allowedOrigins.add('http://localhost:5173');
+  allowedOrigins.add('http://127.0.0.1:5173');
+  allowedOrigins.add('http://localhost:8080');
+  allowedOrigins.add('http://127.0.0.1:8080');
+}
+await app.register(cors, {
+  credentials: false,
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: [
+    'content-type',
+    'x-event-id',
+    'x-github-delivery',
+    'x-github-event',
+    'x-hub-signature-256',
+  ],
+  exposedHeaders: ['x-hooktrials-event-id', 'retry-after'],
+  origin(origin, callback) {
+    callback(null, !origin || allowedOrigins.has(origin));
+  },
 });
 await app.register(rateLimit, { max: 300, timeWindow: '1 minute' });
 

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Brand } from '../components/Brand';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
@@ -12,10 +12,19 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const registerMode = mode === 'register';
   const { user, loading, setup, login, register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedPath = searchParams.get('next');
+  const nextPath =
+    requestedPath &&
+    requestedPath.startsWith('/app') &&
+    !requestedPath.startsWith('//') &&
+    requestedPath.length <= 200
+      ? requestedPath
+      : '/app';
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  if (!loading && user) return <Navigate to="/app" replace />;
+  if (!loading && user) return <Navigate to={nextPath} replace />;
   if (!loading && registerMode && setup && !setup.registrationOpen) {
     return <Navigate to="/login" replace />;
   }
@@ -37,7 +46,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
       } else {
         await login(String(data.get('email')), String(data.get('password')));
       }
-      navigate('/app', { replace: true });
+      navigate(nextPath, { replace: true });
     } catch (requestError) {
       setError(readableError(requestError));
     } finally {
@@ -150,7 +159,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
           {!ownerSetup && (registerMode || setup?.registrationOpen) ? (
             <p className="ht-auth-switch">
               {registerMode ? 'Already have an account?' : 'New to HookTrials?'}{' '}
-              <Link to={registerMode ? '/login' : '/register'}>
+              <Link
+                to={`${registerMode ? '/login' : '/register'}${nextPath !== '/app' ? `?next=${encodeURIComponent(nextPath)}` : ''}`}
+              >
                 {registerMode ? 'Log in' : 'Create account'}
               </Link>
             </p>

@@ -1,6 +1,6 @@
 {
   "name": "hooktrials",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "description": "Open-source webhook resilience and contract testing lab.",

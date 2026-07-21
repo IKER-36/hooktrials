@@ -1,7 +1,7 @@
 # HookTrials
 
 [![Hosted on CubePath](https://img.shields.io/badge/Hosted%20on-CubePath-22c55e?style=flat-square)](https://cubepath.com/)
-[![Release](https://img.shields.io/badge/release-v0.10.0-6366f1?style=flat-square)](docs/release-status.md)
+[![Release](https://img.shields.io/badge/release-v0.11.0-6366f1?style=flat-square)](docs/release-status.md)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-334155?style=flat-square)](LICENSE)
 
 Open-source integration reliability control plane. HookTrials tests failure behavior, safely
@@ -9,7 +9,7 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.10.0** (18 July 2026). The managed sandbox is available at
+Current public release: **v0.11.0** (21 July 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
 
 ## Run locally
@@ -59,7 +59,8 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
   from synthetic Trial endpoints and failure scenarios.
 - Open operational layouts based on typography, whitespace and data dividers instead of repetitive
   floating cards, with the same hierarchy on desktop and mobile.
-- One-click Guided Demo filling every product module with an isolated, realistic synthetic workspace.
+- One-click Guided Demo filling every product module with an isolated, realistic synthetic workspace,
+  including clearly labelled Observe and Protect connections in Webhook Hub.
 - Fastify API and isolated public ingestion service.
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
@@ -88,7 +89,9 @@ After signing in, open **Guided demo** and select **Run full demo**. HookTrials 
 complete synthetic workspace instead of showing static sample cards:
 
 - a custom cascading-outage scenario and a `500 → 503 → 429 → 200` Trial timeline;
-- Observe and Protect traffic with destination evidence, durable retries and recovery;
+- separate Observe and Protect routes with destination evidence, durable retries and recovery;
+- a GitHub-shaped Protect event with a valid HMAC signature, enforced inbound contract and a
+  production-readiness result based entirely on recorded evidence;
 - five monitors covering an external API, internal API, HTTP route, webhook destination and ICMP
   host, plus a public page combining HTTP and ICMP evidence;
 - healthy, degraded, down and recovered monitor states with latency and availability history;
@@ -114,7 +117,7 @@ conclusion or hides a grading formula.
 
 ### See the product, not a mock-up
 
-The current `v0.10.0` interface keeps real delivery work in **Product** and deterministic
+The current `v0.11.0` interface keeps real delivery work in **Product** and deterministic
 experiments in **Lab**. These captures come from the deployed Cloud application; the same dashboard
 is included in the self-hosted distribution.
 

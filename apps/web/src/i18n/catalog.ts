@@ -61,8 +61,8 @@ export const es: Record<string, string> = {
     'El evento se acepta primero, se reintenta de forma duradera y se recupera sin perder datos.',
   'HTTP and ICMP checks fill every health state and a public status page.':
     'Las comprobaciones HTTP e ICMP cubren todos los estados de salud y una página pública.',
-  'The lab creates two endpoints, one custom scenario, five monitored integrations, a multi-monitor public status page, a recoverable dead letter, incident and alert evidence, plus one expiring report. Cleanup matches the private run ID and your account before removing anything.':
-    'El laboratorio crea dos endpoints, un escenario personalizado, cinco integraciones monitorizadas, una página pública multi-monitor, un dead letter recuperable, evidencias de incidentes y alertas, y un informe temporal. La limpieza verifica el ID privado y tu cuenta antes de eliminar nada.',
+  'The lab creates isolated Trial, Observe and Protect routes, a synthetic destination, one custom scenario, five monitored integrations, a multi-monitor public status page, a recoverable dead letter, incident and alert evidence, plus one expiring report. Cleanup matches the private run ID and your account before removing anything.':
+    'El laboratorio crea rutas aisladas de Trial, Observe y Protect, un destino sintético, un escenario personalizado, cinco integraciones monitorizadas, una página pública de estado con varios monitores, una entrega recuperable en dead-letter, evidencia de incidentes y alertas y un informe temporal. La limpieza valida el ID privado de ejecución y tu cuenta antes de eliminar nada.',
   'Open public status page': 'Abrir página pública de estado',
   'Recovery queue': 'Cola de recuperación',
   'A separate delivery exhausts its retry budget and enters dead-letter.':
@@ -81,6 +81,18 @@ export const es: Record<string, string> = {
     'El catálogo de monitores no generó todos los estados de salud esperados.',
   'Full workspace ready. Every module now contains safe, inspectable evidence.':
     'Espacio completo listo. Todos los módulos contienen evidencias seguras e inspeccionables.',
+  'HookTrials receives a webhook and returns controlled responses. The sender performs the retries; HookTrials captures every attempt and explains what happened.':
+    'HookTrials recibe un webhook y devuelve respuestas controladas. El emisor realiza los reintentos; HookTrials captura cada intento y explica qué ocurrió.',
+  'Demo · deterministic provider trial': 'Demo · prueba determinista del proveedor',
+  'Demo · synthetic destination': 'Demo · destino sintético',
+  'Demo · Observe delivery failure': 'Demo · fallo de entrega en Observe',
+  'Demo · GitHub protected recovery': 'Demo · recuperación protegida de GitHub',
+  'Demo · protected dead-letter': 'Demo · dead-letter protegido',
+  'DEMO DATA': 'DATOS DEMO',
+  synthetic: 'sintéticas',
+  'Open Webhook Hub': 'Abrir el concentrador de webhooks',
+  'Open failure scenarios': 'Abrir escenarios de fallo',
+  'Inspect monitoring': 'Inspeccionar monitorización',
   'Demo resources removed. Your other endpoints and monitors were not touched.':
     'Recursos demo eliminados. Tus demás endpoints y monitores no se han modificado.',
   'Enter the URL again to rotate or change alert configuration.':
@@ -1104,6 +1116,7 @@ export const es: Record<string, string> = {
     'Contrato inicial · presencia del header HMAC capturada',
   'Contract starter · signing headers captured': 'Contrato inicial · headers de firma capturados',
   '(leave blank to keep current)': '(déjalo vacío para conservar el actual)',
+  '(leave blank to keep)': '(déjalo vacío para conservar el actual)',
   'Encrypted · unchanged': 'Cifrado · sin cambios',
   'Latest check': 'Última comprobación',
   'Destination recovered. Protected event delivered successfully with no data loss.':

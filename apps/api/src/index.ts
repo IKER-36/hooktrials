@@ -1716,10 +1716,17 @@ app.post('/v1/demo/setup', async (request, reply) => {
   }
 
   const runId = nanoid(16);
-  const sourceToken = `ht_${nanoid(32)}`;
+  const trialToken = `ht_${nanoid(32)}`;
   const targetToken = `ht_${nanoid(32)}`;
-  const sourceIngestUrl = `${config.INGEST_ORIGIN}/i/${sourceToken}`;
+  const observeToken = `ht_${nanoid(32)}`;
+  const protectToken = `ht_${nanoid(32)}`;
+  const deadLetterToken = `ht_${nanoid(32)}`;
+  const githubSecret = `demo_${nanoid(32)}`;
+  const trialIngestUrl = `${config.INGEST_ORIGIN}/i/${trialToken}`;
   const targetIngestUrl = `${config.INGEST_ORIGIN}/i/${targetToken}`;
+  const observeIngestUrl = `${config.INGEST_ORIGIN}/i/${observeToken}`;
+  const protectIngestUrl = `${config.INGEST_ORIGIN}/i/${protectToken}`;
+  const deadLetterIngestUrl = `${config.INGEST_ORIGIN}/i/${deadLetterToken}`;
   const targetWorkerUrl =
     config.DEPLOYMENT_MODE === 'selfhost'
       ? `http://ingestor:3002/i/${targetToken}`
@@ -1761,21 +1768,30 @@ app.post('/v1/demo/setup', async (request, reply) => {
     )[0];
     if (!customScenario) throw new Error('Demo scenario creation returned no record');
 
-    async function createDemoEndpoint(
-      kind: 'source' | 'target',
-      token: string,
-      scenarioId: string,
-    ) {
-      const name = kind === 'source' ? 'Demo Lab · provider' : 'Demo Lab · destination';
+    async function createDemoEndpoint(input: {
+      kind: 'trial' | 'target' | 'observe' | 'protect' | 'dead-letter';
+      name: string;
+      token: string;
+      scenarioId: string;
+      mode?: 'trial' | 'observe' | 'protect';
+      destinationUrl?: string;
+      provider?: 'generic' | 'github';
+      signatureSecret?: string;
+      retryMaxAttempts?: number;
+    }) {
       const resource = (
         await tx
           .insert(integrationResources)
           .values({
             userId,
             type: 'webhook_route',
-            name,
+            name: input.name,
             environment: 'test',
-            metadata: { demoRunId: runId, demoKind: kind },
+            metadata: {
+              demoRunId: runId,
+              demoKind: input.kind,
+              provider: input.provider ?? 'generic',
+            },
           })
           .returning({ id: integrationResources.id })
       )[0];
@@ -1786,35 +1802,98 @@ app.post('/v1/demo/setup', async (request, reply) => {
           .values({
             userId,
             resourceId: resource.id,
-            scenarioId,
-            name,
-            publicTokenHash: sha256(token),
-            publicTokenPrefix: token.slice(0, 12),
-            encryptedToken: encryptValue(token, config.PAYLOAD_ENCRYPTION_KEY),
-            encryptedContract:
-              kind === 'source'
-                ? encryptValue(
-                    JSON.stringify({ method: 'POST', requiredHeaders: {}, jsonPaths: {} }),
-                    config.PAYLOAD_ENCRYPTION_KEY,
-                  )
-                : null,
+            scenarioId: input.scenarioId,
+            name: input.name,
+            publicTokenHash: sha256(input.token),
+            publicTokenPrefix: input.token.slice(0, 12),
+            encryptedToken: encryptValue(input.token, config.PAYLOAD_ENCRYPTION_KEY),
+            mode: input.mode ?? 'trial',
+            encryptedDestinationUrl: input.destinationUrl
+              ? encryptValue(input.destinationUrl, config.PAYLOAD_ENCRYPTION_KEY)
+              : null,
+            displayDestinationHost: input.destinationUrl ? new URL(targetIngestUrl).host : null,
+            retryMaxAttempts: input.retryMaxAttempts ?? 5,
+            retryBaseDelayMs: 1_000,
+            retryMaxDelayMs: 5_000,
+            encryptedContract: encryptValue(
+              JSON.stringify({
+                method: 'POST',
+                requiredHeaders:
+                  input.provider === 'github'
+                    ? {
+                        'x-github-event': '',
+                        'x-github-delivery': '',
+                        'x-hub-signature-256': '',
+                      }
+                    : {},
+                jsonPaths: {},
+              }),
+              config.PAYLOAD_ENCRYPTION_KEY,
+            ),
+            signatureProvider: input.provider === 'github' ? 'github' : 'none',
+            encryptedSignatureSecret: input.signatureSecret
+              ? encryptValue(input.signatureSecret, config.PAYLOAD_ENCRYPTION_KEY)
+              : null,
+            allowPrivateNetworks: privateNetwork,
+            allowedPrivateCidrs: privateCidrs,
           })
           .returning({ id: endpoints.id, resourceId: endpoints.resourceId })
       )[0];
       if (!endpoint) throw new Error('Demo endpoint creation returned no record');
       await tx
         .update(integrationResources)
-        .set({ metadata: { demoRunId: runId, demoKind: kind, endpointId: endpoint.id } })
+        .set({
+          metadata: {
+            demoRunId: runId,
+            demoKind: input.kind,
+            endpointId: endpoint.id,
+            provider: input.provider ?? 'generic',
+          },
+        })
         .where(eq(integrationResources.id, resource.id));
       return { id: endpoint.id, resourceId: resource.id };
     }
 
-    const source = await createDemoEndpoint('source', sourceToken, customScenario.id);
-    const target = await createDemoEndpoint(
-      'target',
-      targetToken,
-      builtInScenarioIds.temporaryOutage,
-    );
+    const trial = await createDemoEndpoint({
+      kind: 'trial',
+      name: 'Demo · deterministic provider trial',
+      token: trialToken,
+      scenarioId: customScenario.id,
+    });
+    const target = await createDemoEndpoint({
+      kind: 'target',
+      name: 'Demo · synthetic destination',
+      token: targetToken,
+      scenarioId: builtInScenarioIds.temporaryOutage,
+    });
+    const observe = await createDemoEndpoint({
+      kind: 'observe',
+      name: 'Demo · Observe delivery failure',
+      token: observeToken,
+      scenarioId: builtInScenarioIds.inspection,
+      mode: 'observe',
+      destinationUrl: targetWorkerUrl,
+    });
+    const protect = await createDemoEndpoint({
+      kind: 'protect',
+      name: 'Demo · GitHub protected recovery',
+      token: protectToken,
+      scenarioId: builtInScenarioIds.inspection,
+      mode: 'protect',
+      destinationUrl: targetWorkerUrl,
+      provider: 'github',
+      signatureSecret: githubSecret,
+      retryMaxAttempts: 5,
+    });
+    const deadLetter = await createDemoEndpoint({
+      kind: 'dead-letter',
+      name: 'Demo · protected dead-letter',
+      token: deadLetterToken,
+      scenarioId: builtInScenarioIds.inspection,
+      mode: 'protect',
+      destinationUrl: targetWorkerUrl,
+      retryMaxAttempts: 3,
+    });
 
     async function createDemoMonitor(input: {
       kind: string;
@@ -1980,18 +2059,21 @@ app.post('/v1/demo/setup', async (request, reply) => {
       .set({
         metadata: {
           demoRunId: runId,
-          demoKind: 'source',
-          endpointId: source.id,
+          demoKind: 'trial',
+          endpointId: trial.id,
           demoScenarioId: customScenario.id,
           demoAlertChannelId: demoAlertChannel?.id,
           demoStatusPageId: demoStatusPage.id,
         },
       })
-      .where(eq(integrationResources.id, source.resourceId));
+      .where(eq(integrationResources.id, trial.resourceId));
 
     return {
-      source,
+      trial,
       target,
+      observe,
+      protect,
+      deadLetter,
       scenario: customScenario,
       monitors: { recovery, healthyApi, degradedContract, downRoute, icmpHost },
       statusPage: {
@@ -2008,8 +2090,11 @@ app.post('/v1/demo/setup', async (request, reply) => {
   return reply.code(201).send({
     demo: {
       runId,
-      source: { ...created.source, ingestUrl: sourceIngestUrl },
+      trial: { ...created.trial, ingestUrl: trialIngestUrl },
       target: { ...created.target, ingestUrl: targetIngestUrl },
+      observe: { ...created.observe, ingestUrl: observeIngestUrl },
+      protect: { ...created.protect, ingestUrl: protectIngestUrl, signatureSecret: githubSecret },
+      deadLetter: { ...created.deadLetter, ingestUrl: deadLetterIngestUrl },
       scenario: created.scenario,
       monitors: created.monitors,
       statusPage: created.statusPage,
@@ -2534,7 +2619,7 @@ app.get('/v1/endpoints/:id/events', async (request, reply) => {
         .select()
         .from(destinationDeliveries)
         .where(eq(destinationDeliveries.eventId, event.id))
-        .orderBy(desc(destinationDeliveries.createdAt));
+        .orderBy(destinationDeliveries.sequence);
       return { ...event, attempts: attemptRows, deliveries: deliveryRows };
     }),
   );

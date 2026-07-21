@@ -57,9 +57,10 @@ export function LiveWebhooksPage() {
   const [activationError, setActivationError] = useState('');
 
   const liveRoutes = useMemo(
-    () => endpoints.filter((endpoint) => endpoint.mode !== 'trial' && !endpoint.demoOwned),
+    () => endpoints.filter((endpoint) => endpoint.mode !== 'trial'),
     [endpoints],
   );
+  const syntheticRoutes = liveRoutes.filter((endpoint) => endpoint.demoOwned);
   const limit = limits?.endpoints ?? 0;
   const usage = limits?.endpointUsage ?? endpoints.filter((endpoint) => !endpoint.demoOwned).length;
   const atLimit = limit > 0 && usage >= limit;
@@ -142,6 +143,13 @@ export function LiveWebhooksPage() {
           <i />
           <strong>{liveRoutes.filter((route) => route.mode === 'protect').length}</strong>
           <span>protected</span>
+          {syntheticRoutes.length > 0 ? (
+            <>
+              <i />
+              <strong>{syntheticRoutes.length}</strong>
+              <span>synthetic</span>
+            </>
+          ) : null}
         </div>
       </header>
 
@@ -430,6 +438,9 @@ export function LiveWebhooksPage() {
                   <small>
                     {PROVIDERS.find((item) => item.id === endpoint.provider)?.name ?? 'Generic'} ·{' '}
                     {endpoint.environment}
+                    {endpoint.demoOwned ? (
+                      <span className="ht-demo-data-badge">DEMO DATA</span>
+                    ) : null}
                   </small>
                 </div>
                 <div className="ht-route-mini-flow">

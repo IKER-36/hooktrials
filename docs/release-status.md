@@ -1,8 +1,35 @@
 # Current release status
 
-Updated: 18 July 2026.
+Updated: 21 July 2026.
 
-## Release `v0.10.0`
+## Release `v0.11.0`
+
+Release `v0.11.0` makes the competition demonstration persist as a convincing, inspectable product
+state instead of disappearing into one rewritten endpoint:
+
+- Guided Demo creates separate Trial, Observe, Protect recovery, Protect dead-letter and synthetic
+  destination routes;
+- Webhook Hub retains the three Observe/Protect connections with explicit **DEMO DATA** labels while
+  excluding them from hosted quotas;
+- the recovery route receives a GitHub-shaped event with a valid HMAC signature and enforced inbound
+  contract, then survives two destination failures before succeeding on the third durable attempt;
+- Control Center selects that recovered route automatically, produces an ordered `500 -> 500 -> 200`
+  delivery timeline and proves all ten Production Readiness controls on the public Cloud deployment;
+- the redacted evidence link now documents the protected recovery, while the independent dead-letter
+  route keeps Operations actionable without lowering the recovered route's readiness;
+- origin-restricted, credential-free ingestion CORS permits realistic browser-generated signed demo
+  traffic from the configured application origin;
+- login and registration accept a sanitized in-app return path, allowing landing CTAs to open Guided
+  Demo or Webhook Hub immediately after authentication.
+
+The full release gate passes formatting, ESLint, strict TypeScript, 133 automated tests and every
+production build. A browser-driven run on the complete self-hosted Compose stack passed all eight
+steps and produced three Webhook Hub routes, five monitor types, seven audited synthetic alerts, a
+protected recovery, one dead letter, a public status page and expiring redacted evidence. The
+selected recovery route scores 90/100 locally because localhost is intentionally not public HTTPS;
+the same check reaches 100/100 in Cloud.
+
+## Previous release `v0.10.0`
 
 Release `v0.10.0` reorganizes the authenticated application around an explicit operating boundary:
 

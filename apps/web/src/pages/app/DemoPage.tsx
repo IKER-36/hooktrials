@@ -8,8 +8,11 @@ type StepState = 'idle' | 'running' | 'passed' | 'failed';
 
 interface DemoSetup {
   runId: string;
-  source: { id: string; ingestUrl: string };
+  trial: { id: string; ingestUrl: string };
   target: { id: string; ingestUrl: string };
+  observe: { id: string; ingestUrl: string };
+  protect: { id: string; ingestUrl: string; signatureSecret: string };
+  deadLetter: { id: string; ingestUrl: string };
   scenario: { id: string; name: string };
   monitors: {
     recovery: { id: string; resourceId: string };
@@ -59,19 +62,32 @@ async function eventually<T>(operation: () => Promise<T>, ready: (value: T) => b
   throw new Error(`Demo evidence did not arrive in time${latest ? '.' : ' (no response).'}`);
 }
 
-async function postWebhook(url: string, body: string) {
-  const crossOrigin = new URL(url).origin !== window.location.origin;
+async function githubSignature(secret: string, body: string) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const value = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(body)));
+  return `sha256=${Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
+}
+
+async function postWebhook(url: string, body: string, headers: Record<string, string> = {}) {
   return fetch(url, {
     method: 'POST',
     body,
+    headers,
     cache: 'no-store',
     credentials: 'omit',
-    mode: crossOrigin ? 'no-cors' : 'same-origin',
+    mode: 'cors',
   });
 }
 
 export function DemoPage() {
-  const { refresh } = useDashboard();
+  const { refresh, selectEndpoint } = useDashboard();
   const [run, setRun] = useState<DemoSetup | null>(null);
   const [activeDemo, setActiveDemo] = useState<ActiveDemo | null>(null);
   const [checkingActive, setCheckingActive] = useState(true);
@@ -131,7 +147,7 @@ export function DemoPage() {
       setActiveDemo({
         runId: response.demo.runId,
         createdAt: new Date().toISOString(),
-        resourceCount: 7,
+        resourceCount: 10,
         runCount: 1,
       });
       step(0, 'passed');
@@ -141,11 +157,11 @@ export function DemoPage() {
       const trialId = `demo-trial-${Date.now()}`;
       const trialBody = JSON.stringify({ id: trialId, type: 'invoice.payment_failed' });
       for (let attempt = 0; attempt < 4; attempt += 1) {
-        await postWebhook(response.demo.source.ingestUrl, trialBody);
+        await postWebhook(response.demo.trial.ingestUrl, trialBody);
         if (attempt < 3) await sleep(250);
       }
       const trialEvents = await eventually(
-        () => events(response.demo.source.id),
+        () => events(response.demo.trial.id),
         (value) =>
           value.events.some(
             (event) => event.correlationKey === trialId && event.attempts.length >= 4,
@@ -157,24 +173,13 @@ export function DemoPage() {
 
       activeStep = 2;
       step(2, 'running');
-      await apiRequest(`/v1/endpoints/${response.demo.source.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          mode: 'observe',
-          destinationUrl: response.demo.destination.url,
-          destinationExpectedMinStatus: 200,
-          destinationExpectedMaxStatus: 299,
-          allowPrivateNetworks: response.demo.destination.allowPrivateNetworks,
-          allowedPrivateCidrs: response.demo.destination.allowedPrivateCidrs,
-        }),
-      });
       const observeId = `demo-observe-${Date.now()}`;
       await postWebhook(
-        response.demo.source.ingestUrl,
+        response.demo.observe.ingestUrl,
         JSON.stringify({ id: observeId, type: 'order.created' }),
       );
       await eventually(
-        () => events(response.demo.source.id),
+        () => events(response.demo.observe.id),
         (value) =>
           value.events.some((event) =>
             event.deliveries.some((delivery) => delivery.state === 'failed'),
@@ -184,29 +189,29 @@ export function DemoPage() {
 
       activeStep = 3;
       step(3, 'running');
-      await apiRequest(`/v1/endpoints/${response.demo.source.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          mode: 'protect',
-          retryMaxAttempts: 3,
-          retryBaseDelayMs: 1_000,
-          retryMaxDelayMs: 5_000,
-        }),
-      });
       const protectId = `demo-protect-${Date.now()}`;
-      await postWebhook(
-        response.demo.source.ingestUrl,
-        JSON.stringify({ id: protectId, type: 'payment.authorized' }),
-      );
-      await eventually(
-        () => events(response.demo.source.id),
+      const protectBody = JSON.stringify({ id: protectId, type: 'push' });
+      await postWebhook(response.demo.protect.ingestUrl, protectBody, {
+        'content-type': 'application/json',
+        'x-github-event': 'push',
+        'x-github-delivery': protectId,
+        'x-hub-signature-256': await githubSignature(
+          response.demo.protect.signatureSecret,
+          protectBody,
+        ),
+      });
+      const protectEvents = await eventually(
+        () => events(response.demo.protect.id),
         (value) =>
           value.events.some(
             (event) =>
+              event.correlationKey === protectId &&
               event.deliveries.length >= 3 &&
               event.deliveries.some((delivery) => delivery.state === 'succeeded'),
           ),
       );
+      const protectEvent = protectEvents.events.find((event) => event.correlationKey === protectId);
+      if (!protectEvent) throw new Error('The protected event did not prove recovery.');
       step(3, 'passed');
 
       async function runMonitor(monitorId: string, checkCount: number) {
@@ -267,11 +272,11 @@ export function DemoPage() {
       });
       const deadLetterId = `demo-dead-letter-${Date.now()}`;
       await postWebhook(
-        response.demo.source.ingestUrl,
+        response.demo.deadLetter.ingestUrl,
         JSON.stringify({ id: deadLetterId, type: 'fulfillment.delivery_requested' }),
       );
       await eventually(
-        () => events(response.demo.source.id),
+        () => events(response.demo.deadLetter.id),
         (value) =>
           value.events.some(
             (event) =>
@@ -305,17 +310,18 @@ export function DemoPage() {
       activeStep = 7;
       step(7, 'running');
       await eventually(
-        () => apiRequest<{ event: EventDetail }>(`/v1/events/${trialEvent.id}`),
+        () => apiRequest<{ event: EventDetail }>(`/v1/events/${protectEvent.id}`),
         (value) => value.event.report?.status === 'passed',
       );
       const evidence = await apiRequest<{ shareUrl: string; expiresAt: string }>(
-        `/v1/events/${trialEvent.id}/share`,
+        `/v1/events/${protectEvent.id}/share`,
         {
           method: 'POST',
           body: JSON.stringify({ confirm: true, expiresInHours: 24 }),
         },
       );
       setEvidenceUrl(evidence.shareUrl);
+      selectEndpoint(response.demo.protect.id);
       await refresh();
       step(7, 'passed');
       setMessage('Full workspace ready. Every module now contains safe, inspectable evidence.');
@@ -387,10 +393,10 @@ export function DemoPage() {
             {complete ? 'Journey verified' : running ? 'Running real checks…' : 'Ready to prove it'}
           </h2>
           <p>
-            The lab creates two endpoints, one custom scenario, five monitored integrations, a
-            multi-monitor public status page, a recoverable dead letter, incident and alert
-            evidence, plus one expiring report. Cleanup matches the private run ID and your account
-            before removing anything.
+            The lab creates isolated Trial, Observe and Protect routes, a synthetic destination, one
+            custom scenario, five monitored integrations, a multi-monitor public status page, a
+            recoverable dead letter, incident and alert evidence, plus one expiring report. Cleanup
+            matches the private run ID and your account before removing anything.
           </p>
           {activeDemo && !run ? (
             <div className="ht-demo-recovered" role="status">
@@ -461,8 +467,9 @@ export function DemoPage() {
           {complete ? (
             <div className="ht-demo-links">
               <Link to="/app">Inspect timelines</Link>
-              <Link to="/app/scenarios">Open Scenario Studio</Link>
-              <Link to="/app/monitor">Inspect monitor</Link>
+              <Link to="/app/live-webhooks">Open Webhook Hub</Link>
+              <Link to="/app/scenarios">Open failure scenarios</Link>
+              <Link to="/app/monitor">Inspect monitoring</Link>
               {run?.statusPage.shareUrl ? (
                 <a href={run.statusPage.shareUrl} target="_blank" rel="noreferrer">
                   Open public status page
