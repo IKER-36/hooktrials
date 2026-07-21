@@ -29,6 +29,7 @@ protected recovery, one dead letter, a public status page and expiring redacted 
 selected recovery route scores 90/100 locally because localhost is intentionally not public HTTPS.
 The release was promoted to CubePath on 21 July 2026; all four public origins passed, the full
 eight-step jury demo passed and the selected signed Protect recovery reached 100/100 in Cloud.
+The README includes a six-scene animated tour captured from the deployed Cloud product.
 
 ## Previous release `v0.10.0`
 

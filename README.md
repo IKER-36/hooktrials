@@ -121,6 +121,8 @@ The current `v0.11.0` interface keeps real delivery work in **Product** and dete
 experiments in **Lab**. These captures come from the deployed Cloud application; the same dashboard
 is included in the self-hosted distribution.
 
+![HookTrials Cloud product tour](docs/assets/hooktrials-demo.gif)
+
 ![Webhook Hub connecting providers, HookTrials and a backend](docs/assets/webhook-hub.jpg)
 
 ![Production Readiness showing its verifiable controls and highest-impact next action](docs/assets/production-readiness.jpg)
