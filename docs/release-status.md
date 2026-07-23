@@ -1,8 +1,19 @@
 # Current release status
 
-Updated: 21 July 2026.
+Updated: 23 July 2026.
 
-## Release `v0.11.2`
+## Release `v0.11.3`
+
+Release `v0.11.3` completes dark-theme parity for operational status surfaces. Production Readiness
+markers, monitor state notices, configuration chips, check history and public-status actions now use
+the semantic dark palette instead of inheriting light-theme white fills. This keeps status meaning
+legible without making the dashboard look like a light card inside the dark workspace.
+
+The patch is presentation-only: it does not change authentication, delivery, monitoring, persistence
+or data retention behaviour. The web typecheck and production build pass before the immutable image
+promotion to CubePath.
+
+## Previous release `v0.11.2`
 
 Release `v0.11.2` removes the remaining light-surface leakage from the dark authentication view.
 The platform badge, deterministic response sequence and CubePath attribution now use restrained

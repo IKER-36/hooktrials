@@ -391,6 +391,85 @@ html[data-theme='dark'] .ht-shell .ht-demo-rail article[data-state='failed'] b {
   color: var(--ht-red);
 }
 
+/* Dark-mode semantic surfaces: status markers and action controls must never
+ * fall back to the light-theme whites used by the legacy component layer. */
+html[data-theme='dark'] .ht-shell .ht-readiness-level {
+  color: var(--ht-amber);
+  background: var(--ht-warning-bg);
+  border: 1px solid color-mix(in srgb, var(--ht-amber) 24%, var(--ht-hairline));
+}
+
+html[data-theme='dark'] .ht-shell .ht-readiness-level.production_ready,
+html[data-theme='dark'] .ht-shell .ht-readiness-grid article.passed > span,
+html[data-theme='dark'] .ht-shell .ht-readiness-checks > footer.complete {
+  color: var(--ht-green);
+  background: var(--ht-positive-bg);
+  border-color: color-mix(in srgb, var(--ht-green) 24%, var(--ht-hairline));
+}
+
+html[data-theme='dark'] .ht-shell .ht-readiness-level.starting,
+html[data-theme='dark'] .ht-shell .ht-readiness-grid article.missing > span {
+  color: var(--ht-red);
+  background: var(--ht-danger-bg);
+  border-color: color-mix(in srgb, var(--ht-red) 24%, var(--ht-hairline));
+}
+
+html[data-theme='dark'] .ht-shell .ht-readiness-grid article > span {
+  border: 1px solid transparent;
+}
+
+html[data-theme='dark'] .ht-shell .ht-readiness-checks > footer:not(.complete) {
+  color: var(--ht-amber);
+  background: var(--ht-warning-bg);
+  border: 1px solid color-mix(in srgb, var(--ht-amber) 24%, var(--ht-hairline));
+}
+
+html[data-theme='dark'] .ht-shell .ht-monitor-nominal {
+  color: var(--ht-green);
+  background: var(--ht-positive-bg);
+  border-color: color-mix(in srgb, var(--ht-green) 25%, var(--ht-hairline));
+}
+
+html[data-theme='dark'] .ht-shell .ht-monitor-incident {
+  color: var(--ht-red);
+  background: var(--ht-danger-bg);
+  border-color: color-mix(in srgb, var(--ht-red) 25%, var(--ht-hairline));
+}
+
+html[data-theme='dark'] .ht-shell .ht-monitor-config span {
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline);
+}
+
+html[data-theme='dark'] .ht-shell .ht-monitor-actions button,
+html[data-theme='dark'] .ht-shell .ht-status-share-actions button,
+html[data-theme='dark'] .ht-shell .ht-status-share-url button {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline-bright);
+  box-shadow: none;
+}
+
+html[data-theme='dark'] .ht-shell .ht-status-share-actions button.danger {
+  color: var(--ht-red);
+}
+
+html[data-theme='dark'] .ht-shell .ht-status-share-url {
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline);
+}
+
+html[data-theme='dark'] .ht-shell .ht-check-list {
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline);
+}
+
+html[data-theme='dark'] .ht-shell .ht-check-list article {
+  background: transparent;
+  border-color: var(--ht-hairline);
+}
+
 html[data-theme='dark'] :where(.ht-auth-eyebrow, .ht-auth-sequence, .ht-cubepath-mini) {
   color: var(--ht-muted);
   background: var(--ht-surface-2);
