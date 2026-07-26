@@ -177,6 +177,7 @@ export function OnboardingTour({ onFinish }: { onFinish(): Promise<void> }) {
           <nav aria-label="Tour controls">
             <button
               type="button"
+              className="button secondary compact"
               onClick={() => setIndex((value) => value - 1)}
               disabled={index === 0}
               aria-label="Previous step"
@@ -186,7 +187,7 @@ export function OnboardingTour({ onFinish }: { onFinish(): Promise<void> }) {
             {index < steps.length - 1 ? (
               <button
                 type="button"
-                className="primary"
+                className="button primary compact"
                 onClick={() => setIndex((value) => value + 1)}
               >
                 Next <ChevronRight aria-hidden="true" />
@@ -194,9 +195,10 @@ export function OnboardingTour({ onFinish }: { onFinish(): Promise<void> }) {
             ) : (
               <button
                 type="button"
-                className="primary"
+                className="button primary compact"
                 onClick={() => void finish()}
                 disabled={busy}
+                aria-busy={busy}
               >
                 {busy ? 'Saving…' : 'Finish'}
               </button>

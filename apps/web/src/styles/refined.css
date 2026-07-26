@@ -1260,29 +1260,7 @@ html[data-theme]
   letter-spacing: -0.04em;
 }
 
-/* Forms and actions */
-.button {
-  min-height: 40px;
-  padding: 9px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  box-shadow: none;
-}
-
-.button.primary {
-  color: #fff;
-  background: var(--ht-green-dim);
-  border-color: var(--ht-green-dim);
-  box-shadow: none;
-}
-
-.button.primary:hover {
-  background: color-mix(in srgb, var(--ht-green-dim) 88%, #000);
-  transform: none;
-  box-shadow: none;
-}
-
-.button.secondary,
+/* Forms and actions. Button appearance lives in styles/buttons.css. */
 .ht-close,
 .ht-modal-close {
   color: var(--ht-ink);

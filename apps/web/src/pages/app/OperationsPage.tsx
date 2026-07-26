@@ -237,12 +237,14 @@ export function OperationsPage() {
                         <>
                           <button
                             type="button"
+                            className="button secondary compact"
                             onClick={() => setPendingAction({ delivery, kind: 'retry' })}
                           >
                             Retry
                           </button>
                           <button
                             type="button"
+                            className="button secondary compact"
                             onClick={() => setPendingAction({ delivery, kind: 'replay' })}
                           >
                             Replay

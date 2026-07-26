@@ -234,12 +234,18 @@ export function EndpointsPage() {
                 <div className="ht-endpoint-actions">
                   <button
                     type="button"
+                    className="button secondary compact"
                     onClick={() => void toggle(endpoint)}
                     disabled={togglingId === endpoint.id}
+                    aria-busy={togglingId === endpoint.id}
                   >
-                    {togglingId === endpoint.id ? '…' : endpoint.active ? 'Pause' : 'Resume'}
+                    {togglingId === endpoint.id ? 'Working…' : endpoint.active ? 'Pause' : 'Resume'}
                   </button>
-                  <button type="button" className="danger" onClick={() => setDeleting(endpoint)}>
+                  <button
+                    type="button"
+                    className="button danger compact"
+                    onClick={() => setDeleting(endpoint)}
+                  >
                     Delete
                   </button>
                 </div>

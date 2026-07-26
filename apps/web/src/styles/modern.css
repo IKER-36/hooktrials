@@ -31,41 +31,7 @@ pre {
   background: var(--ht-green-deep);
 }
 
-/* Shared controls */
-.button {
-  min-height: 40px;
-  border-color: var(--ht-hairline-bright);
-  border-radius: 10px;
-  font-family: var(--ht-sans);
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: none;
-}
-.button svg {
-  width: 15px;
-  height: 15px;
-}
-.button:hover {
-  border-color: rgba(34, 197, 94, 0.4);
-  transform: translateY(-1px);
-}
-.button.secondary {
-  color: #334155;
-  background: rgba(255, 255, 255, 0.74);
-  box-shadow: 0 5px 14px rgba(25, 41, 72, 0.05);
-  backdrop-filter: blur(12px);
-}
-.button.secondary:hover {
-  color: var(--ht-ink);
-  background: #fff;
-}
-.button.primary {
-  border-color: transparent;
-}
-.button.compact {
-  min-height: 36px;
-  padding: 8px 11px;
-}
+/* Shared controls. Button appearance lives in styles/buttons.css. */
 .ht-field {
   color: #465166;
   font-family: var(--ht-sans);

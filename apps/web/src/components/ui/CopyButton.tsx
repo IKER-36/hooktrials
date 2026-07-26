@@ -31,10 +31,15 @@ export function CopyButton({
     timer.current = window.setTimeout(() => setState('idle'), 2000);
   }
 
+  // Callers may pick their own variant; otherwise copying is a secondary action.
+  const variant = className.includes('button')
+    ? className
+    : `button secondary compact ${className}`;
+
   return (
     <button
       type="button"
-      className={`ht-copy ${state} ${className}`.trim()}
+      className={`ht-copy ${state} ${variant}`.replace(/\s+/g, ' ').trim()}
       onClick={() => void copy()}
       disabled={disabled}
     >

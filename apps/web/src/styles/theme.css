@@ -298,13 +298,11 @@ html[data-theme]
   color: var(--ht-ink);
   background: var(--ht-panel-solid);
 }
-.button.secondary,
 .ht-close {
   color: var(--ht-muted);
   background: var(--ht-surface-1);
   border-color: var(--ht-hairline-bright);
 }
-.button.secondary:hover,
 .ht-close:hover {
   color: var(--ht-ink);
   background: var(--ht-surface-2);

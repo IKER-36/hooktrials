@@ -11,6 +11,8 @@ import './styles/modern.css';
 import './styles/theme.css';
 import './styles/refined.css';
 import './styles/workspace.css';
+// Loaded last: the button contract must win over every earlier layer.
+import './styles/buttons.css';
 
 const storedTheme = localStorage.getItem('ht.theme');
 const initialTheme =

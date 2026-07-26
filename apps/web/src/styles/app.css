@@ -809,11 +809,6 @@
 .ht-repeat-control small {
   color: var(--ht-faint);
 }
-.button.danger {
-  border-color: #ff215766;
-  color: var(--ht-red);
-  background: #ff21570a;
-}
 .ht-external-warning {
   display: grid;
   grid-template-columns: auto 1fr auto;

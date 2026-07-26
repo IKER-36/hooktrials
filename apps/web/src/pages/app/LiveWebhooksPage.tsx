@@ -617,12 +617,18 @@ export function LiveWebhooksPage() {
                 <div className="ht-live-route-actions">
                   <button
                     type="button"
+                    className="button secondary compact"
                     disabled={testingRouteId === endpoint.id || !endpoint.active}
+                    aria-busy={testingRouteId === endpoint.id}
                     onClick={() => void sendSyntheticEvent(endpoint)}
                   >
                     {testingRouteId === endpoint.id ? 'Sending…' : 'Run test'}
                   </button>
-                  <button type="button" onClick={() => openRoute(endpoint)}>
+                  <button
+                    type="button"
+                    className="button secondary compact"
+                    onClick={() => openRoute(endpoint)}
+                  >
                     Inspect
                   </button>
                   {testResult?.routeId === endpoint.id ? (

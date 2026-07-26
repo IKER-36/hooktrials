@@ -1,0 +1,115 @@
+/* The single button contract.
+ *
+ * Loaded last so it is authoritative: no earlier layer may redefine a variant.
+ * Variants are primary, secondary, danger and ghost; `compact` is the only size
+ * modifier. Every variant carries explicit hover, focus-visible, disabled and
+ * busy states so an action never depends on an ancestor selector for its
+ * affordance.
+ *
+ * Container rules may still set layout (margin, width, justification). They must
+ * not set colour, border, radius, type or size.
+ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ht-space-2);
+  min-height: 40px;
+  padding: 9px 14px;
+  color: var(--ht-ink);
+  background: transparent;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 8px;
+  font-family: var(--ht-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease,
+    background 120ms ease;
+}
+
+.button > svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.button.compact {
+  min-height: 36px;
+  padding: 8px 11px;
+  font-size: 11px;
+}
+
+/* Primary: the one dominant next action on a surface. */
+.button.primary {
+  color: #fff;
+  background: var(--ht-green-dim);
+  border-color: var(--ht-green-dim);
+}
+.button.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ht-green-dim) 88%, #000);
+  border-color: color-mix(in srgb, var(--ht-green-dim) 88%, #000);
+}
+
+/* Secondary: the default for any other real action. */
+.button.secondary {
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline-bright);
+}
+.button.secondary:hover:not(:disabled) {
+  background: var(--ht-surface-2);
+  border-color: var(--ht-green-dim);
+}
+
+/* Danger: destructive and irreversible. Must read as destructive at rest, in
+   both themes, before the confirmation dialog is ever reached. */
+.button.danger {
+  color: var(--ht-red);
+  background: var(--ht-danger-bg);
+  border-color: color-mix(in srgb, var(--ht-red) 42%, transparent);
+}
+.button.danger:hover:not(:disabled) {
+  color: #fff;
+  background: var(--ht-red);
+  border-color: var(--ht-red);
+}
+
+/* Ghost: low emphasis, for repeated inline actions inside dense rows. Still a
+   visible control, never bare text. */
+.button.ghost {
+  color: var(--ht-muted);
+  background: transparent;
+  border-color: transparent;
+}
+.button.ghost:hover:not(:disabled) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline-bright);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--ht-focus);
+  outline-offset: 2px;
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.button[aria-busy='true'] {
+  cursor: progress;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

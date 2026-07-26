@@ -258,7 +258,11 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
                   <CopyButton value={share.shareUrl} label="Copy 24h link" />
                 </div>
               ) : (
-                <button type="button" onClick={() => setSharePending(true)}>
+                <button
+                  type="button"
+                  className="button secondary compact"
+                  onClick={() => setSharePending(true)}
+                >
                   Create 24h share link
                 </button>
               )}
@@ -395,6 +399,7 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
                           {['failed', 'dead_letter'].includes(delivery.state) ? (
                             <button
                               type="button"
+                              className="button secondary compact"
                               onClick={() =>
                                 setPendingDeliveryAction({ id: delivery.id, kind: 'retry' })
                               }
@@ -405,6 +410,7 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
                           {['succeeded', 'failed', 'dead_letter'].includes(delivery.state) ? (
                             <button
                               type="button"
+                              className="button secondary compact"
                               onClick={() =>
                                 setPendingDeliveryAction({ id: delivery.id, kind: 'replay' })
                               }

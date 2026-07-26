@@ -272,6 +272,7 @@ export function ScenariosPage() {
                   <footer>
                     <button
                       type="button"
+                      className="button secondary compact"
                       onClick={() => moveStep(index, -1)}
                       disabled={index === 0}
                     >
@@ -279,6 +280,7 @@ export function ScenariosPage() {
                     </button>
                     <button
                       type="button"
+                      className="button secondary compact"
                       onClick={() => moveStep(index, 1)}
                       disabled={index === steps.length - 1}
                     >
@@ -286,7 +288,7 @@ export function ScenariosPage() {
                     </button>
                     <button
                       type="button"
-                      className="danger"
+                      className="button danger compact"
                       onClick={() =>
                         setSteps((items) => items.filter((_, position) => position !== index))
                       }

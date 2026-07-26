@@ -560,15 +560,25 @@ function StatusPagesPanel({
                     <CopyButton value={page.shareUrl} label="Copy link" />
                   </>
                 ) : null}
-                <button type="button" onClick={() => openEditor(page)}>
+                <button
+                  type="button"
+                  className="button secondary compact"
+                  onClick={() => openEditor(page)}
+                >
                   Edit
                 </button>
-                <button type="button" onClick={() => void rotate(page)} disabled={busy === page.id}>
+                <button
+                  type="button"
+                  className="button secondary compact"
+                  onClick={() => void rotate(page)}
+                  disabled={busy === page.id}
+                  aria-busy={busy === page.id}
+                >
                   Rotate
                 </button>
                 <button
                   type="button"
-                  className="danger"
+                  className="button danger compact"
                   onClick={() => void remove(page)}
                   disabled={busy === page.id}
                 >
@@ -655,10 +665,15 @@ function StatusPagesPanel({
           </fieldset>
           {message ? <p className="ht-form-error">{message}</p> : null}
           <div className="ht-form-actions">
-            <button type="button" onClick={() => setEditing(null)}>
+            <button type="button" className="button secondary" onClick={() => setEditing(null)}>
               Cancel
             </button>
-            <button type="submit" className="button primary" disabled={busy === 'save'}>
+            <button
+              type="submit"
+              className="button primary"
+              disabled={busy === 'save'}
+              aria-busy={busy === 'save'}
+            >
               {busy === 'save' ? 'Saving…' : 'Save status page'}
             </button>
           </div>
@@ -1067,26 +1082,43 @@ function MonitorDetail({
           <code>{summary.displayUrl}</code>
         </div>
         <div className="ht-monitor-actions">
-          <button type="button" onClick={onEdit} disabled={Boolean(busy)}>
+          <button
+            type="button"
+            className="button secondary compact"
+            onClick={onEdit}
+            disabled={Boolean(busy)}
+          >
             Edit
           </button>
           <button
             type="button"
+            className="button secondary compact"
             onClick={onRun}
             disabled={Boolean(busy) || summary.state === 'paused'}
+            aria-busy={busy === 'run'}
           >
             {busy === 'run' ? 'Queued…' : 'Run now'}
           </button>
           {summary.state === 'paused' ? (
-            <button type="button" onClick={onResume} disabled={Boolean(busy)}>
+            <button
+              type="button"
+              className="button secondary compact"
+              onClick={onResume}
+              disabled={Boolean(busy)}
+            >
               Resume
             </button>
           ) : (
-            <button type="button" onClick={onPause} disabled={Boolean(busy)}>
+            <button
+              type="button"
+              className="button secondary compact"
+              onClick={onPause}
+              disabled={Boolean(busy)}
+            >
               Pause
             </button>
           )}
-          <button type="button" className="danger" onClick={onDelete}>
+          <button type="button" className="button danger compact" onClick={onDelete}>
             Delete
           </button>
         </div>
@@ -1146,7 +1178,13 @@ function MonitorDetail({
           </p>
         </div>
         <div className="ht-status-share-actions">
-          <button type="button" onClick={() => void publishStatus()} disabled={statusBusy}>
+          <button
+            type="button"
+            className="button secondary compact"
+            onClick={() => void publishStatus()}
+            disabled={statusBusy}
+            aria-busy={statusBusy}
+          >
             {statusBusy
               ? 'Working…'
               : statusEnabled
@@ -1156,7 +1194,7 @@ function MonitorDetail({
           {statusEnabled || statusUrl ? (
             <button
               type="button"
-              className="danger"
+              className="button danger compact"
               onClick={() => void disableStatus()}
               disabled={statusBusy}
             >
