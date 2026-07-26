@@ -122,6 +122,18 @@ export const deliveryActionInputSchema = z.object({
   confirm: z.literal(true),
 });
 
+export const syntheticEventInputSchema = z.object({
+  confirm: z.literal(true),
+});
+
+export const destinationPreflightInputSchema = z.object({
+  url: z.string().url().max(2_048),
+  provider: z.enum(['generic', 'stripe', 'github', 'shopify', 'slack']).default('generic'),
+  signatureConfigured: z.boolean().default(false),
+  contractConfigured: z.boolean().default(true),
+  timeoutMs: z.number().int().min(1_000).max(30_000).default(10_000),
+});
+
 export const alertChannelInputSchema = z
   .object({
     url: z.string().url().max(2_048),
@@ -231,6 +243,8 @@ export type LoginInput = z.infer<typeof loginInputSchema>;
 export type CreateEndpointInput = z.infer<typeof createEndpointInputSchema>;
 export type UpdateEndpointInput = z.infer<typeof updateEndpointInputSchema>;
 export type DeliveryActionInput = z.infer<typeof deliveryActionInputSchema>;
+export type SyntheticEventInput = z.infer<typeof syntheticEventInputSchema>;
+export type DestinationPreflightInput = z.infer<typeof destinationPreflightInputSchema>;
 export type WebhookContract = z.infer<typeof webhookContractSchema>;
 export type AlertChannelInput = z.infer<typeof alertChannelInputSchema>;
 export type ScenarioInput = z.infer<typeof scenarioInputSchema>;

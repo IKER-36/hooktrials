@@ -199,6 +199,27 @@ export const es: Record<string, string> = {
   'Your current webhook destination': 'Tu destino webhook actual',
   'Encrypted at rest and never returned to the browser.':
     'Cifrado en reposo y nunca devuelto al navegador.',
+  'Destination preflight': 'Comprobación previa del destino',
+  'HookTrials checks public routing, DNS, TLS and HTTP reachability without sending a webhook payload.':
+    'HookTrials comprueba el enrutamiento público, DNS, TLS y la conectividad HTTP sin enviar ningún payload webhook.',
+  'Checking destination…': 'Comprobando destino…',
+  'Check destination': 'Comprobar destino',
+  'Check that the destination is reachable before creating the live route.':
+    'Comprueba que el destino sea accesible antes de crear la ruta real.',
+  'Destination needs attention': 'El destino requiere atención',
+  'Destination is allowed by the outbound network policy.':
+    'El destino está permitido por la política de red saliente.',
+  'An inbound contract will validate provider requests.':
+    'Un contrato entrante validará las peticiones del proveedor.',
+  'No inbound contract is configured yet.': 'Todavía no hay un contrato entrante configurado.',
+  'Provider signature verification is configured.':
+    'La verificación de firma del proveedor está configurada.',
+  'Provider signature verification is not configured.':
+    'La verificación de firma del proveedor no está configurada.',
+  'Signature verification is optional for this generic integration.':
+    'La verificación de firma es opcional para esta integración genérica.',
+  'Destination answered with a redirect. Use the final HTTPS webhook URL.':
+    'El destino respondió con una redirección. Usa la URL HTTPS final del webhook.',
   'Delivery strategy': 'Estrategia de entrega',
   'Forward synchronously and return your backend response to the provider.':
     'Reenvía de forma síncrona y devuelve al proveedor la respuesta de tu backend.',
@@ -243,6 +264,18 @@ export const es: Record<string, string> = {
   'Inspect requests, validation, destination responses, retries and recovery.':
     'Inspecciona peticiones, validación, respuestas del destino, reintentos y recuperación.',
   'Open live inspector': 'Abrir inspector en directo',
+  'Verify the complete route now': 'Verifica ahora la ruta completa',
+  'This sends one clearly marked synthetic event through HookTrials and forwards it to your configured destination.':
+    'Esto envía un evento sintético claramente identificado a través de HookTrials y lo reenvía al destino configurado.',
+  'Sending synthetic event…': 'Enviando evento sintético…',
+  'Send test event': 'Enviar evento de prueba',
+  'Run test': 'Probar',
+  'Resume this live route before sending a synthetic event.':
+    'Reanuda esta ruta real antes de enviar un evento sintético.',
+  'Synthetic forwarding tests require an Observe or Protect route.':
+    'Las pruebas de reenvío sintéticas requieren una ruta Observar o Proteger.',
+  'This route cannot receive a synthetic event. Recreate it safely.':
+    'Esta ruta no puede recibir un evento sintético. Vuelve a crearla de forma segura.',
   'Payloads and secrets are encrypted at rest. Private network destinations remain blocked in HookTrials Cloud.':
     'Los payloads y secretos están cifrados en reposo. Los destinos de redes privadas permanecen bloqueados en HookTrials Cloud.',
   Concentrator: 'Concentrador',
@@ -1126,6 +1159,37 @@ export const es: Record<string, string> = {
 };
 
 export const phrasePatterns: Array<[RegExp, (match: RegExpMatchArray) => string]> = [
+  [
+    /^Reachable(?: · HTTP (\d+))?(?: · (\d+) ms)?$/,
+    (m) => `Accesible${m[1] ? ` · HTTP ${m[1]}` : ''}${m[2] ? ` · ${m[2]} ms` : ''}`,
+  ],
+  [
+    /^(.+) resolved to (\d+) public address(?:es)?\.$/,
+    (m) =>
+      `${m[1]} resolvió ${m[2]} dirección${m[2] === '1' ? '' : 'es'} pública${m[2] === '1' ? '' : 's'}.`,
+  ],
+  [
+    /^Destination answered HTTP (\d+) in (\d+) ms\. Any HTTP response proves reachability; no webhook payload was sent\.$/,
+    (m) =>
+      `El destino respondió HTTP ${m[1]} en ${m[2]} ms. Cualquier respuesta HTTP demuestra conectividad; no se envió ningún payload webhook.`,
+  ],
+  [
+    /^Destination could not be resolved or reached \((.+)\)\.$/,
+    (m) => `No se pudo resolver o alcanzar el destino (${m[1]}).`,
+  ],
+  [
+    /^Destination did not answer the safe HEAD probe \((.+)\)\.$/,
+    (m) => `El destino no respondió a la comprobación HEAD segura (${m[1]}).`,
+  ],
+  [
+    /^(stripe|github|shopify|slack) traffic is not protected by signature verification yet\.$/i,
+    (m) => `El tráfico de ${m[1]} todavía no está protegido mediante verificación de firma.`,
+  ],
+  [
+    /^Event recorded · HTTP (\d+) · (\d+) ms$/,
+    (m) => `Evento registrado · HTTP ${m[1]} · ${m[2]} ms`,
+  ],
+  [/^Recorded · HTTP (\d+) · (\d+) ms$/, (m) => `Registrado · HTTP ${m[1]} · ${m[2]} ms`],
   [/^(\d+) of (\d+)$/, (m) => `${m[1]} de ${m[2]}`],
   [
     /^(\d+) trial endpoints?( · unlimited)?$/,

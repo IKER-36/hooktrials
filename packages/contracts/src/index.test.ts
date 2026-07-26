@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createEndpointInputSchema } from './index.js';
+import {
+  createEndpointInputSchema,
+  destinationPreflightInputSchema,
+  syntheticEventInputSchema,
+} from './index.js';
 
 describe('createEndpointInputSchema', () => {
   it('keeps the existing endpoint creation flow in trial mode', () => {
@@ -41,5 +45,33 @@ describe('createEndpointInputSchema', () => {
       destinationUrl: 'https://api.example.com/webhooks',
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('destinationPreflightInputSchema', () => {
+  it('applies safe defaults for a generic destination check', () => {
+    const input = destinationPreflightInputSchema.parse({
+      url: 'https://api.example.com/webhooks',
+    });
+
+    expect(input.provider).toBe('generic');
+    expect(input.signatureConfigured).toBe(false);
+    expect(input.contractConfigured).toBe(true);
+    expect(input.timeoutMs).toBe(10_000);
+  });
+
+  it('rejects non-HTTP destinations', () => {
+    const result = destinationPreflightInputSchema.safeParse({
+      url: 'not-a-url',
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('syntheticEventInputSchema', () => {
+  it('requires explicit confirmation before contacting a real destination', () => {
+    expect(syntheticEventInputSchema.safeParse({ confirm: true }).success).toBe(true);
+    expect(syntheticEventInputSchema.safeParse({ confirm: false }).success).toBe(false);
   });
 });

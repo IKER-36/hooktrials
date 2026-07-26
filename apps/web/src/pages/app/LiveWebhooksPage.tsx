@@ -1,13 +1,35 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowRight, CheckCircle2, RadioTower, ShieldCheck, Waypoints } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
-import { readableError } from '../../lib/api';
+import { apiRequest, readableError } from '../../lib/api';
 import type { Endpoint } from '../../lib/types';
 
 type Provider = NonNullable<Endpoint['provider']>;
+type PreflightCheck = {
+  id: string;
+  status: 'passed' | 'warning' | 'failed';
+  detail: string;
+};
+type PreflightResult = {
+  url: string;
+  reachable: boolean;
+  ready: boolean;
+  statusCode: number | null;
+  latencyMs: number | null;
+  checks: PreflightCheck[];
+};
+type TestEventResult = {
+  accepted: boolean;
+  eventId: string | null;
+  correlationKey: string;
+  mode: 'observe' | 'protect';
+  statusCode: number;
+  latencyMs: number;
+  destinationTriggered: boolean;
+};
 
 const PROVIDERS: Array<{ id: Provider; name: string; detail: string }> = [
   { id: 'generic', name: 'Generic', detail: 'Any HTTPS webhook provider' },
@@ -55,6 +77,13 @@ export function LiveWebhooksPage() {
   const [activationSecret, setActivationSecret] = useState('');
   const [activatingSignature, setActivatingSignature] = useState(false);
   const [activationError, setActivationError] = useState('');
+  const [preflight, setPreflight] = useState<PreflightResult | null>(null);
+  const [preflighting, setPreflighting] = useState(false);
+  const [preflightError, setPreflightError] = useState('');
+  const [testingRouteId, setTestingRouteId] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<
+    { routeId: string; result?: TestEventResult; error?: string } | undefined
+  >();
 
   const liveRoutes = useMemo(
     () => endpoints.filter((endpoint) => endpoint.mode !== 'trial'),
@@ -65,11 +94,63 @@ export function LiveWebhooksPage() {
   const usage = limits?.endpointUsage ?? endpoints.filter((endpoint) => !endpoint.demoOwned).length;
   const atLimit = limit > 0 && usage >= limit;
   const supportsSignature = provider === 'stripe' || provider === 'github';
+  const destination = destinationUrl.trim();
+  const destinationChecked = Boolean(
+    preflight?.reachable && preflight.url === destination && destination.length > 0,
+  );
+
+  useEffect(() => {
+    setPreflight(null);
+    setPreflightError('');
+  }, [destinationUrl, provider, signatureSecret]);
+
+  async function runPreflight() {
+    if (!destination) return;
+    setPreflighting(true);
+    setPreflightError('');
+    setPreflight(null);
+    try {
+      const result = await apiRequest<Omit<PreflightResult, 'url'>>('/v1/preflight/destination', {
+        method: 'POST',
+        body: JSON.stringify({
+          url: destination,
+          provider,
+          signatureConfigured: supportsSignature && signatureSecret.trim().length >= 8,
+          contractConfigured: true,
+        }),
+      });
+      setPreflight({ ...result, url: destination });
+    } catch (requestError) {
+      setPreflightError(readableError(requestError));
+    } finally {
+      setPreflighting(false);
+    }
+  }
+
+  async function sendSyntheticEvent(endpoint: Endpoint) {
+    setTestingRouteId(endpoint.id);
+    setTestResult(undefined);
+    try {
+      const result = await apiRequest<TestEventResult>(`/v1/endpoints/${endpoint.id}/test-event`, {
+        method: 'POST',
+        body: JSON.stringify({ confirm: true }),
+      });
+      setTestResult({ routeId: endpoint.id, result });
+    } catch (requestError) {
+      setTestResult({ routeId: endpoint.id, error: readableError(requestError) });
+    } finally {
+      setTestingRouteId(null);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const scenario = scenarios[0];
     if (!scenario) return;
+    if (!destinationChecked) {
+      setError('Check that the destination is reachable before creating the live route.');
+      return;
+    }
     setSubmitting(true);
     setError('');
     setCreated(null);
@@ -91,6 +172,7 @@ export function LiveWebhooksPage() {
       setDestinationUrl('');
       setSignatureSecret('');
       setConfirmProduction(false);
+      setPreflight(null);
     } catch (requestError) {
       setError(readableError(requestError));
     } finally {
@@ -246,6 +328,42 @@ export function LiveWebhooksPage() {
             </label>
           </div>
 
+          <section className="ht-destination-preflight" aria-live="polite">
+            <div>
+              <b>Destination preflight</b>
+              <span>
+                HookTrials checks public routing, DNS, TLS and HTTP reachability without sending a
+                webhook payload.
+              </span>
+            </div>
+            <button
+              className="button secondary"
+              type="button"
+              disabled={!destination || preflighting}
+              onClick={() => void runPreflight()}
+            >
+              {preflighting ? 'Checking destination…' : 'Check destination'}
+            </button>
+            {preflightError ? <p className="ht-form-error">{preflightError}</p> : null}
+            {preflight ? (
+              <div className="ht-preflight-results">
+                <strong className={preflight.reachable ? 'passed' : 'failed'}>
+                  {preflight.reachable
+                    ? `Reachable${preflight.statusCode ? ` · HTTP ${preflight.statusCode}` : ''}${preflight.latencyMs !== null ? ` · ${preflight.latencyMs} ms` : ''}`
+                    : 'Destination needs attention'}
+                </strong>
+                <ul>
+                  {preflight.checks.map((check) => (
+                    <li key={check.id} className={check.status}>
+                      <i aria-hidden="true" />
+                      <span>{check.detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </section>
+
           <fieldset className="ht-delivery-choice">
             <legend>Delivery strategy</legend>
             <label className={mode === 'observe' ? 'active' : ''}>
@@ -313,7 +431,9 @@ export function LiveWebhooksPage() {
           <button
             className="button primary"
             type="submit"
-            disabled={submitting || loading || atLimit || scenarios.length === 0}
+            disabled={
+              submitting || loading || atLimit || scenarios.length === 0 || !destinationChecked
+            }
           >
             {submitting ? 'Creating secure route…' : 'Create live connection'}
           </button>
@@ -381,6 +501,27 @@ export function LiveWebhooksPage() {
                   </button>
                 </form>
               ) : null}
+              <div className="ht-synthetic-test">
+                <b>Verify the complete route now</b>
+                <p>
+                  This sends one clearly marked synthetic event through HookTrials and forwards it
+                  to your configured destination.
+                </p>
+                <button
+                  className="button primary"
+                  type="button"
+                  disabled={testingRouteId === created.id}
+                  onClick={() => void sendSyntheticEvent(created)}
+                >
+                  {testingRouteId === created.id ? 'Sending synthetic event…' : 'Send test event'}
+                </button>
+                {testResult?.routeId === created.id ? (
+                  <p className={testResult.error ? 'ht-form-error' : 'ht-form-success'}>
+                    {testResult.error ??
+                      `Event recorded · HTTP ${testResult.result?.statusCode ?? '—'} · ${testResult.result?.latencyMs ?? '—'} ms`}
+                  </p>
+                ) : null}
+              </div>
               <button className="button secondary" type="button" onClick={() => openRoute(created)}>
                 Open live inspector
               </button>
@@ -453,9 +594,24 @@ export function LiveWebhooksPage() {
                   <span>{endpoint.destinationHost ?? 'destination'}</span>
                 </div>
                 <span className={`ht-mode-badge ${endpoint.mode}`}>{endpoint.mode}</span>
-                <button type="button" onClick={() => openRoute(endpoint)}>
-                  Inspect
-                </button>
+                <div className="ht-live-route-actions">
+                  <button
+                    type="button"
+                    disabled={testingRouteId === endpoint.id || !endpoint.active}
+                    onClick={() => void sendSyntheticEvent(endpoint)}
+                  >
+                    {testingRouteId === endpoint.id ? 'Sending…' : 'Run test'}
+                  </button>
+                  <button type="button" onClick={() => openRoute(endpoint)}>
+                    Inspect
+                  </button>
+                  {testResult?.routeId === endpoint.id ? (
+                    <small className={testResult.error ? 'failed' : 'passed'}>
+                      {testResult.error ??
+                        `Recorded · HTTP ${testResult.result?.statusCode ?? '—'} · ${testResult.result?.latencyMs ?? '—'} ms`}
+                    </small>
+                  ) : null}
+                </div>
               </article>
             ))}
           </div>

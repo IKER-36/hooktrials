@@ -316,6 +316,95 @@ html[data-theme='dark'] body {
   accent-color: var(--accent);
 }
 
+.ht-destination-preflight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 16px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-soft);
+}
+
+.ht-destination-preflight > div:first-child b,
+.ht-destination-preflight > div:first-child span {
+  display: block;
+}
+
+.ht-destination-preflight > div:first-child b {
+  font-size: 12px;
+}
+
+.ht-destination-preflight > div:first-child span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.ht-destination-preflight > .ht-form-error,
+.ht-preflight-results {
+  grid-column: 1 / -1;
+}
+
+.ht-preflight-results {
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+
+.ht-preflight-results > strong {
+  display: inline-flex;
+  margin-bottom: 8px;
+  font: 700 10px/1 var(--font-mono);
+}
+
+.ht-preflight-results > strong.passed {
+  color: var(--accent);
+}
+
+.ht-preflight-results > strong.failed {
+  color: var(--ht-red);
+}
+
+.ht-preflight-results ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ht-preflight-results li {
+  display: grid;
+  grid-template-columns: 8px 1fr;
+  gap: 8px;
+  align-items: start;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.ht-preflight-results li i {
+  width: 6px;
+  height: 6px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.ht-preflight-results li.passed i {
+  background: var(--accent);
+}
+
+.ht-preflight-results li.warning i {
+  background: var(--warning);
+}
+
+.ht-preflight-results li.failed i {
+  background: var(--ht-red);
+}
+
 .ht-live-activation {
   position: sticky;
   top: 18px;
@@ -461,6 +550,26 @@ html[data-theme='dark'] body {
   font-size: 10px;
 }
 
+.ht-synthetic-test {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+.ht-synthetic-test > b {
+  font-size: 11px;
+}
+
+.ht-synthetic-test > p {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
 .ht-live-security-note p {
   margin: 0;
   color: var(--muted);
@@ -483,7 +592,7 @@ html[data-theme='dark'] body {
 
 .ht-live-route-list article {
   display: grid;
-  grid-template-columns: 86px minmax(150px, 0.7fr) minmax(280px, 1.2fr) 72px auto;
+  grid-template-columns: 86px minmax(150px, 0.7fr) minmax(280px, 1.2fr) 72px minmax(138px, auto);
   gap: 14px;
   align-items: center;
   padding: 13px 20px;
@@ -564,12 +673,35 @@ html[data-theme='dark'] body {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
 }
 
-.ht-live-route-list article > button {
+.ht-live-route-actions {
+  position: relative;
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.ht-live-route-actions > button {
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface-soft);
   font-size: 10px;
+}
+
+.ht-live-route-actions > small {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: max-content;
+  font: 600 8px/1.2 var(--font-mono);
+}
+
+.ht-live-route-actions > small.passed {
+  color: var(--accent);
+}
+
+.ht-live-route-actions > small.failed {
+  color: var(--ht-red);
 }
 
 @media (max-width: 1050px) {
@@ -586,7 +718,7 @@ html[data-theme='dark'] body {
   }
 
   .ht-live-route-list article {
-    grid-template-columns: 80px 1fr 72px auto;
+    grid-template-columns: 80px 1fr 72px minmax(138px, auto);
   }
 
   .ht-route-mini-flow {
@@ -617,7 +749,15 @@ html[data-theme='dark'] body {
   }
 
   .ht-live-route-list article {
-    grid-template-columns: 72px 1fr auto;
+    grid-template-columns: 72px 1fr minmax(138px, auto);
+  }
+
+  .ht-destination-preflight {
+    grid-template-columns: 1fr;
+  }
+
+  .ht-destination-preflight > button {
+    width: 100%;
   }
 
   .ht-live-route-list .ht-mode-badge {

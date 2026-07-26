@@ -2,10 +2,12 @@ import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import { createHmac } from 'node:crypto';
 import { readRuntimeConfig } from '@hooktrials/config';
 import {
   createEndpointInputSchema,
   alertChannelInputSchema,
+  destinationPreflightInputSchema,
   deliveryActionInputSchema,
   loginInputSchema,
   monitorInputSchema,
@@ -14,6 +16,7 @@ import {
   scenarioInputSchema,
   shareEvidenceInputSchema,
   statusPageInputSchema,
+  syntheticEventInputSchema,
   updateMonitorInputSchema,
   updateStatusPageInputSchema,
   updateEndpointInputSchema,
@@ -151,6 +154,99 @@ function decryptToken(value: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+function setSyntheticJsonPath(
+  target: Record<string, unknown>,
+  path: string,
+  value: string | number | boolean | null,
+) {
+  const segments = path.slice(2).split('.');
+  let current = target;
+  for (const [index, segment] of segments.entries()) {
+    if (index === segments.length - 1) {
+      current[segment] = value;
+      return;
+    }
+    const existing = current[segment];
+    if (!existing || typeof existing !== 'object' || Array.isArray(existing)) {
+      current[segment] = {};
+    }
+    current = current[segment] as Record<string, unknown>;
+  }
+}
+
+type SyntheticMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+type SyntheticContract = {
+  method?: SyntheticMethod;
+  requiredHeaders?: Record<string, string>;
+  jsonPaths?: Record<string, string | number | boolean | null>;
+};
+
+function syntheticIngestTarget(token: string) {
+  if (config.NODE_ENV === 'development') {
+    return {
+      url: `http://127.0.0.1:${config.INGEST_PORT}/i/${token}`,
+      network: {
+        allowHttp: true,
+        allowPrivateNetworks: true,
+        allowedPrivateCidrs: ['127.0.0.1/32'],
+      },
+    };
+  }
+  return {
+    url: `http://ingestor:${config.INGEST_PORT}/i/${token}`,
+    network: {
+      allowHttp: true,
+      allowPrivateNetworks: true,
+      allowedPrivateCidrs: ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'],
+    },
+  };
+}
+
+function syntheticProviderHeaders(input: {
+  provider: string;
+  eventId: string;
+  body: Buffer;
+  signatureProvider: 'none' | 'github' | 'stripe';
+  signatureSecret: string | null;
+}) {
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+    'x-event-id': input.eventId,
+    'x-hooktrials-test-event': 'true',
+  };
+
+  if (input.provider === 'github') {
+    headers['x-github-event'] = 'ping';
+    headers['x-github-delivery'] = input.eventId;
+    headers['x-hub-signature-256'] =
+      input.signatureProvider === 'github' && input.signatureSecret
+        ? `sha256=${createHmac('sha256', input.signatureSecret).update(input.body).digest('hex')}`
+        : 'sha256=synthetic-not-configured';
+  }
+  if (input.provider === 'stripe') {
+    const timestamp = Math.floor(Date.now() / 1_000);
+    const signature =
+      input.signatureProvider === 'stripe' && input.signatureSecret
+        ? createHmac('sha256', input.signatureSecret)
+            .update(`${timestamp}.`)
+            .update(input.body)
+            .digest('hex')
+        : 'synthetic-not-configured';
+    headers['stripe-signature'] = `t=${timestamp},v1=${signature}`;
+  }
+  if (input.provider === 'shopify') {
+    headers['x-shopify-topic'] = 'hooktrials/test';
+    headers['x-shopify-webhook-id'] = input.eventId;
+    headers['x-shopify-hmac-sha256'] = 'synthetic-test';
+  }
+  if (input.provider === 'slack') {
+    headers['x-slack-request-timestamp'] = String(Math.floor(Date.now() / 1_000));
+    headers['x-slack-signature'] = 'v0=synthetic-test';
+  }
+
+  return headers;
 }
 
 function safeHeaders(value: unknown): Record<string, unknown> {
@@ -1587,6 +1683,126 @@ app.delete('/v1/alert-channel', async (request, reply) => {
   return reply.code(204).send();
 });
 
+app.post('/v1/preflight/destination', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const input = destinationPreflightInputSchema.parse(request.body);
+  const checks: Array<{
+    id: 'network_policy' | 'dns' | 'tls_http' | 'contract' | 'signature';
+    status: 'passed' | 'warning' | 'failed';
+    detail: string;
+  }> = [];
+
+  try {
+    const target = await validateTarget(
+      input.url,
+      monitorNetworkOptions({ allowPrivateNetworks: false, allowedPrivateCidrs: [] }),
+    );
+    checks.push({
+      id: 'network_policy',
+      status: 'passed',
+      detail: 'Destination is allowed by the outbound network policy.',
+    });
+    checks.push({
+      id: 'dns',
+      status: 'passed',
+      detail: `${target.hostname} resolved to ${target.addresses.length} public address${target.addresses.length === 1 ? '' : 'es'}.`,
+    });
+  } catch (error) {
+    if (
+      error instanceof NetworkPolicyError &&
+      (error.category === 'blocked' || error.category === 'invalid_url')
+    ) {
+      throw error;
+    }
+    const category = error instanceof NetworkPolicyError ? error.category : 'connect';
+    return {
+      reachable: false,
+      ready: false,
+      statusCode: null,
+      latencyMs: null,
+      checks: [
+        {
+          id: 'dns',
+          status: 'failed',
+          detail: `Destination could not be resolved or reached (${category}).`,
+        },
+        {
+          id: 'contract',
+          status: input.contractConfigured ? 'passed' : 'warning',
+          detail: input.contractConfigured
+            ? 'An inbound contract will validate provider requests.'
+            : 'No inbound contract is configured yet.',
+        },
+        {
+          id: 'signature',
+          status: input.signatureConfigured ? 'passed' : 'warning',
+          detail: input.signatureConfigured
+            ? 'Provider signature verification is configured.'
+            : 'Provider signature verification is not configured.',
+        },
+      ],
+    };
+  }
+
+  let statusCode: number | null = null;
+  let latencyMs: number | null = null;
+  try {
+    const response = await safeRequest(input.url, {
+      method: 'HEAD',
+      timeoutMs: input.timeoutMs,
+      maxResponseBytes: 0,
+      ...monitorNetworkOptions({ allowPrivateNetworks: false, allowedPrivateCidrs: [] }),
+    });
+    statusCode = response.statusCode;
+    latencyMs = response.latencyMs;
+    checks.push({
+      id: 'tls_http',
+      status: 'passed',
+      detail: `Destination answered HTTP ${response.statusCode} in ${response.latencyMs} ms. Any HTTP response proves reachability; no webhook payload was sent.`,
+    });
+  } catch (error) {
+    const category = error instanceof NetworkPolicyError ? error.category : 'connect';
+    checks.push({
+      id: 'tls_http',
+      status: category === 'redirect' ? 'warning' : 'failed',
+      detail:
+        category === 'redirect'
+          ? 'Destination answered with a redirect. Use the final HTTPS webhook URL.'
+          : `Destination did not answer the safe HEAD probe (${category}).`,
+    });
+  }
+
+  checks.push({
+    id: 'contract',
+    status: input.contractConfigured ? 'passed' : 'warning',
+    detail: input.contractConfigured
+      ? 'An inbound contract will validate provider requests.'
+      : 'No inbound contract is configured yet.',
+  });
+  const signatureRecommended = input.provider !== 'generic';
+  checks.push({
+    id: 'signature',
+    status: input.signatureConfigured ? 'passed' : signatureRecommended ? 'warning' : 'passed',
+    detail: input.signatureConfigured
+      ? 'Provider signature verification is configured.'
+      : signatureRecommended
+        ? `${input.provider} traffic is not protected by signature verification yet.`
+        : 'Signature verification is optional for this generic integration.',
+  });
+
+  const reachable = checks.some(
+    (check) => check.id === 'tls_http' && (check.status === 'passed' || check.status === 'warning'),
+  );
+  return {
+    reachable,
+    ready: reachable && input.contractConfigured,
+    statusCode,
+    latencyMs,
+    checks,
+  };
+});
+
 app.get('/v1/endpoints', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
@@ -1653,6 +1869,118 @@ app.get('/v1/endpoints', async (request, reply) => {
       }).length,
       dailyEvents: config.DAILY_EVENTS_LIMIT,
     },
+  };
+});
+
+app.post('/v1/endpoints/:id/test-event', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  syntheticEventInputSchema.parse(request.body);
+
+  const owned = (
+    await database.db
+      .select({ endpoint: endpoints, metadata: integrationResources.metadata })
+      .from(endpoints)
+      .leftJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
+      .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+      .limit(1)
+  )[0];
+  if (!owned) return reply.code(404).send({ error: 'endpoint_not_found' });
+  if (!owned.endpoint.active) return reply.code(409).send({ error: 'endpoint_inactive' });
+  if (owned.endpoint.mode === 'trial' || !owned.endpoint.encryptedDestinationUrl) {
+    return reply.code(409).send({ error: 'live_route_required' });
+  }
+
+  const token = decryptToken(owned.endpoint.encryptedToken);
+  if (!token) return reply.code(409).send({ error: 'ingest_token_unavailable' });
+  const metadata = owned.metadata as { provider?: unknown } | null;
+  const provider = ['generic', 'stripe', 'github', 'shopify', 'slack'].includes(
+    String(metadata?.provider),
+  )
+    ? String(metadata?.provider)
+    : owned.endpoint.signatureProvider === 'github' || owned.endpoint.signatureProvider === 'stripe'
+      ? owned.endpoint.signatureProvider
+      : 'generic';
+  const eventId = `evt_ht_${nanoid(20)}`;
+  const payload: Record<string, unknown> = {
+    id: eventId,
+    type: 'hooktrials.test',
+    source: 'hooktrials-webhook-hub',
+    synthetic: true,
+    sentAt: new Date().toISOString(),
+    data: {
+      routeId: owned.endpoint.id,
+      routeName: owned.endpoint.name,
+      environment: owned.endpoint.environment,
+    },
+  };
+  let method: SyntheticMethod = 'POST';
+  let contract: SyntheticContract | undefined;
+  if (owned.endpoint.encryptedContract) {
+    contract = JSON.parse(
+      decryptValue(owned.endpoint.encryptedContract, config.PAYLOAD_ENCRYPTION_KEY).toString(
+        'utf8',
+      ),
+    ) as SyntheticContract;
+    method = contract.method ?? method;
+    for (const [path, expected] of Object.entries(contract.jsonPaths ?? {})) {
+      setSyntheticJsonPath(payload, path, expected);
+    }
+  }
+  const body = Buffer.from(JSON.stringify(payload));
+  const signatureSecret = decryptToken(owned.endpoint.encryptedSignatureSecret);
+  const headers = syntheticProviderHeaders({
+    provider,
+    eventId,
+    body,
+    signatureProvider: owned.endpoint.signatureProvider,
+    signatureSecret,
+  });
+  const currentHeaderNames = new Set(Object.keys(headers).map((name) => name.toLowerCase()));
+  const unsafeSyntheticHeaders = new Set([
+    'authorization',
+    'cookie',
+    'host',
+    'proxy-authorization',
+    'transfer-encoding',
+  ]);
+  for (const [name, expected] of Object.entries(contract?.requiredHeaders ?? {})) {
+    const normalized = name.toLowerCase();
+    if (
+      expected === '' &&
+      !currentHeaderNames.has(normalized) &&
+      !unsafeSyntheticHeaders.has(normalized)
+    ) {
+      headers[name] = 'synthetic-test';
+      currentHeaderNames.add(normalized);
+    }
+  }
+  const target = syntheticIngestTarget(token);
+  const response = await safeRequest(target.url, {
+    method,
+    headers,
+    body: method === 'HEAD' ? undefined : body,
+    timeoutMs: Math.min(owned.endpoint.destinationTimeoutMs + 2_000, 30_000),
+    maxResponseBytes: 65_536,
+    ...target.network,
+  });
+  const recorded = (
+    await database.db
+      .select({ id: events.id })
+      .from(events)
+      .where(and(eq(events.endpointId, owned.endpoint.id), eq(events.correlationKey, eventId)))
+      .limit(1)
+  )[0];
+
+  return {
+    accepted: Boolean(recorded),
+    eventId: recorded?.id ?? null,
+    correlationKey: eventId,
+    mode: owned.endpoint.mode,
+    statusCode: response.statusCode,
+    latencyMs: response.latencyMs,
+    destinationTriggered: true,
   };
 });
 
