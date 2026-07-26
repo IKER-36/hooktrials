@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createEndpointInputSchema,
   destinationPreflightInputSchema,
+  evidenceExportQuerySchema,
   syntheticEventInputSchema,
 } from './index.js';
 
@@ -73,5 +74,16 @@ describe('syntheticEventInputSchema', () => {
   it('requires explicit confirmation before contacting a real destination', () => {
     expect(syntheticEventInputSchema.safeParse({ confirm: true }).success).toBe(true);
     expect(syntheticEventInputSchema.safeParse({ confirm: false }).success).toBe(false);
+  });
+});
+
+describe('evidenceExportQuerySchema', () => {
+  it('defaults to JSON and accepts Markdown', () => {
+    expect(evidenceExportQuerySchema.parse({}).format).toBe('json');
+    expect(evidenceExportQuerySchema.parse({ format: 'markdown' }).format).toBe('markdown');
+  });
+
+  it('rejects unsupported export formats', () => {
+    expect(evidenceExportQuerySchema.safeParse({ format: 'html' }).success).toBe(false);
   });
 });

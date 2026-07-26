@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { apiRequest, readableError } from '../../lib/api';
+import { API_ORIGIN, apiRequest, readableError } from '../../lib/api';
 import { clockTime, shortDate, shortHash } from '../../lib/format';
 import type { AttemptDetail, EventDetail } from '../../lib/types';
 import { CopyButton } from '../ui/CopyButton';
@@ -245,6 +245,12 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
               <div>
                 <b>Redacted evidence</b>
                 <span>No payload, secret headers, credentials or destination URL.</span>
+              </div>
+              <div className="ht-evidence-downloads">
+                <a href={`${API_ORIGIN}/v1/events/${eventId}/export?format=json`}>Download JSON</a>
+                <a href={`${API_ORIGIN}/v1/events/${eventId}/export?format=markdown`}>
+                  Download Markdown
+                </a>
               </div>
               {share ? (
                 <div className="ht-share-result">

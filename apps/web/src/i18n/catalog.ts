@@ -579,6 +579,9 @@ export const es: Record<string, string> = {
   'Loading verified evidence…': 'Cargando evidencia verificada…',
   'No payload, secret headers, credentials or destination URL.':
     'Sin payload, headers secretos, credenciales ni URL de destino.',
+  'Download redacted evidence': 'Descargar evidencia redactada',
+  'Download JSON': 'Descargar JSON',
+  'Download Markdown': 'Descargar Markdown',
   Attempts: 'Intentos',
   Attempt: 'Intento',
   'Selected attempt': 'Intento seleccionado',

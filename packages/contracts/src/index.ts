@@ -152,6 +152,10 @@ export const shareEvidenceInputSchema = z.object({
   confirm: z.literal(true),
 });
 
+export const evidenceExportQuerySchema = z.object({
+  format: z.enum(['json', 'markdown']).default('json'),
+});
+
 export const scenarioStepInputSchema = z.object({
   statusCode: z.number().int().min(100).max(599),
   delayMs: z.number().int().min(0).max(30_000).default(0),
@@ -247,6 +251,7 @@ export type SyntheticEventInput = z.infer<typeof syntheticEventInputSchema>;
 export type DestinationPreflightInput = z.infer<typeof destinationPreflightInputSchema>;
 export type WebhookContract = z.infer<typeof webhookContractSchema>;
 export type AlertChannelInput = z.infer<typeof alertChannelInputSchema>;
+export type EvidenceExportQuery = z.infer<typeof evidenceExportQuerySchema>;
 export type ScenarioInput = z.infer<typeof scenarioInputSchema>;
 export type MonitorInput = z.infer<typeof monitorInputSchema>;
 export type UpdateMonitorInput = z.infer<typeof updateMonitorInputSchema>;

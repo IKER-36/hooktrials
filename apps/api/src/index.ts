@@ -9,6 +9,7 @@ import {
   alertChannelInputSchema,
   destinationPreflightInputSchema,
   deliveryActionInputSchema,
+  evidenceExportQuerySchema,
   loginInputSchema,
   monitorInputSchema,
   onboardingInputSchema,
@@ -63,6 +64,12 @@ import { Redis } from 'ioredis';
 import { nanoid } from 'nanoid';
 import { ZodError } from 'zod';
 import { clearSession, createSession, getAuthenticatedUser, setSessionCookie } from './auth.js';
+import {
+  evidenceFilename,
+  evidenceJson,
+  evidenceMarkdown,
+  type RedactedEvidence,
+} from './evidence.js';
 
 const config = readRuntimeConfig();
 const externalAccess = !['localhost', '127.0.0.1', '::1'].includes(
@@ -2911,6 +2918,128 @@ app.delete('/v1/endpoints/:id', async (request, reply) => {
   return reply.code(204).send();
 });
 
+const evidenceRedactions = [
+  'Payload bodies',
+  'Captured request headers',
+  'Authentication and cookie values',
+  'Provider signing secrets',
+  'Destination URLs and destination-only headers',
+];
+
+async function loadRedactedEvidence(eventId: string): Promise<RedactedEvidence | null> {
+  const base = (
+    await database.db
+      .select({
+        correlationKey: events.correlationKey,
+        bodyHash: events.bodyHash,
+        firstSeenAt: events.firstSeenAt,
+        lastSeenAt: events.lastSeenAt,
+        integrationName: endpoints.name,
+        mode: endpoints.mode,
+        environment: endpoints.environment,
+        reportStatus: reports.status,
+        reportScore: reports.score,
+        reportResult: reports.result,
+      })
+      .from(events)
+      .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
+      .leftJoin(reports, eq(reports.eventId, events.id))
+      .where(eq(events.id, eventId))
+      .limit(1)
+  )[0];
+  if (!base) return null;
+
+  const [attemptRows, deliveryRows] = await Promise.all([
+    database.db
+      .select({
+        id: attempts.id,
+        sequence: attempts.sequence,
+        method: attempts.method,
+        receivedAt: attempts.receivedAt,
+        responseStatus: attempts.responseStatus,
+        responseDelayMs: attempts.responseDelayMs,
+        signatureProvider: attempts.signatureProvider,
+        signatureStatus: attempts.signatureStatus,
+        contractResult: attempts.contractResult,
+      })
+      .from(attempts)
+      .where(eq(attempts.eventId, eventId))
+      .orderBy(attempts.sequence),
+    database.db
+      .select({
+        id: destinationDeliveries.id,
+        sequence: destinationDeliveries.sequence,
+        kind: destinationDeliveries.kind,
+        state: destinationDeliveries.state,
+        statusCode: destinationDeliveries.statusCode,
+        latencyMs: destinationDeliveries.latencyMs,
+        errorCategory: destinationDeliveries.errorCategory,
+        startedAt: destinationDeliveries.startedAt,
+        completedAt: destinationDeliveries.completedAt,
+      })
+      .from(destinationDeliveries)
+      .where(eq(destinationDeliveries.eventId, eventId))
+      .orderBy(destinationDeliveries.sequence),
+  ]);
+
+  return {
+    schemaVersion: '1.0',
+    generatedAt: new Date(),
+    integration: {
+      name: base.integrationName,
+      mode: base.mode,
+      environment: base.environment,
+    },
+    event: {
+      correlationKey: base.correlationKey,
+      bodyHash: base.bodyHash,
+      firstSeenAt: base.firstSeenAt,
+      lastSeenAt: base.lastSeenAt,
+    },
+    attempts: attemptRows,
+    deliveries: deliveryRows,
+    report:
+      base.reportStatus === null
+        ? null
+        : {
+            status: base.reportStatus,
+            score: base.reportScore,
+            result: base.reportResult,
+          },
+    redacted: true,
+    redactions: evidenceRedactions,
+  };
+}
+
+async function loadSharedEvidence(token: string): Promise<RedactedEvidence | null> {
+  const shared = (
+    await database.db
+      .select({ eventId: reports.eventId, expiresAt: reports.publicExpiresAt })
+      .from(reports)
+      .where(
+        and(eq(reports.publicTokenHash, sha256(token)), gt(reports.publicExpiresAt, new Date())),
+      )
+      .limit(1)
+  )[0];
+  if (!shared) return null;
+  const evidence = await loadRedactedEvidence(shared.eventId);
+  return evidence ? { ...evidence, expiresAt: shared.expiresAt } : null;
+}
+
+function sendEvidenceExport(
+  reply: FastifyReply,
+  evidence: RedactedEvidence,
+  eventId: string,
+  format: 'json' | 'markdown',
+) {
+  const body = format === 'json' ? evidenceJson(evidence) : evidenceMarkdown(evidence);
+  return reply
+    .header('cache-control', 'private, no-store')
+    .header('content-disposition', `attachment; filename="${evidenceFilename(eventId, format)}"`)
+    .type(format === 'json' ? 'application/json; charset=utf-8' : 'text/markdown; charset=utf-8')
+    .send(body);
+}
+
 app.get('/v1/endpoints/:id/events', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
@@ -3015,6 +3144,25 @@ app.get('/v1/events/:id', async (request, reply) => {
   };
 });
 
+app.get('/v1/events/:id/export', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const { format } = evidenceExportQuerySchema.parse(request.query);
+  const owned = (
+    await database.db
+      .select({ id: events.id })
+      .from(events)
+      .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
+      .where(and(eq(events.id, id), eq(endpoints.userId, user.id)))
+      .limit(1)
+  )[0];
+  if (!owned) return reply.code(404).send({ error: 'event_not_found' });
+  const evidence = await loadRedactedEvidence(id);
+  if (!evidence) return reply.code(404).send({ error: 'event_not_found' });
+  return sendEvidenceExport(reply, evidence, id, format);
+});
+
 app.post('/v1/events/:id/share', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
@@ -3061,76 +3209,19 @@ app.delete('/v1/events/:id/share', async (request, reply) => {
   return reply.code(204).send();
 });
 
+app.get('/v1/public/evidence/:token/export', async (request, reply) => {
+  const { token } = request.params as { token: string };
+  const { format } = evidenceExportQuerySchema.parse(request.query);
+  const evidence = await loadSharedEvidence(token);
+  if (!evidence) return reply.code(404).send({ error: 'evidence_not_found' });
+  return sendEvidenceExport(reply, evidence, evidence.event.bodyHash, format);
+});
+
 app.get('/v1/public/evidence/:token', async (request, reply) => {
   const { token } = request.params as { token: string };
-  const shared = (
-    await database.db
-      .select({ report: reports, event: events, endpoint: endpoints })
-      .from(reports)
-      .innerJoin(events, eq(reports.eventId, events.id))
-      .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
-      .where(
-        and(eq(reports.publicTokenHash, sha256(token)), gt(reports.publicExpiresAt, new Date())),
-      )
-      .limit(1)
-  )[0];
-  if (!shared) return reply.code(404).send({ error: 'evidence_not_found' });
-  const [attemptRows, deliveryRows] = await Promise.all([
-    database.db
-      .select({
-        id: attempts.id,
-        sequence: attempts.sequence,
-        method: attempts.method,
-        receivedAt: attempts.receivedAt,
-        responseStatus: attempts.responseStatus,
-        responseDelayMs: attempts.responseDelayMs,
-        signatureProvider: attempts.signatureProvider,
-        signatureStatus: attempts.signatureStatus,
-        contractResult: attempts.contractResult,
-      })
-      .from(attempts)
-      .where(eq(attempts.eventId, shared.event.id))
-      .orderBy(attempts.sequence),
-    database.db
-      .select({
-        id: destinationDeliveries.id,
-        sequence: destinationDeliveries.sequence,
-        kind: destinationDeliveries.kind,
-        state: destinationDeliveries.state,
-        statusCode: destinationDeliveries.statusCode,
-        latencyMs: destinationDeliveries.latencyMs,
-        errorCategory: destinationDeliveries.errorCategory,
-        startedAt: destinationDeliveries.startedAt,
-        completedAt: destinationDeliveries.completedAt,
-      })
-      .from(destinationDeliveries)
-      .where(eq(destinationDeliveries.eventId, shared.event.id))
-      .orderBy(destinationDeliveries.sequence),
-  ]);
-  return {
-    evidence: {
-      integration: {
-        name: shared.endpoint.name,
-        mode: shared.endpoint.mode,
-        environment: shared.endpoint.environment,
-      },
-      event: {
-        correlationKey: shared.event.correlationKey,
-        bodyHash: shared.event.bodyHash,
-        firstSeenAt: shared.event.firstSeenAt,
-        lastSeenAt: shared.event.lastSeenAt,
-      },
-      attempts: attemptRows,
-      deliveries: deliveryRows,
-      report: {
-        status: shared.report.status,
-        score: shared.report.score,
-        result: shared.report.result,
-      },
-      expiresAt: shared.report.publicExpiresAt,
-      redacted: true,
-    },
-  };
+  const evidence = await loadSharedEvidence(token);
+  if (!evidence) return reply.code(404).send({ error: 'evidence_not_found' });
+  return { evidence };
 });
 
 async function createManualDelivery(deliveryId: string, userId: string, kind: 'retry' | 'replay') {

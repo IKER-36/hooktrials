@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { Brand } from '../components/Brand';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
-import { apiRequest } from '../lib/api';
+import { API_ORIGIN, apiRequest } from '../lib/api';
 import { shortDate } from '../lib/format';
 
 interface PublicEvidence {
@@ -74,6 +74,18 @@ export function EvidencePage() {
             <span>{evidence.integration.environment}</span>
             <span>expires {shortDate(evidence.expiresAt)}</span>
           </div>
+          <nav className="ht-evidence-downloads" aria-label="Download redacted evidence">
+            <a
+              href={`${API_ORIGIN}/v1/public/evidence/${encodeURIComponent(token)}/export?format=json`}
+            >
+              Download JSON
+            </a>
+            <a
+              href={`${API_ORIGIN}/v1/public/evidence/${encodeURIComponent(token)}/export?format=markdown`}
+            >
+              Download Markdown
+            </a>
+          </nav>
           <section className="ht-evidence-summary">
             <div>
               <span>Event</span>
