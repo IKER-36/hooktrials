@@ -65,6 +65,7 @@ import { Redis } from 'ioredis';
 import { nanoid } from 'nanoid';
 import { ZodError } from 'zod';
 import { clearSession, createSession, getAuthenticatedUser, setSessionCookie } from './auth.js';
+import { acquireDemoMutationLock } from './demo-lock.js';
 import {
   evidenceFilename,
   evidenceJson,
@@ -2051,418 +2052,431 @@ app.get('/v1/demo/active', async (request, reply) => {
 app.post('/v1/demo/setup', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
-  const userId = user.id;
-  const activeDemo = (
-    await database.db
-      .select({ metadata: integrationResources.metadata })
-      .from(integrationResources)
-      .where(
-        and(
-          eq(integrationResources.userId, user.id),
-          sql`${integrationResources.metadata} ? 'demoRunId'`,
-        ),
-      )
-      .limit(1)
-  )[0];
-  if (activeDemo) {
-    const metadata = activeDemo.metadata as { demoRunId?: unknown };
-    return reply.code(409).send({
-      error: 'demo_run_active',
-      runId: typeof metadata.demoRunId === 'string' ? metadata.demoRunId : undefined,
-    });
+  const demoLock = await acquireDemoMutationLock(redis, user.id);
+  if (!demoLock) {
+    return reply.code(409).send({ error: 'demo_operation_in_progress' });
   }
-
-  const runId = nanoid(16);
-  const trialToken = `ht_${nanoid(32)}`;
-  const targetToken = `ht_${nanoid(32)}`;
-  const observeToken = `ht_${nanoid(32)}`;
-  const protectToken = `ht_${nanoid(32)}`;
-  const deadLetterToken = `ht_${nanoid(32)}`;
-  const githubSecret = `demo_${nanoid(32)}`;
-  const trialIngestUrl = `${config.INGEST_ORIGIN}/i/${trialToken}`;
-  const targetIngestUrl = `${config.INGEST_ORIGIN}/i/${targetToken}`;
-  const observeIngestUrl = `${config.INGEST_ORIGIN}/i/${observeToken}`;
-  const protectIngestUrl = `${config.INGEST_ORIGIN}/i/${protectToken}`;
-  const deadLetterIngestUrl = `${config.INGEST_ORIGIN}/i/${deadLetterToken}`;
-  const targetWorkerUrl =
-    config.DEPLOYMENT_MODE === 'selfhost'
-      ? `http://ingestor:3002/i/${targetToken}`
-      : targetIngestUrl;
-  const apiHealthUrl = `${config.API_ORIGIN.replace(/\/$/, '')}/healthz`;
-  const apiHealthWorkerUrl =
-    config.DEPLOYMENT_MODE === 'selfhost' ? 'http://api:3001/healthz' : apiHealthUrl;
-  const applicationWorkerUrl =
-    config.DEPLOYMENT_MODE === 'selfhost' ? 'http://web:8080/' : config.APP_ORIGIN;
-  const privateNetwork = config.DEPLOYMENT_MODE === 'selfhost';
-  const privateCidrs = privateNetwork ? ['172.16.0.0/12'] : [];
-  const existingAlertChannel = (
-    await database.db
-      .select({ id: alertChannels.id })
-      .from(alertChannels)
-      .where(and(eq(alertChannels.userId, userId), eq(alertChannels.active, true)))
-      .limit(1)
-  )[0];
-
-  const created = await database.db.transaction(async (tx) => {
-    const customScenario = (
-      await tx
-        .insert(scenarios)
-        .values({
-          userId,
-          name: 'Demo · Cascading provider outage',
-          definition: {
-            name: 'Demo · Cascading provider outage',
-            repeatLastStep: true,
-            steps: [
-              { statusCode: 500, delayMs: 0, headers: {} },
-              { statusCode: 503, delayMs: 250, headers: {} },
-              { statusCode: 429, delayMs: 0, headers: { 'retry-after': '2' } },
-              { statusCode: 200, delayMs: 0, headers: {} },
-            ],
-          },
-        })
-        .returning({ id: scenarios.id, name: scenarios.name })
+  try {
+    const userId = user.id;
+    const activeDemo = (
+      await database.db
+        .select({ metadata: integrationResources.metadata })
+        .from(integrationResources)
+        .where(
+          and(
+            eq(integrationResources.userId, user.id),
+            sql`${integrationResources.metadata} ? 'demoRunId'`,
+          ),
+        )
+        .limit(1)
     )[0];
-    if (!customScenario) throw new Error('Demo scenario creation returned no record');
+    if (activeDemo) {
+      const metadata = activeDemo.metadata as { demoRunId?: unknown };
+      return reply.code(409).send({
+        error: 'demo_run_active',
+        runId: typeof metadata.demoRunId === 'string' ? metadata.demoRunId : undefined,
+      });
+    }
 
-    async function createDemoEndpoint(input: {
-      kind: 'trial' | 'target' | 'observe' | 'protect' | 'dead-letter';
-      name: string;
-      token: string;
-      scenarioId: string;
-      mode?: 'trial' | 'observe' | 'protect';
-      destinationUrl?: string;
-      provider?: 'generic' | 'github';
-      signatureSecret?: string;
-      retryMaxAttempts?: number;
-    }) {
-      const resource = (
+    const runId = nanoid(16);
+    const trialToken = `ht_${nanoid(32)}`;
+    const targetToken = `ht_${nanoid(32)}`;
+    const observeToken = `ht_${nanoid(32)}`;
+    const protectToken = `ht_${nanoid(32)}`;
+    const deadLetterToken = `ht_${nanoid(32)}`;
+    const githubSecret = `demo_${nanoid(32)}`;
+    const trialIngestUrl = `${config.INGEST_ORIGIN}/i/${trialToken}`;
+    const targetIngestUrl = `${config.INGEST_ORIGIN}/i/${targetToken}`;
+    const observeIngestUrl = `${config.INGEST_ORIGIN}/i/${observeToken}`;
+    const protectIngestUrl = `${config.INGEST_ORIGIN}/i/${protectToken}`;
+    const deadLetterIngestUrl = `${config.INGEST_ORIGIN}/i/${deadLetterToken}`;
+    const targetWorkerUrl =
+      config.DEPLOYMENT_MODE === 'selfhost'
+        ? `http://ingestor:3002/i/${targetToken}`
+        : targetIngestUrl;
+    const apiHealthUrl = `${config.API_ORIGIN.replace(/\/$/, '')}/healthz`;
+    const apiHealthWorkerUrl =
+      config.DEPLOYMENT_MODE === 'selfhost' ? 'http://api:3001/healthz' : apiHealthUrl;
+    const applicationWorkerUrl =
+      config.DEPLOYMENT_MODE === 'selfhost' ? 'http://web:8080/' : config.APP_ORIGIN;
+    const privateNetwork = config.DEPLOYMENT_MODE === 'selfhost';
+    const privateCidrs = privateNetwork ? ['172.16.0.0/12'] : [];
+    const existingAlertChannel = (
+      await database.db
+        .select({ id: alertChannels.id })
+        .from(alertChannels)
+        .where(and(eq(alertChannels.userId, userId), eq(alertChannels.active, true)))
+        .limit(1)
+    )[0];
+
+    const created = await database.db.transaction(async (tx) => {
+      const customScenario = (
         await tx
-          .insert(integrationResources)
+          .insert(scenarios)
           .values({
             userId,
-            type: 'webhook_route',
-            name: input.name,
-            environment: 'test',
+            name: 'Demo · Cascading provider outage',
+            definition: {
+              name: 'Demo · Cascading provider outage',
+              repeatLastStep: true,
+              steps: [
+                { statusCode: 500, delayMs: 0, headers: {} },
+                { statusCode: 503, delayMs: 250, headers: {} },
+                { statusCode: 429, delayMs: 0, headers: { 'retry-after': '2' } },
+                { statusCode: 200, delayMs: 0, headers: {} },
+              ],
+            },
+          })
+          .returning({ id: scenarios.id, name: scenarios.name })
+      )[0];
+      if (!customScenario) throw new Error('Demo scenario creation returned no record');
+
+      async function createDemoEndpoint(input: {
+        kind: 'trial' | 'target' | 'observe' | 'protect' | 'dead-letter';
+        name: string;
+        token: string;
+        scenarioId: string;
+        mode?: 'trial' | 'observe' | 'protect';
+        destinationUrl?: string;
+        provider?: 'generic' | 'github';
+        signatureSecret?: string;
+        retryMaxAttempts?: number;
+      }) {
+        const resource = (
+          await tx
+            .insert(integrationResources)
+            .values({
+              userId,
+              type: 'webhook_route',
+              name: input.name,
+              environment: 'test',
+              metadata: {
+                demoRunId: runId,
+                demoKind: input.kind,
+                provider: input.provider ?? 'generic',
+              },
+            })
+            .returning({ id: integrationResources.id })
+        )[0];
+        if (!resource) throw new Error('Demo resource creation returned no record');
+        const endpoint = (
+          await tx
+            .insert(endpoints)
+            .values({
+              userId,
+              resourceId: resource.id,
+              scenarioId: input.scenarioId,
+              name: input.name,
+              publicTokenHash: sha256(input.token),
+              publicTokenPrefix: input.token.slice(0, 12),
+              encryptedToken: encryptValue(input.token, config.PAYLOAD_ENCRYPTION_KEY),
+              mode: input.mode ?? 'trial',
+              encryptedDestinationUrl: input.destinationUrl
+                ? encryptValue(input.destinationUrl, config.PAYLOAD_ENCRYPTION_KEY)
+                : null,
+              displayDestinationHost: input.destinationUrl ? new URL(targetIngestUrl).host : null,
+              retryMaxAttempts: input.retryMaxAttempts ?? 5,
+              retryBaseDelayMs: 1_000,
+              retryMaxDelayMs: 5_000,
+              encryptedContract: encryptValue(
+                JSON.stringify({
+                  method: 'POST',
+                  requiredHeaders:
+                    input.provider === 'github'
+                      ? {
+                          'x-github-event': '',
+                          'x-github-delivery': '',
+                          'x-hub-signature-256': '',
+                        }
+                      : {},
+                  jsonPaths: {},
+                }),
+                config.PAYLOAD_ENCRYPTION_KEY,
+              ),
+              signatureProvider: input.provider === 'github' ? 'github' : 'none',
+              encryptedSignatureSecret: input.signatureSecret
+                ? encryptValue(input.signatureSecret, config.PAYLOAD_ENCRYPTION_KEY)
+                : null,
+              allowPrivateNetworks: privateNetwork,
+              allowedPrivateCidrs: privateCidrs,
+            })
+            .returning({ id: endpoints.id, resourceId: endpoints.resourceId })
+        )[0];
+        if (!endpoint) throw new Error('Demo endpoint creation returned no record');
+        await tx
+          .update(integrationResources)
+          .set({
             metadata: {
               demoRunId: runId,
               demoKind: input.kind,
+              endpointId: endpoint.id,
               provider: input.provider ?? 'generic',
             },
           })
-          .returning({ id: integrationResources.id })
-      )[0];
-      if (!resource) throw new Error('Demo resource creation returned no record');
-      const endpoint = (
+          .where(eq(integrationResources.id, resource.id));
+        return { id: endpoint.id, resourceId: resource.id };
+      }
+
+      const trial = await createDemoEndpoint({
+        kind: 'trial',
+        name: 'Demo · deterministic provider trial',
+        token: trialToken,
+        scenarioId: customScenario.id,
+      });
+      const target = await createDemoEndpoint({
+        kind: 'target',
+        name: 'Demo · synthetic destination',
+        token: targetToken,
+        scenarioId: builtInScenarioIds.temporaryOutage,
+      });
+      const observe = await createDemoEndpoint({
+        kind: 'observe',
+        name: 'Demo · Observe delivery failure',
+        token: observeToken,
+        scenarioId: builtInScenarioIds.inspection,
+        mode: 'observe',
+        destinationUrl: targetWorkerUrl,
+      });
+      const protect = await createDemoEndpoint({
+        kind: 'protect',
+        name: 'Demo · GitHub protected recovery',
+        token: protectToken,
+        scenarioId: builtInScenarioIds.inspection,
+        mode: 'protect',
+        destinationUrl: targetWorkerUrl,
+        provider: 'github',
+        signatureSecret: githubSecret,
+        retryMaxAttempts: 5,
+      });
+      const deadLetter = await createDemoEndpoint({
+        kind: 'dead-letter',
+        name: 'Demo · protected dead-letter',
+        token: deadLetterToken,
+        scenarioId: builtInScenarioIds.inspection,
+        mode: 'protect',
+        destinationUrl: targetWorkerUrl,
+        retryMaxAttempts: 3,
+      });
+
+      async function createDemoMonitor(input: {
+        kind: string;
+        name: string;
+        type: 'external_api' | 'internal_api' | 'http_route' | 'webhook_destination' | 'icmp_host';
+        protocol?: 'http' | 'icmp';
+        environment: 'test' | 'staging' | 'production';
+        publicUrl: string;
+        workerUrl: string;
+        method?: 'GET' | 'POST';
+        expectedMinStatus?: number;
+        expectedMaxStatus?: number;
+        expectedText?: string;
+        expectedJsonPath?: string;
+        consecutiveFailuresToOpen?: number;
+      }) {
+        const resource = (
+          await tx
+            .insert(integrationResources)
+            .values({
+              userId,
+              type: input.type,
+              name: input.name,
+              environment: input.environment,
+              active: false,
+              metadata: {
+                demoRunId: runId,
+                demoKind: input.kind,
+                displayUrl:
+                  input.protocol === 'icmp' ? `icmp://${input.publicUrl}` : input.publicUrl,
+              },
+            })
+            .returning({ id: integrationResources.id })
+        )[0];
+        if (!resource) throw new Error('Demo monitor resource creation returned no record');
+        const monitor = (
+          await tx
+            .insert(monitors)
+            .values({
+              resourceId: resource.id,
+              encryptedUrl: encryptValue(input.workerUrl, config.PAYLOAD_ENCRYPTION_KEY),
+              displayHost:
+                input.protocol === 'icmp' ? input.publicUrl : new URL(input.publicUrl).host,
+              protocol: input.protocol ?? 'http',
+              method: input.method ?? 'GET',
+              intervalSeconds: 900,
+              timeoutMs: 10_000,
+              expectedMinStatus: input.expectedMinStatus ?? 200,
+              expectedMaxStatus: input.expectedMaxStatus ?? 299,
+              expectedText: input.expectedText,
+              expectedJsonPath: input.expectedJsonPath,
+              consecutiveFailuresToOpen: input.consecutiveFailuresToOpen ?? 1,
+              allowPrivateNetworks: privateNetwork,
+              allowedPrivateCidrs: privateCidrs,
+              state: 'paused',
+            })
+            .returning({ id: monitors.id, resourceId: monitors.resourceId })
+        )[0];
+        if (!monitor) throw new Error('Demo monitor creation returned no record');
+        return monitor;
+      }
+
+      const recovery = await createDemoMonitor({
+        kind: 'recovery-monitor',
+        name: 'Demo · webhook destination recovery',
+        type: 'webhook_destination',
+        environment: 'test',
+        publicUrl: targetIngestUrl,
+        workerUrl: targetWorkerUrl,
+        method: 'POST',
+      });
+      const healthyApi = await createDemoMonitor({
+        kind: 'healthy-api',
+        name: 'Demo · public API health',
+        type: 'external_api',
+        environment: 'production',
+        publicUrl: apiHealthUrl,
+        workerUrl: apiHealthWorkerUrl,
+        expectedJsonPath: '$.status',
+      });
+      const degradedContract = await createDemoMonitor({
+        kind: 'degraded-contract',
+        name: 'Demo · internal API contract drift',
+        type: 'internal_api',
+        environment: 'staging',
+        publicUrl: apiHealthUrl,
+        workerUrl: apiHealthWorkerUrl,
+        expectedText: 'demo-contract-version: 2',
+        consecutiveFailuresToOpen: 2,
+      });
+      const downRoute = await createDemoMonitor({
+        kind: 'down-route',
+        name: 'Demo · unavailable checkout route',
+        type: 'http_route',
+        environment: 'production',
+        publicUrl: config.APP_ORIGIN,
+        workerUrl: applicationWorkerUrl,
+        expectedMinStatus: 503,
+        expectedMaxStatus: 503,
+      });
+      const icmpHost = await createDemoMonitor({
+        kind: 'icmp-host',
+        name: 'Demo · ICMP reachability',
+        type: 'icmp_host',
+        protocol: 'icmp',
+        environment: 'production',
+        publicUrl: '1.1.1.1',
+        workerUrl: '1.1.1.1',
+      });
+      const syntheticCheckAt = new Date();
+      await tx.insert(monitorChecks).values({
+        monitorId: icmpHost.id,
+        startedAt: syntheticCheckAt,
+        completedAt: syntheticCheckAt,
+        latencyMs: 12,
+        outcome: 'healthy',
+        contractResult: { passed: true, synthetic: true },
+      });
+      await tx
+        .update(monitors)
+        .set({ state: 'healthy', lastCheckAt: syntheticCheckAt })
+        .where(eq(monitors.id, icmpHost.id));
+
+      const statusToken = `hts_${nanoid(32)}`;
+      const demoStatusPage = (
         await tx
-          .insert(endpoints)
+          .insert(statusPages)
           .values({
             userId,
-            resourceId: resource.id,
-            scenarioId: input.scenarioId,
-            name: input.name,
-            publicTokenHash: sha256(input.token),
-            publicTokenPrefix: input.token.slice(0, 12),
-            encryptedToken: encryptValue(input.token, config.PAYLOAD_ENCRYPTION_KEY),
-            mode: input.mode ?? 'trial',
-            encryptedDestinationUrl: input.destinationUrl
-              ? encryptValue(input.destinationUrl, config.PAYLOAD_ENCRYPTION_KEY)
-              : null,
-            displayDestinationHost: input.destinationUrl ? new URL(targetIngestUrl).host : null,
-            retryMaxAttempts: input.retryMaxAttempts ?? 5,
-            retryBaseDelayMs: 1_000,
-            retryMaxDelayMs: 5_000,
-            encryptedContract: encryptValue(
-              JSON.stringify({
-                method: 'POST',
-                requiredHeaders:
-                  input.provider === 'github'
-                    ? {
-                        'x-github-event': '',
-                        'x-github-delivery': '',
-                        'x-hub-signature-256': '',
-                      }
-                    : {},
-                jsonPaths: {},
-              }),
-              config.PAYLOAD_ENCRYPTION_KEY,
-            ),
-            signatureProvider: input.provider === 'github' ? 'github' : 'none',
-            encryptedSignatureSecret: input.signatureSecret
-              ? encryptValue(input.signatureSecret, config.PAYLOAD_ENCRYPTION_KEY)
-              : null,
-            allowPrivateNetworks: privateNetwork,
-            allowedPrivateCidrs: privateCidrs,
+            name: 'Demo · Public service status',
+            headline: 'HookTrials demo services',
+            description: 'Synthetic HTTP and ICMP availability evidence generated by Demo Lab.',
+            accentColor: '#36e37e',
+            publicTokenHash: sha256(statusToken),
+            encryptedToken: encryptValue(statusToken, config.PAYLOAD_ENCRYPTION_KEY),
+            enabled: true,
           })
-          .returning({ id: endpoints.id, resourceId: endpoints.resourceId })
+          .returning({ id: statusPages.id })
       )[0];
-      if (!endpoint) throw new Error('Demo endpoint creation returned no record');
+      if (!demoStatusPage) throw new Error('Demo status page creation returned no record');
+      await tx.insert(statusPageMonitors).values([
+        { pageId: demoStatusPage.id, monitorId: healthyApi.id, position: 0 },
+        { pageId: demoStatusPage.id, monitorId: icmpHost.id, position: 1 },
+      ]);
+
+      const demoAlertChannel = existingAlertChannel
+        ? null
+        : (
+            await tx
+              .insert(alertChannels)
+              .values({
+                userId,
+                encryptedUrl: encryptValue(targetWorkerUrl, config.PAYLOAD_ENCRYPTION_KEY),
+                displayHost: new URL(targetIngestUrl).host,
+                active: true,
+                allowPrivateNetworks: privateNetwork,
+                allowedPrivateCidrs: privateCidrs,
+              })
+              .returning({ id: alertChannels.id })
+          )[0];
+
       await tx
         .update(integrationResources)
         .set({
           metadata: {
             demoRunId: runId,
-            demoKind: input.kind,
-            endpointId: endpoint.id,
-            provider: input.provider ?? 'generic',
+            demoKind: 'trial',
+            endpointId: trial.id,
+            demoScenarioId: customScenario.id,
+            demoAlertChannelId: demoAlertChannel?.id,
+            demoStatusPageId: demoStatusPage.id,
           },
         })
-        .where(eq(integrationResources.id, resource.id));
-      return { id: endpoint.id, resourceId: resource.id };
-    }
+        .where(eq(integrationResources.id, trial.resourceId));
 
-    const trial = await createDemoEndpoint({
-      kind: 'trial',
-      name: 'Demo · deterministic provider trial',
-      token: trialToken,
-      scenarioId: customScenario.id,
-    });
-    const target = await createDemoEndpoint({
-      kind: 'target',
-      name: 'Demo · synthetic destination',
-      token: targetToken,
-      scenarioId: builtInScenarioIds.temporaryOutage,
-    });
-    const observe = await createDemoEndpoint({
-      kind: 'observe',
-      name: 'Demo · Observe delivery failure',
-      token: observeToken,
-      scenarioId: builtInScenarioIds.inspection,
-      mode: 'observe',
-      destinationUrl: targetWorkerUrl,
-    });
-    const protect = await createDemoEndpoint({
-      kind: 'protect',
-      name: 'Demo · GitHub protected recovery',
-      token: protectToken,
-      scenarioId: builtInScenarioIds.inspection,
-      mode: 'protect',
-      destinationUrl: targetWorkerUrl,
-      provider: 'github',
-      signatureSecret: githubSecret,
-      retryMaxAttempts: 5,
-    });
-    const deadLetter = await createDemoEndpoint({
-      kind: 'dead-letter',
-      name: 'Demo · protected dead-letter',
-      token: deadLetterToken,
-      scenarioId: builtInScenarioIds.inspection,
-      mode: 'protect',
-      destinationUrl: targetWorkerUrl,
-      retryMaxAttempts: 3,
-    });
-
-    async function createDemoMonitor(input: {
-      kind: string;
-      name: string;
-      type: 'external_api' | 'internal_api' | 'http_route' | 'webhook_destination' | 'icmp_host';
-      protocol?: 'http' | 'icmp';
-      environment: 'test' | 'staging' | 'production';
-      publicUrl: string;
-      workerUrl: string;
-      method?: 'GET' | 'POST';
-      expectedMinStatus?: number;
-      expectedMaxStatus?: number;
-      expectedText?: string;
-      expectedJsonPath?: string;
-      consecutiveFailuresToOpen?: number;
-    }) {
-      const resource = (
-        await tx
-          .insert(integrationResources)
-          .values({
-            userId,
-            type: input.type,
-            name: input.name,
-            environment: input.environment,
-            active: false,
-            metadata: {
-              demoRunId: runId,
-              demoKind: input.kind,
-              displayUrl: input.protocol === 'icmp' ? `icmp://${input.publicUrl}` : input.publicUrl,
-            },
-          })
-          .returning({ id: integrationResources.id })
-      )[0];
-      if (!resource) throw new Error('Demo monitor resource creation returned no record');
-      const monitor = (
-        await tx
-          .insert(monitors)
-          .values({
-            resourceId: resource.id,
-            encryptedUrl: encryptValue(input.workerUrl, config.PAYLOAD_ENCRYPTION_KEY),
-            displayHost:
-              input.protocol === 'icmp' ? input.publicUrl : new URL(input.publicUrl).host,
-            protocol: input.protocol ?? 'http',
-            method: input.method ?? 'GET',
-            intervalSeconds: 900,
-            timeoutMs: 10_000,
-            expectedMinStatus: input.expectedMinStatus ?? 200,
-            expectedMaxStatus: input.expectedMaxStatus ?? 299,
-            expectedText: input.expectedText,
-            expectedJsonPath: input.expectedJsonPath,
-            consecutiveFailuresToOpen: input.consecutiveFailuresToOpen ?? 1,
-            allowPrivateNetworks: privateNetwork,
-            allowedPrivateCidrs: privateCidrs,
-            state: 'paused',
-          })
-          .returning({ id: monitors.id, resourceId: monitors.resourceId })
-      )[0];
-      if (!monitor) throw new Error('Demo monitor creation returned no record');
-      return monitor;
-    }
-
-    const recovery = await createDemoMonitor({
-      kind: 'recovery-monitor',
-      name: 'Demo · webhook destination recovery',
-      type: 'webhook_destination',
-      environment: 'test',
-      publicUrl: targetIngestUrl,
-      workerUrl: targetWorkerUrl,
-      method: 'POST',
-    });
-    const healthyApi = await createDemoMonitor({
-      kind: 'healthy-api',
-      name: 'Demo · public API health',
-      type: 'external_api',
-      environment: 'production',
-      publicUrl: apiHealthUrl,
-      workerUrl: apiHealthWorkerUrl,
-      expectedJsonPath: '$.status',
-    });
-    const degradedContract = await createDemoMonitor({
-      kind: 'degraded-contract',
-      name: 'Demo · internal API contract drift',
-      type: 'internal_api',
-      environment: 'staging',
-      publicUrl: apiHealthUrl,
-      workerUrl: apiHealthWorkerUrl,
-      expectedText: 'demo-contract-version: 2',
-      consecutiveFailuresToOpen: 2,
-    });
-    const downRoute = await createDemoMonitor({
-      kind: 'down-route',
-      name: 'Demo · unavailable checkout route',
-      type: 'http_route',
-      environment: 'production',
-      publicUrl: config.APP_ORIGIN,
-      workerUrl: applicationWorkerUrl,
-      expectedMinStatus: 503,
-      expectedMaxStatus: 503,
-    });
-    const icmpHost = await createDemoMonitor({
-      kind: 'icmp-host',
-      name: 'Demo · ICMP reachability',
-      type: 'icmp_host',
-      protocol: 'icmp',
-      environment: 'production',
-      publicUrl: '1.1.1.1',
-      workerUrl: '1.1.1.1',
-    });
-    const syntheticCheckAt = new Date();
-    await tx.insert(monitorChecks).values({
-      monitorId: icmpHost.id,
-      startedAt: syntheticCheckAt,
-      completedAt: syntheticCheckAt,
-      latencyMs: 12,
-      outcome: 'healthy',
-      contractResult: { passed: true, synthetic: true },
-    });
-    await tx
-      .update(monitors)
-      .set({ state: 'healthy', lastCheckAt: syntheticCheckAt })
-      .where(eq(monitors.id, icmpHost.id));
-
-    const statusToken = `hts_${nanoid(32)}`;
-    const demoStatusPage = (
-      await tx
-        .insert(statusPages)
-        .values({
-          userId,
-          name: 'Demo · Public service status',
-          headline: 'HookTrials demo services',
-          description: 'Synthetic HTTP and ICMP availability evidence generated by Demo Lab.',
-          accentColor: '#36e37e',
-          publicTokenHash: sha256(statusToken),
-          encryptedToken: encryptValue(statusToken, config.PAYLOAD_ENCRYPTION_KEY),
-          enabled: true,
-        })
-        .returning({ id: statusPages.id })
-    )[0];
-    if (!demoStatusPage) throw new Error('Demo status page creation returned no record');
-    await tx.insert(statusPageMonitors).values([
-      { pageId: demoStatusPage.id, monitorId: healthyApi.id, position: 0 },
-      { pageId: demoStatusPage.id, monitorId: icmpHost.id, position: 1 },
-    ]);
-
-    const demoAlertChannel = existingAlertChannel
-      ? null
-      : (
-          await tx
-            .insert(alertChannels)
-            .values({
-              userId,
-              encryptedUrl: encryptValue(targetWorkerUrl, config.PAYLOAD_ENCRYPTION_KEY),
-              displayHost: new URL(targetIngestUrl).host,
-              active: true,
-              allowPrivateNetworks: privateNetwork,
-              allowedPrivateCidrs: privateCidrs,
-            })
-            .returning({ id: alertChannels.id })
-        )[0];
-
-    await tx
-      .update(integrationResources)
-      .set({
-        metadata: {
-          demoRunId: runId,
-          demoKind: 'trial',
-          endpointId: trial.id,
-          demoScenarioId: customScenario.id,
-          demoAlertChannelId: demoAlertChannel?.id,
-          demoStatusPageId: demoStatusPage.id,
+      return {
+        trial,
+        target,
+        observe,
+        protect,
+        deadLetter,
+        scenario: customScenario,
+        monitors: { recovery, healthyApi, degradedContract, downRoute, icmpHost },
+        statusPage: {
+          id: demoStatusPage.id,
+          shareUrl: `${config.APP_ORIGIN.replace(/\/$/, '')}/status/${statusToken}`,
         },
-      })
-      .where(eq(integrationResources.id, trial.resourceId));
+        alertChannel: {
+          id: demoAlertChannel?.id ?? existingAlertChannel?.id ?? null,
+          demoOwned: Boolean(demoAlertChannel),
+        },
+      };
+    });
 
-    return {
-      trial,
-      target,
-      observe,
-      protect,
-      deadLetter,
-      scenario: customScenario,
-      monitors: { recovery, healthyApi, degradedContract, downRoute, icmpHost },
-      statusPage: {
-        id: demoStatusPage.id,
-        shareUrl: `${config.APP_ORIGIN.replace(/\/$/, '')}/status/${statusToken}`,
+    return reply.code(201).send({
+      demo: {
+        runId,
+        trial: { ...created.trial, ingestUrl: trialIngestUrl },
+        target: { ...created.target, ingestUrl: targetIngestUrl },
+        observe: { ...created.observe, ingestUrl: observeIngestUrl },
+        protect: { ...created.protect, ingestUrl: protectIngestUrl, signatureSecret: githubSecret },
+        deadLetter: { ...created.deadLetter, ingestUrl: deadLetterIngestUrl },
+        scenario: created.scenario,
+        monitors: created.monitors,
+        statusPage: created.statusPage,
+        alertChannel: created.alertChannel,
+        destination: {
+          url: targetWorkerUrl,
+          allowPrivateNetworks: privateNetwork,
+          allowedPrivateCidrs: privateCidrs,
+        },
       },
-      alertChannel: {
-        id: demoAlertChannel?.id ?? existingAlertChannel?.id ?? null,
-        demoOwned: Boolean(demoAlertChannel),
-      },
-    };
-  });
-
-  return reply.code(201).send({
-    demo: {
-      runId,
-      trial: { ...created.trial, ingestUrl: trialIngestUrl },
-      target: { ...created.target, ingestUrl: targetIngestUrl },
-      observe: { ...created.observe, ingestUrl: observeIngestUrl },
-      protect: { ...created.protect, ingestUrl: protectIngestUrl, signatureSecret: githubSecret },
-      deadLetter: { ...created.deadLetter, ingestUrl: deadLetterIngestUrl },
-      scenario: created.scenario,
-      monitors: created.monitors,
-      statusPage: created.statusPage,
-      alertChannel: created.alertChannel,
-      destination: {
-        url: targetWorkerUrl,
-        allowPrivateNetworks: privateNetwork,
-        allowedPrivateCidrs: privateCidrs,
-      },
-    },
-  });
+    });
+  } finally {
+    await demoLock
+      .release()
+      .catch((error) =>
+        logger.error({ error, userId: user.id }, 'Failed to release demo mutation lock'),
+      );
+  }
 });
 
 app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
@@ -2470,145 +2484,173 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
   if (!user) return;
   deliveryActionInputSchema.parse(request.body);
   const { runId } = request.params as { runId: string };
-  const owned = await database.db
-    .select({ id: integrationResources.id, metadata: integrationResources.metadata })
-    .from(integrationResources)
-    .where(
-      and(
-        eq(integrationResources.userId, user.id),
-        sql`${integrationResources.metadata} ->> 'demoRunId' = ${runId}`,
-      ),
-    );
-  if (owned.length === 0) return { removed: 0 };
-  const resourceIds = owned.map((resource) => resource.id);
-  const ownedMetadata = owned.map(
-    (resource) =>
-      resource.metadata as {
-        demoScenarioId?: string;
-        demoAlertChannelId?: string | null;
-        demoStatusPageId?: string;
-      },
-  );
-  const scenarioIds = [
-    ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoScenarioId ?? [])),
-  ];
-  const alertChannelIds = [
-    ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoAlertChannelId ?? [])),
-  ];
-  const statusPageIds = [
-    ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoStatusPageId ?? [])),
-  ];
-  await database.db.transaction(async (tx) => {
-    if (statusPageIds.length > 0) {
-      await tx
-        .delete(statusPages)
-        .where(and(eq(statusPages.userId, user.id), inArray(statusPages.id, statusPageIds)));
-    }
-    await tx
-      .delete(endpoints)
-      .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
-    await tx
-      .delete(integrationResources)
+  const demoLock = await acquireDemoMutationLock(redis, user.id);
+  if (!demoLock) {
+    return reply.code(409).send({ error: 'demo_operation_in_progress' });
+  }
+  try {
+    const owned = await database.db
+      .select({ id: integrationResources.id, metadata: integrationResources.metadata })
+      .from(integrationResources)
       .where(
         and(
           eq(integrationResources.userId, user.id),
-          inArray(integrationResources.id, resourceIds),
+          sql`${integrationResources.metadata} ->> 'demoRunId' = ${runId}`,
         ),
       );
-    if (scenarioIds.length > 0) {
+    if (owned.length === 0) return { removed: 0 };
+    const resourceIds = owned.map((resource) => resource.id);
+    const ownedMetadata = owned.map(
+      (resource) =>
+        resource.metadata as {
+          demoScenarioId?: string;
+          demoAlertChannelId?: string | null;
+          demoStatusPageId?: string;
+        },
+    );
+    const scenarioIds = [
+      ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoScenarioId ?? [])),
+    ];
+    const alertChannelIds = [
+      ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoAlertChannelId ?? [])),
+    ];
+    const statusPageIds = [
+      ...new Set(ownedMetadata.flatMap((metadata) => metadata.demoStatusPageId ?? [])),
+    ];
+    await database.db.transaction(async (tx) => {
+      if (statusPageIds.length > 0) {
+        await tx
+          .delete(statusPages)
+          .where(and(eq(statusPages.userId, user.id), inArray(statusPages.id, statusPageIds)));
+      }
       await tx
-        .delete(scenarios)
+        .delete(endpoints)
+        .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
+      await tx
+        .delete(integrationResources)
         .where(
           and(
-            eq(scenarios.userId, user.id),
-            eq(scenarios.builtIn, false),
-            inArray(scenarios.id, scenarioIds),
+            eq(integrationResources.userId, user.id),
+            inArray(integrationResources.id, resourceIds),
           ),
         );
-    }
-    if (alertChannelIds.length > 0) {
-      await tx
-        .delete(alertChannels)
-        .where(and(eq(alertChannels.userId, user.id), inArray(alertChannels.id, alertChannelIds)));
-    }
-  });
-  return {
-    removed: resourceIds.length,
-    scenariosRemoved: scenarioIds.length,
-    alertChannelsRemoved: alertChannelIds.length,
-    statusPagesRemoved: statusPageIds.length,
-  };
+      if (scenarioIds.length > 0) {
+        await tx
+          .delete(scenarios)
+          .where(
+            and(
+              eq(scenarios.userId, user.id),
+              eq(scenarios.builtIn, false),
+              inArray(scenarios.id, scenarioIds),
+            ),
+          );
+      }
+      if (alertChannelIds.length > 0) {
+        await tx
+          .delete(alertChannels)
+          .where(
+            and(eq(alertChannels.userId, user.id), inArray(alertChannels.id, alertChannelIds)),
+          );
+      }
+    });
+    return {
+      removed: resourceIds.length,
+      scenariosRemoved: scenarioIds.length,
+      alertChannelsRemoved: alertChannelIds.length,
+      statusPagesRemoved: statusPageIds.length,
+    };
+  } finally {
+    await demoLock
+      .release()
+      .catch((error) =>
+        logger.error({ error, userId: user.id }, 'Failed to release demo mutation lock'),
+      );
+  }
 });
 
 app.post('/v1/demo/reset', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   deliveryActionInputSchema.parse(request.body);
-  const owned = await database.db
-    .select({ id: integrationResources.id, metadata: integrationResources.metadata })
-    .from(integrationResources)
-    .where(
-      and(
-        eq(integrationResources.userId, user.id),
-        sql`${integrationResources.metadata} ? 'demoRunId'`,
-      ),
-    );
-  if (owned.length === 0) return { removed: 0, runsRemoved: 0 };
-  const resourceIds = owned.map((resource) => resource.id);
-  const metadata = owned.map(
-    (resource) =>
-      resource.metadata as {
-        demoRunId?: string;
-        demoScenarioId?: string;
-        demoAlertChannelId?: string | null;
-        demoStatusPageId?: string;
-      },
-  );
-  const scenarioIds = [...new Set(metadata.flatMap((item) => item.demoScenarioId ?? []))];
-  const alertChannelIds = [...new Set(metadata.flatMap((item) => item.demoAlertChannelId ?? []))];
-  const statusPageIds = [...new Set(metadata.flatMap((item) => item.demoStatusPageId ?? []))];
-  const runIds = new Set(metadata.flatMap((item) => item.demoRunId ?? []));
-  await database.db.transaction(async (tx) => {
-    if (statusPageIds.length > 0) {
-      await tx
-        .delete(statusPages)
-        .where(and(eq(statusPages.userId, user.id), inArray(statusPages.id, statusPageIds)));
-    }
-    await tx
-      .delete(endpoints)
-      .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
-    await tx
-      .delete(integrationResources)
+  const demoLock = await acquireDemoMutationLock(redis, user.id);
+  if (!demoLock) {
+    return reply.code(409).send({ error: 'demo_operation_in_progress' });
+  }
+  try {
+    const owned = await database.db
+      .select({ id: integrationResources.id, metadata: integrationResources.metadata })
+      .from(integrationResources)
       .where(
         and(
           eq(integrationResources.userId, user.id),
-          inArray(integrationResources.id, resourceIds),
+          sql`${integrationResources.metadata} ? 'demoRunId'`,
         ),
       );
-    if (scenarioIds.length > 0) {
+    if (owned.length === 0) return { removed: 0, runsRemoved: 0 };
+    const resourceIds = owned.map((resource) => resource.id);
+    const metadata = owned.map(
+      (resource) =>
+        resource.metadata as {
+          demoRunId?: string;
+          demoScenarioId?: string;
+          demoAlertChannelId?: string | null;
+          demoStatusPageId?: string;
+        },
+    );
+    const scenarioIds = [...new Set(metadata.flatMap((item) => item.demoScenarioId ?? []))];
+    const alertChannelIds = [...new Set(metadata.flatMap((item) => item.demoAlertChannelId ?? []))];
+    const statusPageIds = [...new Set(metadata.flatMap((item) => item.demoStatusPageId ?? []))];
+    const runIds = new Set(metadata.flatMap((item) => item.demoRunId ?? []));
+    await database.db.transaction(async (tx) => {
+      if (statusPageIds.length > 0) {
+        await tx
+          .delete(statusPages)
+          .where(and(eq(statusPages.userId, user.id), inArray(statusPages.id, statusPageIds)));
+      }
       await tx
-        .delete(scenarios)
+        .delete(endpoints)
+        .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
+      await tx
+        .delete(integrationResources)
         .where(
           and(
-            eq(scenarios.userId, user.id),
-            eq(scenarios.builtIn, false),
-            inArray(scenarios.id, scenarioIds),
+            eq(integrationResources.userId, user.id),
+            inArray(integrationResources.id, resourceIds),
           ),
         );
-    }
-    if (alertChannelIds.length > 0) {
-      await tx
-        .delete(alertChannels)
-        .where(and(eq(alertChannels.userId, user.id), inArray(alertChannels.id, alertChannelIds)));
-    }
-  });
-  return {
-    removed: resourceIds.length,
-    runsRemoved: runIds.size,
-    scenariosRemoved: scenarioIds.length,
-    alertChannelsRemoved: alertChannelIds.length,
-    statusPagesRemoved: statusPageIds.length,
-  };
+      if (scenarioIds.length > 0) {
+        await tx
+          .delete(scenarios)
+          .where(
+            and(
+              eq(scenarios.userId, user.id),
+              eq(scenarios.builtIn, false),
+              inArray(scenarios.id, scenarioIds),
+            ),
+          );
+      }
+      if (alertChannelIds.length > 0) {
+        await tx
+          .delete(alertChannels)
+          .where(
+            and(eq(alertChannels.userId, user.id), inArray(alertChannels.id, alertChannelIds)),
+          );
+      }
+    });
+    return {
+      removed: resourceIds.length,
+      runsRemoved: runIds.size,
+      scenariosRemoved: scenarioIds.length,
+      alertChannelsRemoved: alertChannelIds.length,
+      statusPagesRemoved: statusPageIds.length,
+    };
+  } finally {
+    await demoLock
+      .release()
+      .catch((error) =>
+        logger.error({ error, userId: user.id }, 'Failed to release demo mutation lock'),
+      );
+  }
 });
 
 app.post('/v1/endpoints', async (request, reply) => {

@@ -52,6 +52,8 @@ export function readableError(error: unknown): string {
     monitor_not_found: 'That monitor no longer exists.',
     monitor_paused: 'Resume this monitor before running an immediate check.',
     demo_run_active: 'A Demo Lab workspace already exists. Reset it before starting another run.',
+    demo_operation_in_progress:
+      'Another Demo Lab operation is still finishing. Wait a moment and try again.',
     target_blocked: error.detail ?? 'Target blocked by outbound network safety policy.',
     destination_required: 'Add a destination URL before enabling Observe or Protect.',
     endpoint_inactive: 'Resume this live route before sending a synthetic event.',

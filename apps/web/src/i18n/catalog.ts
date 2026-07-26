@@ -1,6 +1,8 @@
 export type Locale = 'en' | 'es';
 
 export const es: Record<string, string> = {
+  'Another Demo Lab operation is still finishing. Wait a moment and try again.':
+    'Otra operación de Demo Lab todavía está terminando. Espera un momento y vuelve a intentarlo.',
   'Next action': 'Siguiente acción',
   'Open guided demo': 'Abrir demo guiada',
   'Run the guided demo, send a request to the URL, or use the curl example. New attempts appear here automatically.':
