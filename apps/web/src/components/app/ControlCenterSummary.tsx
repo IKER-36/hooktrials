@@ -51,7 +51,6 @@ export function ControlCenterSummary() {
     <section className="ht-control-center" aria-label="Control Center">
       <header>
         <div>
-          <p className="ht-kicker">Control Center</p>
           <h2>Integration reliability, now</h2>
         </div>
         <span className={`ht-monitor-state ${state.status}`}>{state.status}</span>
