@@ -242,40 +242,21 @@ export function OverviewPage() {
         )}
       </section>
 
-      <ReadinessPanel endpointId={selected.id} />
-
-      <RouteConfiguration endpoint={selected} />
-
-      {selected.mode === 'trial' ? (
-        <GuidedDemo
-          endpoint={selected}
-          scenario={selectedScenario}
-          onComplete={async () => {
-            await loadEvents(selected.id);
-          }}
-        />
-      ) : null}
-
-      <section className="ht-metrics" aria-label="Endpoint metrics">
-        <article>
-          <span>Events retained</span>
-          <strong>{events.length}</strong>
-        </article>
-        <article>
-          <span>Attempts observed</span>
-          <strong>{totalAttempts}</strong>
-        </article>
-        <article>
-          <span>Retention</span>
-          <strong>72h</strong>
-        </article>
-      </section>
-
       <section className="ht-events" aria-label="Retry timelines">
         <header>
           <div>
-            <p className="ht-kicker">Real-time</p>
             <h2>Retry timelines</h2>
+            <p className="ht-events-facts">
+              <span>
+                Events retained: <b>{events.length}</b>
+              </span>
+              <span>
+                Attempts observed: <b>{totalAttempts}</b>
+              </span>
+              <span>
+                Retention: <b>72h</b>
+              </span>
+            </p>
           </div>
           <span className={`ht-stream ${streamStatus}`}>
             <i aria-hidden="true" />
@@ -328,6 +309,20 @@ export function OverviewPage() {
           </ul>
         )}
       </section>
+
+      <ReadinessPanel endpointId={selected.id} />
+
+      <RouteConfiguration endpoint={selected} />
+
+      {selected.mode === 'trial' ? (
+        <GuidedDemo
+          endpoint={selected}
+          scenario={selectedScenario}
+          onComplete={async () => {
+            await loadEvents(selected.id);
+          }}
+        />
+      ) : null}
 
       {inspecting ? (
         <EventInspector eventId={inspecting} onClose={() => setInspecting(null)} />

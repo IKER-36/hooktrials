@@ -452,6 +452,21 @@ html[data-theme='dark'] .ht-shell .ht-status-share-url button {
   box-shadow: none;
 }
 
+/* Endpoint facts, folded into the live traffic header. They used to be a second
+   metric strip stacked under the workspace summary, which already carries five. */
+.ht-events-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 4px 0 0;
+  color: var(--ht-muted);
+  font-size: 11px;
+}
+.ht-events-facts b {
+  color: var(--ht-ink);
+  font-weight: 650;
+}
+
 /* Row navigation affordance. The row body opens the route in Control Center,
    which was previously indistinguishable from the actions sitting beside it. */
 .ht-endpoint-open {
