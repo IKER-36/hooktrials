@@ -34,10 +34,15 @@ a product requirement, not a deployment option.
 - Destination headers, monitor headers and signature secrets encrypted and write-only.
 - Manual retry/replay requires confirmation and stores user/source audit metadata.
 - Public evidence uses a hashed expiring token and excludes bodies, headers, credentials and URLs.
+- Authenticated and public JSON/Markdown evidence exports use that same redacted server-side model.
+- Generic-webhook and Discord alert destinations are encrypted and write-only; Discord messages
+  disable mention expansion and all alert payloads exclude captured request data.
 - Public status pages use hashed rotatable tokens and exclude response bodies, authentication
   headers, query strings and user identity.
 - ICMP targets pass the same public/private address policy as HTTP targets. Only the worker receives
   `NET_RAW`; the API, dashboard and ingestor do not.
+- Guided Demo setup, cleanup and reset are serialized by an expiring per-user Redis lock; cleanup
+  still requires both authenticated ownership and the exact private run identifier.
 
 ## Rules for rendering captured content
 

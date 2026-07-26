@@ -43,6 +43,12 @@ then endpoints, events, deliveries, monitors, checks, incidents and evidence fol
 cascades. The exact custom scenario and a demo-owned alert channel are also removed by stored IDs;
 an existing user status page or alert channel is never deleted or overwritten.
 
+Setup, cleanup and reset acquire one short-lived Redis lock scoped to the authenticated user.
+Only one demo mutation can run for that account at a time; a concurrent request receives an
+explicit conflict response and can be retried after the active operation finishes. Lock release is
+token-checked so one operation cannot release another operation's lock, and the expiry remains a
+safety net if a process stops unexpectedly.
+
 The browser queries the API for an existing private run when Guided Demo opens. Closing or reloading the
 browser therefore cannot lose the cleanup control. If one run is found, **Reset demo workspace**
 removes it. If historical interrupted runs exist, reset removes every demo-tagged run owned by that
@@ -52,4 +58,5 @@ account while preserving all normal resources.
 Cleanup never matches names or prefixes and cannot touch another user's resources.
 
 Only use synthetic payloads. Demo endpoints use temporary reserved Cloud capacity and do not consume
-the normal endpoint quota shown to the user. A second run cannot start while demo resources exist.
+the normal endpoint quota shown to the user. A second run cannot start while demo resources exist
+or another setup/cleanup/reset operation is active.

@@ -1,8 +1,31 @@
 # Current release status
 
-Updated: 23 July 2026.
+Updated: 26 July 2026.
 
-## Release `v0.11.3`
+## Release `v0.12.0`
+
+Release `v0.12.0` makes real integration setup safer and the resulting operational evidence easier
+to deliver:
+
+- Webhook Hub can preflight a configured destination without sending payload data, then run an
+  explicit signed synthetic event through the real ingestion and destination path;
+- event evidence downloads as redacted JSON or Markdown from the same projection used by expiring
+  public reports;
+- Operations supports generic-webhook JSON and native Discord alerts, independently scoped to
+  Monitor or Webhook incidents and opened or recovered events;
+- Product and Lab expose actionable empty, failure and retry states instead of blank surfaces or
+  indefinite loading;
+- Guided Demo mutations are serialized per account, while cleanup remains constrained to the
+  authenticated user and exact run identifier.
+
+The local release gate passes formatting, ESLint, strict TypeScript, 150 automated tests and all
+production builds. Functional validation covers signed safe traffic, private/public evidence
+exports, real alert payload delivery, concurrent demo setup, scoped cleanup and preservation of
+ordinary same-user resources. Browser validation covers English/Spanish and light/dark changed
+states without console errors. CubePath promotion remains pending until the immutable `v0.12.0`
+images complete their release workflow.
+
+## Previous release `v0.11.3`
 
 Release `v0.11.3` completes dark-theme parity for operational status surfaces. Production Readiness
 markers, monitor state notices, configuration chips, check history and public-status actions now use

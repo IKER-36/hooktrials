@@ -1,7 +1,7 @@
 # HookTrials
 
 [![Hosted on CubePath](https://img.shields.io/badge/Hosted%20on-CubePath-22c55e?style=flat-square)](https://cubepath.com/)
-[![Release](https://img.shields.io/badge/release-v0.11.3-6366f1?style=flat-square)](docs/release-status.md)
+[![Release](https://img.shields.io/badge/release-v0.12.0-6366f1?style=flat-square)](docs/release-status.md)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-334155?style=flat-square)](LICENSE)
 
 Open-source integration reliability control plane. HookTrials tests failure behavior, safely
@@ -9,7 +9,7 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.11.3** (23 July 2026). The managed sandbox is available at
+Current public release: **v0.12.0** (26 July 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
 
 ## Run locally
@@ -73,8 +73,12 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Trial, Observe and Protect route modes with contracts and GitHub/Stripe signatures.
 - Webhook Hub for atomic real-provider onboarding, complete request interception and centralized
   delivery operations.
+- Destination preflight and explicit provider-shaped synthetic events for validating live routes
+  before changing a real provider.
 - Stripe, GitHub, Shopify and Slack provider starters inside route configuration.
-- Durable retries, dead-letter recovery, incidents, outgoing alerts and redacted evidence links.
+- Durable retries, dead-letter recovery, incidents, scoped generic-webhook or Discord alerts and
+  redacted evidence links.
+- Downloadable JSON and Markdown evidence generated from the same public-safe redaction boundary.
 - Editable HTTP/HTTPS and ICMP monitoring with explainable availability, latency and integrity
   scores.
 - Explainable production-readiness score with a highest-impact next action for every route.
@@ -100,6 +104,8 @@ complete synthetic workspace instead of showing static sample cards:
 - one redacted evidence report with an expiring share link.
 
 Every generated resource belongs to the signed-in account and receives a private run identifier.
+Setup, run cleanup and all-run reset are serialized per account with an expiring Redis lock, so
+concurrent browser requests cannot create overlapping workspaces.
 **Clean only this demo run** removes that exact workspace without matching names or touching other
 user data. Demo incidents never call a real alert webhook configured by the user.
 
@@ -117,7 +123,7 @@ conclusion or hides a grading formula.
 
 ### See the product, not a mock-up
 
-The current `v0.11.2` interface keeps real delivery work in **Product** and deterministic
+The current `v0.12.0` interface keeps real delivery work in **Product** and deterministic
 experiments in **Lab**. These captures come from the deployed Cloud application; the same dashboard
 is included in the self-hosted distribution.
 

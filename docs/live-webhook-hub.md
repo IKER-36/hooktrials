@@ -46,6 +46,22 @@ The connection is created atomically: route, encrypted destination, contract, si
 public token are committed together. A failed validation does not leave a partially configured live
 route.
 
+## Validate before provider cutover
+
+Every live connection exposes two explicit, safe validation actions:
+
+1. **Run destination preflight** checks outbound network policy, DNS resolution, TLS and HTTP
+   reachability without sending a webhook payload. It also reports whether the configured inbound
+   contract and provider signature settings are ready.
+2. **Send safe test event** creates a synthetic provider-shaped request and sends it through the
+   real public ingestion URL, validation pipeline and configured destination. GitHub and Stripe
+   starters generate their native signatures when a signing secret is configured.
+
+The synthetic event is clearly identified in captured evidence and never reuses a production
+payload. It can still reach the configured destination, so point a new route at staging or a
+side-effect-free handler until idempotency and filtering have been verified. Neither action runs
+automatically when the route is created.
+
 ## Observe versus Protect
 
 ### Observe
@@ -110,6 +126,7 @@ reverse proxy. Explicit private CIDR access is available only in self-hosted mod
 ## Production checklist
 
 - start in a provider sandbox or staging environment;
+- run destination preflight, then send the explicit safe test event;
 - verify the first captured request and destination response;
 - enable a native signature secret where supported;
 - define the smallest useful inbound contract;
