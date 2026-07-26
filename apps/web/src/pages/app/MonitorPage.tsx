@@ -9,6 +9,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { CopyButton } from '../../components/ui/CopyButton';
+import { ProductState } from '../../components/ui/ProductState';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
@@ -66,6 +67,7 @@ export function MonitorPage() {
     setMonitors(response.monitors);
     setRoutes(integrationResponse.integrations);
     setStatusPages(statusPageResponse.pages);
+    setError('');
     setSelectedId((current) =>
       response.monitors.some((monitor) => monitor.id === current)
         ? current
@@ -193,9 +195,28 @@ export function MonitorPage() {
       />
 
       {error ? (
-        <p className="ht-form-error" role="alert">
-          {error}
-        </p>
+        <ProductState
+          compact
+          tone="danger"
+          eyebrow="Request failed"
+          title="Monitoring evidence could not refresh."
+          description={error}
+          action={
+            <button
+              className="button secondary compact"
+              type="button"
+              onClick={() => {
+                setError('');
+                setLoading(true);
+                void loadMonitors()
+                  .catch((requestError) => setError(readableError(requestError)))
+                  .finally(() => setLoading(false));
+              }}
+            >
+              Try again
+            </button>
+          }
+        />
       ) : null}
       {showCreate ? (
         <MonitorForm
@@ -251,17 +272,16 @@ export function MonitorPage() {
 
       {loading ? (
         <div className="ht-skeleton tall" />
-      ) : monitors.length === 0 && routes.length === 0 && !showCreate ? (
-        <div className="ht-onboarding ht-monitor-empty">
-          <h2>Add your first integration</h2>
-          <p className="ht-muted-line">
-            Monitor an API, HTTP route or webhook destination. HookTrials checks availability,
-            latency and response contracts without storing full response bodies.
-          </p>
-          <button type="button" className="button primary" onClick={() => setShowCreate(true)}>
-            Create first monitor
-          </button>
-        </div>
+      ) : monitors.length === 0 && routes.length === 0 && !showCreate && !error ? (
+        <ProductState
+          title="Add your first monitored integration."
+          description="Check an API, HTTP route or webhook destination for availability, latency and response contracts without storing full response bodies."
+          action={
+            <button type="button" className="button primary" onClick={() => setShowCreate(true)}>
+              Create first monitor
+            </button>
+          }
+        />
       ) : monitors.length > 0 ? (
         <div className="ht-monitor-grid">
           <aside className="ht-monitor-list" aria-label="Monitored integrations">

@@ -78,7 +78,7 @@ export function GuidedDemo({ endpoint, scenario, onComplete }: GuidedDemoProps) 
   }
 
   return (
-    <section className="ht-guided-demo" aria-labelledby="guided-demo-title">
+    <section id="guided-demo" className="ht-guided-demo" aria-labelledby="guided-demo-title">
       <div className="ht-guided-copy">
         <p className="ht-kicker">Guided demonstration</p>
         <h2 id="guided-demo-title">See the complete retry cycle</h2>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowRight, CheckCircle2, RadioTower, ShieldCheck, Waypoints } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
+import { ProductState } from '../../components/ui/ProductState';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -265,7 +266,11 @@ export function LiveWebhooksPage() {
       </section>
 
       <div className="ht-live-grid">
-        <form className="ht-live-connect" onSubmit={(event) => void submit(event)}>
+        <form
+          id="live-route-builder"
+          className="ht-live-connect"
+          onSubmit={(event) => void submit(event)}
+        >
           <header>
             <p className="ht-kicker">New live connection</p>
             <h2>Connect a real webhook</h2>
@@ -562,11 +567,27 @@ export function LiveWebhooksPage() {
           </div>
           <p>One control plane for every provider and backend.</p>
         </header>
-        {liveRoutes.length === 0 ? (
-          <div className="ht-events-empty">
-            <h3>No live routes yet.</h3>
-            <p>Create the first connection above. Trial endpoints remain separate and safe.</p>
-          </div>
+        {loading ? (
+          <div className="ht-skeleton tall" aria-label="Loading live routes" />
+        ) : liveRoutes.length === 0 ? (
+          <ProductState
+            compact
+            title="No live routes yet."
+            description="Connect a provider to a real backend when you are ready. Trial endpoints remain separate and safe."
+            action={
+              <button
+                className="button secondary compact"
+                type="button"
+                onClick={() =>
+                  document
+                    .getElementById('live-route-builder')
+                    ?.scrollIntoView({ behavior: 'smooth' })
+                }
+              >
+                Configure first route
+              </button>
+            }
+          />
         ) : (
           <div className="ht-live-route-list">
             {liveRoutes.map((endpoint) => (

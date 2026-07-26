@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertChannelPanel } from '../../components/app/AlertChannelPanel';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { ProductState } from '../../components/ui/ProductState';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { shortDate, timeAgo } from '../../lib/format';
@@ -21,6 +22,7 @@ export function OperationsPage() {
   const load = useCallback(async () => {
     const response = await apiRequest<OperationsResponse>('/v1/operations');
     setData(response);
+    setError('');
   }, []);
 
   useEffect(() => {
@@ -72,12 +74,43 @@ export function OperationsPage() {
         </button>
       </header>
 
-      {error ? (
-        <p className="ht-form-error" role="alert">
-          {error}
-        </p>
+      {error && data ? (
+        <ProductState
+          compact
+          tone="danger"
+          eyebrow="Refresh failed"
+          title="The last known operations evidence is still visible."
+          description={error}
+          action={
+            <button className="button secondary compact" type="button" onClick={() => void load()}>
+              Try again
+            </button>
+          }
+        />
       ) : null}
-      {loading || !data ? (
+      {!data && error ? (
+        <ProductState
+          tone="danger"
+          eyebrow="Request failed"
+          title="Operations could not load."
+          description={error}
+          action={
+            <button
+              className="button primary"
+              type="button"
+              onClick={() => {
+                setError('');
+                setLoading(true);
+                void load()
+                  .catch((requestError) => setError(readableError(requestError)))
+                  .finally(() => setLoading(false));
+              }}
+            >
+              Try again
+            </button>
+          }
+        />
+      ) : loading || !data ? (
         <div className="ht-skeleton tall" />
       ) : (
         <>
@@ -109,7 +142,17 @@ export function OperationsPage() {
               <span>{data.incidents.length} retained</span>
             </header>
             {data.incidents.length === 0 ? (
-              <p className="ht-operation-empty">No incident evidence yet.</p>
+              <ProductState
+                compact
+                eyebrow="No action required"
+                title="No incidents are open."
+                description="Create a monitor or run a protected webhook test to start collecting operational evidence."
+                action={
+                  <Link className="button secondary compact" to="/app/monitor">
+                    Open monitoring
+                  </Link>
+                }
+              />
             ) : (
               <div className="ht-operation-list">
                 {data.incidents.map((incident) => (
@@ -151,7 +194,17 @@ export function OperationsPage() {
               </label>
             </header>
             {deadLetters.length === 0 ? (
-              <p className="ht-operation-empty">No unresolved dead letters.</p>
+              <ProductState
+                compact
+                tone="positive"
+                eyebrow="Recovery queue"
+                title={
+                  showResolved
+                    ? 'No resolved deliveries match this view.'
+                    : 'Recovery queue is clear.'
+                }
+                description="Failed protected deliveries that exhaust their retry budget will appear here with explicit retry and replay controls."
+              />
             ) : (
               <div className="ht-dlq-list">
                 {deadLetters.map((delivery) => (
@@ -213,7 +266,11 @@ export function OperationsPage() {
               <span>{data.alerts.length} deliveries</span>
             </header>
             {data.alerts.length === 0 ? (
-              <p className="ht-operation-empty">Configure the channel below, then send a test.</p>
+              <ProductState
+                compact
+                title="No alert delivery evidence yet."
+                description="Configure Discord or a generic webhook below, choose its scope, and send a test notification."
+              />
             ) : (
               <div className="ht-alert-audit-list">
                 {data.alerts.map((alert) => (

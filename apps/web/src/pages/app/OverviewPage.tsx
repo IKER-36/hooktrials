@@ -7,6 +7,7 @@ import { GuidedDemo } from '../../components/app/GuidedDemo';
 import { ReadinessPanel } from '../../components/app/ReadinessPanel';
 import { RouteConfiguration } from '../../components/app/RouteConfiguration';
 import { CopyButton } from '../../components/ui/CopyButton';
+import { ProductState } from '../../components/ui/ProductState';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { useEventStream } from '../../hooks/useEventStream';
@@ -284,14 +285,22 @@ export function OverviewPage() {
         {eventsLoading ? (
           <div className="ht-skeleton tall" aria-label="Loading events" />
         ) : events.length === 0 ? (
-          <div className="ht-events-empty">
-            <h3>Waiting for the first delivery.</h3>
-            <p>
-              Run the guided demo above, send a request to the URL, or use the curl example. New
-              attempts appear here automatically
-              {selected.active ? '' : ' once the endpoint is resumed'}.
-            </p>
-          </div>
+          <ProductState
+            compact
+            title="Waiting for the first delivery."
+            description={`Run the guided demo, send a request to the URL, or use the curl example. New attempts appear here automatically${selected.active ? '.' : ' once the endpoint is resumed.'}`}
+            action={
+              <button
+                className="button secondary compact"
+                type="button"
+                onClick={() =>
+                  document.getElementById('guided-demo')?.scrollIntoView({ behavior: 'smooth' })
+                }
+              >
+                Open guided demo
+              </button>
+            }
+          />
         ) : (
           <ul className="ht-event-list">
             {events.map((event) => (

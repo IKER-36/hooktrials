@@ -1,6 +1,42 @@
 export type Locale = 'en' | 'es';
 
 export const es: Record<string, string> = {
+  'Next action': 'Siguiente acción',
+  'Open guided demo': 'Abrir demo guiada',
+  'Run the guided demo, send a request to the URL, or use the curl example. New attempts appear here automatically.':
+    'Ejecuta la demo guiada, envía una petición a la URL o usa el ejemplo curl. Los nuevos intentos aparecerán aquí automáticamente.',
+  'Run the guided demo, send a request to the URL, or use the curl example. New attempts appear here automatically once the endpoint is resumed.':
+    'Ejecuta la demo guiada, envía una petición a la URL o usa el ejemplo curl. Los nuevos intentos aparecerán aquí cuando se reanude el endpoint.',
+  'No trial endpoints yet.': 'Todavía no hay endpoints de prueba.',
+  'Choose a template and create the first safe failure route with the form beside this list.':
+    'Elige una plantilla y crea la primera ruta segura de fallos con el formulario junto a esta lista.',
+  'Name first endpoint': 'Nombrar primer endpoint',
+  'Connect a provider to a real backend when you are ready. Trial endpoints remain separate and safe.':
+    'Conecta un proveedor a un backend real cuando estés preparado. Los endpoints de prueba permanecen separados y seguros.',
+  'Configure first route': 'Configurar primera ruta',
+  'Request failed': 'Petición fallida',
+  'Monitoring evidence could not refresh.':
+    'No se pudieron actualizar las evidencias de monitorización.',
+  'Try again': 'Reintentar',
+  'Add your first monitored integration.': 'Añade tu primera integración monitorizada.',
+  'Check an API, HTTP route or webhook destination for availability, latency and response contracts without storing full response bodies.':
+    'Comprueba disponibilidad, latencia y contratos de respuesta de una API, ruta HTTP o destino webhook sin guardar cuerpos de respuesta completos.',
+  'Refresh failed': 'Falló la actualización',
+  'The last known operations evidence is still visible.':
+    'La última evidencia operativa conocida sigue visible.',
+  'Operations could not load.': 'No se pudieron cargar las operaciones.',
+  'No action required': 'No se requiere ninguna acción',
+  'No incidents are open.': 'No hay incidentes abiertos.',
+  'Create a monitor or run a protected webhook test to start collecting operational evidence.':
+    'Crea un monitor o ejecuta una prueba de webhook protegido para empezar a recopilar evidencia operativa.',
+  'Open monitoring': 'Abrir monitorización',
+  'No resolved deliveries match this view.': 'Ninguna entrega resuelta coincide con esta vista.',
+  'Recovery queue is clear.': 'La cola de recuperación está vacía.',
+  'Failed protected deliveries that exhaust their retry budget will appear here with explicit retry and replay controls.':
+    'Las entregas protegidas fallidas que agoten sus reintentos aparecerán aquí con controles explícitos de reintento y replay.',
+  'No alert delivery evidence yet.': 'Todavía no hay evidencia de entrega de alertas.',
+  'Configure Discord or a generic webhook below, choose its scope, and send a test notification.':
+    'Configura Discord o un webhook genérico abajo, elige su alcance y envía una notificación de prueba.',
   'MONITORS + WEBHOOKS': 'MONITORES + WEBHOOKS',
   'Send redacted incident notifications to Discord or your own webhook. Choose which product areas and lifecycle events may notify this channel.':
     'Envía notificaciones redactadas de incidentes a Discord o a tu propio webhook. Elige qué áreas del producto y eventos del ciclo de vida pueden avisar a este canal.',

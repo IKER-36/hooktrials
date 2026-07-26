@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { EndpointTemplates } from '../../components/app/EndpointTemplates';
 import { ScenarioPicker } from '../../components/app/ScenarioPicker';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { ProductState } from '../../components/ui/ProductState';
 import { useDashboard } from '../../layouts/AppLayout';
 import { readableError } from '../../lib/api';
 import { shortDate } from '../../lib/format';
@@ -191,10 +192,20 @@ export function EndpointsPage() {
           {loading ? (
             <div className="ht-skeleton tall" />
           ) : trialEndpoints.length === 0 ? (
-            <div className="ht-events-empty">
-              <h3>No endpoints yet.</h3>
-              <p>Create your first trial endpoint with the form on this page.</p>
-            </div>
+            <ProductState
+              compact
+              title="No trial endpoints yet."
+              description="Choose a template and create the first safe failure route with the form beside this list."
+              action={
+                <button
+                  className="button secondary compact"
+                  type="button"
+                  onClick={() => document.getElementById('endpoint-name')?.focus()}
+                >
+                  Name first endpoint
+                </button>
+              }
+            />
           ) : (
             trialEndpoints.map((endpoint) => (
               <article
