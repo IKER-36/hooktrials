@@ -2,7 +2,33 @@
 
 Updated: 26 July 2026.
 
-## Release `v0.12.2`
+## Release `v0.12.3`
+
+Release `v0.12.3` makes the operational workspace easier to scan and act on:
+
+- Control Center shows live delivery activity and retry timelines earlier, so the current route
+  state is visible before configuration details;
+- Operations puts incidents, dead letters and recent activity before alert configuration, making
+  triage the first task on the page;
+- Monitoring separates the integration list, monitor detail, monitor setup and public status pages
+  into clearer work areas;
+- recent monitor checks show a bounded history with a clear indication of how many checks are kept;
+- the Control Center route selector is explicitly labelled, and endpoint rows explain where they
+  open next;
+- actions across Webhook Hub, Monitoring, Operations, Trial endpoints and the event inspector use
+  consistent primary, secondary, danger and quiet button states, including focus and disabled
+  feedback;
+- wide screens use a readable centred content width and the dashboard removes repeated headings and
+  duplicate integration rows.
+
+## Fixed
+
+- destructive actions remain visibly destructive instead of inheriting the appearance of nearby
+  neutral actions;
+- long-running monitor history no longer grows without a visible limit;
+- dashboard controls no longer rely on surrounding containers to communicate that they are buttons.
+
+## Previous release `v0.12.2`
 
 Release `v0.12.2` makes the dashboard easier to navigate by naming every screen after the menu
 entry that opens it:
