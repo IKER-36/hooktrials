@@ -1,7 +1,4 @@
 /* HookTrials 2026 visual system: calm technical clarity, glass surfaces and rounded geometry. */
-:root {
-  --ht-orange: var(--ht-amber);
-}
 
 body {
   font-family: var(--ht-sans);
@@ -129,7 +126,7 @@ pre {
 }
 .ht-auth-pitch {
   position: relative;
-  z-index: 1;
+  z-index: var(--ht-z-raised);
   max-width: 620px;
 }
 .ht-auth-eyebrow {
@@ -308,22 +305,8 @@ pre {
   padding: 14px 5px 0;
   border-color: var(--ht-hairline);
 }
-.ht-runtime-state {
-  gap: 7px;
-  padding: 11px;
 
-  border: 1px solid var(--ht-hairline);
-  border-radius: 10px;
-  font-size: 8px;
-}
-.ht-runtime-state i,
-.ht-systembar i {
-  border-radius: 50%;
-  background: var(--ht-green);
-  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
-}
-.ht-logout,
-.ht-tour-restart {
+.ht-logout {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -338,34 +321,10 @@ pre {
   text-transform: none;
   cursor: pointer;
 }
-.ht-logout svg,
-.ht-tour-restart svg {
+.ht-logout svg {
   width: 14px;
 }
-.ht-tour-restart:hover {
-  color: var(--ht-ink);
-}
-.ht-systembar {
-  min-height: 54px;
-  margin: 0 0 26px;
-  padding: 0 4px;
-  color: var(--ht-muted);
-  border: 0;
-  font-family: var(--ht-sans);
-  font-size: 9px;
-  letter-spacing: 0.04em;
-}
-.ht-system-title {
-  color: #465166 !important;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-transform: none;
-}
-.ht-system-title svg {
-  width: 16px;
-  color: var(--ht-green-deep);
-}
+
 .ht-banner {
   border: 1px solid rgba(229, 72, 77, 0.2);
   border-radius: 12px;
@@ -549,7 +508,7 @@ pre {
 }
 .ht-modal-close {
   position: absolute;
-  z-index: 2;
+  z-index: var(--ht-z-sticky);
   top: 14px;
   right: 14px;
   width: 36px;
@@ -1769,9 +1728,7 @@ pre {
     width: 17px;
     height: 17px;
   }
-  .ht-systembar {
-    display: none;
-  }
+
   .ht-monitor-grid,
   .ht-studio-grid {
     grid-template-columns: 1fr;

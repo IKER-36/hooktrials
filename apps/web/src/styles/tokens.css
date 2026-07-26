@@ -1,34 +1,42 @@
+/* The single source of design tokens.
+ *
+ * Every colour, surface, radius, spacing and typeface value lives here and
+ * nowhere else. No later stylesheet may open a :root block; if a value needs to
+ * change, change it here so both themes stay in step.
+ */
+
+/* Light theme. */
 :root {
-  --ht-bg: #f4f7fb;
-  --ht-bg-deep: #edf2f7;
-  --ht-panel: rgba(255, 255, 255, 0.76);
+  --ht-bg: #f3f5f4;
+  --ht-bg-deep: #e9eeeb;
+  --ht-panel: #ffffff;
   --ht-panel-solid: #ffffff;
-  --ht-glass: rgba(255, 255, 255, 0.68);
-  --ht-ink: #111827;
-  --ht-muted: #657084;
-  --ht-faint: #697589;
-  --ht-hairline: rgba(15, 23, 42, 0.08);
-  --ht-hairline-bright: rgba(15, 23, 42, 0.14);
-  --ht-green: #22c55e;
-  --ht-green-dim: #16a34a;
-  --ht-green-deep: #08783d;
+  --ht-glass: #ffffff;
+  --ht-ink: #17201b;
+  --ht-muted: #5e6b64;
+  --ht-faint: #7b8881;
+  --ht-hairline: #e2e7e4;
+  --ht-hairline-bright: #d2dad5;
+  --ht-green: #20b66a;
+  --ht-green-dim: #159653;
+  --ht-green-deep: #0d7844;
   --ht-blue: #6366f1;
-  --ht-red: #e5484d;
-  --ht-amber: #d97706;
+  --ht-red: #c6424b;
+  --ht-amber: #a96708;
   --ht-stone: #111827;
-  --ht-shadow: rgba(25, 41, 72, 0.12);
-  --ht-surface-1: rgba(255, 255, 255, 0.78);
-  --ht-surface-2: rgba(248, 250, 252, 0.88);
-  --ht-surface-3: #eef3f7;
-  --ht-surface-hover: #f0fbf4;
-  --ht-overlay: rgba(10, 18, 30, 0.56);
-  --ht-positive-bg: #eafbf0;
-  --ht-warning-bg: #fff7e7;
-  --ht-danger-bg: #fff1f2;
+  --ht-shadow: rgba(24, 40, 31, 0.07);
+  --ht-surface-1: #ffffff;
+  --ht-surface-2: #f8faf9;
+  --ht-surface-3: #eef2f0;
+  --ht-surface-hover: #f0f8f3;
+  --ht-overlay: rgba(8, 14, 11, 0.58);
+  --ht-positive-bg: #eaf7ef;
+  --ht-warning-bg: #fff6e8;
+  --ht-danger-bg: #fff0f1;
   --ht-focus: #08783d;
-  --ht-radius-sm: 10px;
-  --ht-radius-md: 14px;
-  --ht-radius-lg: 20px;
+  --ht-radius-sm: 7px;
+  --ht-radius-md: 10px;
+  --ht-radius-lg: 14px;
   --ht-space-1: 4px;
   --ht-space-2: 8px;
   --ht-space-3: 12px;
@@ -39,34 +47,50 @@
   --ht-space-10: 40px;
   --ht-sans: 'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --ht-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --ht-orange: var(--ht-amber);
 }
 
+/* Dark theme overrides. */
 :root[data-theme='dark'] {
-  --ht-bg: #07100d;
-  --ht-bg-deep: #040906;
-  --ht-panel: rgba(13, 24, 20, 0.9);
-  --ht-panel-solid: #0d1814;
-  --ht-glass: rgba(14, 26, 21, 0.78);
-  --ht-ink: #edf7f1;
-  --ht-muted: #a3b3aa;
-  --ht-faint: #738279;
-  --ht-hairline: rgba(219, 247, 229, 0.09);
-  --ht-hairline-bright: rgba(219, 247, 229, 0.16);
-  --ht-green: #36d878;
-  --ht-green-dim: #25b963;
-  --ht-green-deep: #74e69f;
+  --ht-bg: #0a0e0c;
+  --ht-bg-deep: #070a08;
+  --ht-panel: #111713;
+  --ht-panel-solid: #111713;
+  --ht-glass: #111713;
+  --ht-ink: #edf3ef;
+  --ht-muted: #a1ada6;
+  --ht-faint: #77847c;
+  --ht-hairline: #222d27;
+  --ht-hairline-bright: #2e3b34;
+  --ht-green: #36ce7d;
+  --ht-green-dim: #28b76c;
+  --ht-green-deep: #6fe3a2;
   --ht-blue: #9397ff;
-  --ht-red: #ff7d85;
-  --ht-amber: #f6b94b;
+  --ht-red: #ff8188;
+  --ht-amber: #f2b44f;
   --ht-stone: #edf7f1;
-  --ht-shadow: rgba(0, 0, 0, 0.38);
-  --ht-surface-1: rgba(14, 26, 21, 0.86);
-  --ht-surface-2: rgba(20, 34, 28, 0.9);
-  --ht-surface-3: #172820;
-  --ht-surface-hover: #173326;
-  --ht-overlay: rgba(0, 0, 0, 0.7);
-  --ht-positive-bg: rgba(54, 216, 120, 0.12);
-  --ht-warning-bg: rgba(246, 185, 75, 0.12);
-  --ht-danger-bg: rgba(255, 125, 133, 0.12);
+  --ht-shadow: rgba(0, 0, 0, 0.24);
+  --ht-surface-1: #111713;
+  --ht-surface-2: #161d19;
+  --ht-surface-3: #1c2621;
+  --ht-surface-hover: #18281f;
+  --ht-overlay: rgba(0, 0, 0, 0.72);
+  --ht-positive-bg: #132b1f;
+  --ht-warning-bg: #2b2315;
+  --ht-danger-bg: #2b171a;
   --ht-focus: #74e69f;
+}
+
+/* Stacking order. Every z-index in the product comes from this scale.
+   The modal layer currently sits below the tour layers; correcting that
+   ordering is a behaviour change and is handled separately. */
+:root {
+  --ht-z-raised: 1;
+  --ht-z-sticky: 2;
+  --ht-z-nav: 29;
+  --ht-z-header: 30;
+  --ht-z-modal: 60;
+  --ht-z-tour-scrim: 1000;
+  --ht-z-tour-target: 1001;
+  --ht-z-tour-panel: 1002;
 }

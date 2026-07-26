@@ -30,38 +30,6 @@ body {
 .ht-page-head > div:first-child {
   min-width: 0;
 }
-.ht-systembar {
-  display: flex;
-  align-items: center;
-  gap: var(--ht-space-4);
-}
-.ht-systembar > span:nth-child(2) {
-  margin-left: auto;
-}
-.ht-system-help {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 7px 10px;
-  color: var(--ht-muted);
-  border: 1px solid var(--ht-hairline);
-  border-radius: var(--ht-radius-sm);
-  font-size: 10px;
-  font-weight: 650;
-  letter-spacing: 0;
-  text-transform: none;
-}
-.ht-system-help svg {
-  width: 14px;
-  height: 14px;
-}
-.ht-system-help:hover,
-.ht-system-help.active {
-  color: var(--ht-green-deep);
-  border-color: rgba(34, 197, 94, 0.3);
-  background: var(--ht-positive-bg);
-}
 
 .ht-sidebar {
   border-color: var(--ht-hairline-bright);
@@ -72,8 +40,7 @@ body {
 .ht-sidebar nav a > svg {
   color: var(--ht-faint);
 }
-.ht-sidebar nav a > small,
-.ht-runtime-state {
+.ht-sidebar nav a > small {
   color: var(--ht-muted);
   background: var(--ht-surface-2);
 }
@@ -111,9 +78,6 @@ body {
 .ht-logout:hover {
   color: var(--ht-red);
   background: var(--ht-danger-bg);
-}
-.ht-tour-restart:hover {
-  background: var(--ht-surface-2);
 }
 
 /* Every large module surface uses the same semantic material. */
@@ -421,7 +385,7 @@ html[data-theme='dark'] .ht-public-component {
 .ht-tour-layer {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--ht-z-tour-scrim);
   pointer-events: none;
 }
 .ht-tour-scrim {
@@ -432,7 +396,7 @@ html[data-theme='dark'] .ht-public-component {
 }
 [data-tour-active='true'] {
   position: relative;
-  z-index: 1001;
+  z-index: var(--ht-z-tour-target);
   isolation: isolate;
   border-radius: var(--ht-radius-lg);
   box-shadow:
@@ -441,7 +405,7 @@ html[data-theme='dark'] .ht-public-component {
 }
 .ht-tour-panel {
   position: fixed;
-  z-index: 2147483647;
+  z-index: var(--ht-z-tour-panel);
   right: clamp(18px, 3vw, 46px);
   bottom: clamp(18px, 3vw, 42px);
   width: min(430px, calc(100vw - 36px));
@@ -736,10 +700,7 @@ html[data-theme='dark'] .ht-public-component {
   .ht-shell {
     padding: 0;
   }
-  .ht-system-help,
-  .ht-systembar > span:nth-child(2) {
-    display: none;
-  }
+
   .ht-main {
     padding-bottom: 100px;
   }

@@ -1,62 +1,5 @@
 /* HookTrials visual system v2: sober surfaces, readable density and strict theme parity. */
 
-:root {
-  --ht-bg: #f3f5f4;
-  --ht-bg-deep: #e9eeeb;
-  --ht-panel: #ffffff;
-  --ht-panel-solid: #ffffff;
-  --ht-glass: #ffffff;
-  --ht-ink: #17201b;
-  --ht-muted: #5e6b64;
-  --ht-faint: #7b8881;
-  --ht-hairline: #e2e7e4;
-  --ht-hairline-bright: #d2dad5;
-  --ht-green: #20b66a;
-  --ht-green-dim: #159653;
-  --ht-green-deep: #0d7844;
-  --ht-red: #c6424b;
-  --ht-amber: #a96708;
-  --ht-shadow: rgba(24, 40, 31, 0.07);
-  --ht-surface-1: #ffffff;
-  --ht-surface-2: #f8faf9;
-  --ht-surface-3: #eef2f0;
-  --ht-surface-hover: #f0f8f3;
-  --ht-overlay: rgba(8, 14, 11, 0.58);
-  --ht-positive-bg: #eaf7ef;
-  --ht-warning-bg: #fff6e8;
-  --ht-danger-bg: #fff0f1;
-  --ht-radius-sm: 7px;
-  --ht-radius-md: 10px;
-  --ht-radius-lg: 14px;
-}
-
-:root[data-theme='dark'] {
-  --ht-bg: #0a0e0c;
-  --ht-bg-deep: #070a08;
-  --ht-panel: #111713;
-  --ht-panel-solid: #111713;
-  --ht-glass: #111713;
-  --ht-ink: #edf3ef;
-  --ht-muted: #a1ada6;
-  --ht-faint: #77847c;
-  --ht-hairline: #222d27;
-  --ht-hairline-bright: #2e3b34;
-  --ht-green: #36ce7d;
-  --ht-green-dim: #28b76c;
-  --ht-green-deep: #6fe3a2;
-  --ht-red: #ff8188;
-  --ht-amber: #f2b44f;
-  --ht-shadow: rgba(0, 0, 0, 0.24);
-  --ht-surface-1: #111713;
-  --ht-surface-2: #161d19;
-  --ht-surface-3: #1c2621;
-  --ht-surface-hover: #18281f;
-  --ht-overlay: rgba(0, 0, 0, 0.72);
-  --ht-positive-bg: #132b1f;
-  --ht-warning-bg: #2b2315;
-  --ht-danger-bg: #2b171a;
-}
-
 html,
 html[data-theme='dark'] {
   background: var(--ht-bg);
@@ -1505,7 +1448,7 @@ html[data-theme='dark'] .ht-backdrop {
 .ht-inspector-head {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: var(--ht-z-sticky);
   padding: 18px 20px;
   color: var(--ht-ink);
   background: var(--ht-panel-solid);
@@ -1990,7 +1933,7 @@ html[data-theme='dark']
   .ht-mobilebar {
     position: fixed;
     inset: 0 0 auto;
-    z-index: 30;
+    z-index: var(--ht-z-header);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2021,7 +1964,7 @@ html[data-theme='dark']
 
   .ht-mobilenav {
     position: fixed;
-    z-index: 29;
+    z-index: var(--ht-z-nav);
     inset: auto 0 0;
 
     grid-template-columns: repeat(7, minmax(0, 1fr));
