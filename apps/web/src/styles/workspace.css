@@ -452,6 +452,31 @@ html[data-theme='dark'] .ht-shell .ht-status-share-url button {
   box-shadow: none;
 }
 
+/* The route switcher is the subject control for Control Center, so it names
+   itself rather than relying on a screen-reader-only label. */
+.ht-switcher.labelled {
+  display: inline-grid;
+  gap: 4px;
+}
+.ht-switcher.labelled > span {
+  color: var(--ht-faint);
+  font: 650 9px/1 var(--ht-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Says how much check history is held back, so a bounded list never reads as
+   the complete record. */
+.ht-history-scope {
+  margin: 3px 0 0;
+  color: var(--ht-muted);
+  font-size: 11px;
+}
+.ht-history-scope b {
+  color: var(--ht-ink);
+  font-weight: 650;
+}
+
 /* Endpoint facts, folded into the live traffic header. They used to be a second
    metric strip stacked under the workspace summary, which already carries five. */
 .ht-events-facts {

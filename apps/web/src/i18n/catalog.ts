@@ -1178,6 +1178,7 @@ export const es: Record<string, string> = {
     'Resuelve el incidente activo y verifica la recuperación.',
   'points proven': 'puntos demostrados',
   of: 'de',
+  Showing: 'Mostrando',
   'reliability controls proven.': 'controles de fiabilidad demostrados.',
   starting: 'inicial',
   developing: 'en desarrollo',

@@ -142,14 +142,18 @@ export function OverviewPage() {
       <header className="ht-page-head">
         <div>
           <h1>Control Center</h1>
-          <p className="ht-page-subject">
-            Selected route: <b>{selected.name}</b>
-          </p>
+          {endpoints.length > 1 ? null : (
+            <p className="ht-page-subject">
+              Selected route: <b>{selected.name}</b>
+            </p>
+          )}
         </div>
         <div className="ht-page-head-actions">
+          {/* With several routes the switcher is the page's subject control, so
+              it carries a visible label instead of a screen-reader-only one. */}
           {endpoints.length > 1 ? (
-            <label className="ht-switcher">
-              <span className="sr-only">Active endpoint</span>
+            <label className="ht-switcher labelled">
+              <span>Selected route</span>
               <select value={selected.id} onChange={(event) => selectEndpoint(event.target.value)}>
                 {endpoints.map((endpoint) => (
                   <option key={endpoint.id} value={endpoint.id}>
