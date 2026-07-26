@@ -1001,8 +1001,9 @@ html[data-theme='dark'] .ht-cubepath-brand img.dark {
 
 .ht-main {
   width: 100%;
-  max-width: none;
+  max-width: var(--ht-measure-max);
   min-width: 0;
+  margin-inline: auto;
   padding: 0 clamp(18px, 2vw, 30px) 48px;
 }
 

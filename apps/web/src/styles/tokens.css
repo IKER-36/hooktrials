@@ -81,6 +81,13 @@
   --ht-focus: #74e69f;
 }
 
+/* Layout measures. */
+:root {
+  /* Widest the workspace column may grow. Past this a table row spans so much
+     screen that related values stop reading as one row. */
+  --ht-measure-max: 1440px;
+}
+
 /* Stacking order. Every z-index in the product comes from this scale.
    The modal layer currently sits below the tour layers; correcting that
    ordering is a behaviour change and is handled separately. */
