@@ -197,6 +197,124 @@ export interface ReliabilityReplay {
   actions: string[];
 }
 
+export type AlertProvider = 'generic' | 'discord';
+export type AlertIncidentEvent = 'opened' | 'recovered';
+export type AlertScope = 'monitor' | 'webhook';
+
+export interface IncidentAlertData {
+  event: AlertIncidentEvent;
+  incident: {
+    id: string;
+    cause: string;
+    summary: string;
+    openedAt: Date | string;
+    recoveredAt: Date | string | null;
+  };
+  integration: {
+    id: string;
+    name: string;
+    type: string;
+    environment: string;
+  };
+}
+
+export function incidentAlertScope(evidence: unknown): AlertScope {
+  return evidence &&
+    typeof evidence === 'object' &&
+    !Array.isArray(evidence) &&
+    typeof (evidence as Record<string, unknown>).monitorId === 'string'
+    ? 'monitor'
+    : 'webhook';
+}
+
+export function shouldDeliverIncidentAlert(input: {
+  scopes: unknown;
+  events: unknown;
+  scope: AlertScope;
+  event: AlertIncidentEvent;
+}): boolean {
+  const scopes = Array.isArray(input.scopes) ? input.scopes : [];
+  const events = Array.isArray(input.events) ? input.events : [];
+  return scopes.includes(input.scope) && events.includes(input.event);
+}
+
+function boundedDiscordText(value: string, limit = 1_024): string {
+  return value.length <= limit ? value : `${value.slice(0, Math.max(0, limit - 1))}…`;
+}
+
+export function buildIncidentAlertPayload(
+  provider: AlertProvider,
+  input: IncidentAlertData,
+): Record<string, unknown> {
+  const status = input.event === 'opened' ? 'open' : 'recovered';
+  const generic = {
+    type: `hooktrials.incident.${input.event}`,
+    incident: {
+      id: input.incident.id,
+      status,
+      cause: input.incident.cause,
+      summary: input.incident.summary,
+      openedAt: input.incident.openedAt,
+      recoveredAt: input.incident.recoveredAt,
+    },
+    integration: input.integration,
+  };
+  if (provider === 'generic') return generic;
+
+  return {
+    username: 'HookTrials',
+    allowed_mentions: { parse: [] },
+    embeds: [
+      {
+        title: `${input.event === 'opened' ? 'Incident opened' : 'Incident recovered'} · ${boundedDiscordText(input.integration.name, 180)}`,
+        description: boundedDiscordText(input.incident.summary, 2_048),
+        color: input.event === 'opened' ? 15_154_380 : 4_436_849,
+        fields: [
+          { name: 'Status', value: status, inline: true },
+          {
+            name: 'Environment',
+            value: boundedDiscordText(input.integration.environment),
+            inline: true,
+          },
+          { name: 'Source', value: boundedDiscordText(input.integration.type), inline: true },
+          { name: 'Cause', value: boundedDiscordText(input.incident.cause || 'unknown') },
+        ],
+        timestamp: new Date(
+          input.event === 'recovered'
+            ? (input.incident.recoveredAt ?? input.incident.openedAt)
+            : input.incident.openedAt,
+        ).toISOString(),
+        footer: { text: `HookTrials · ${input.incident.id}` },
+      },
+    ],
+  };
+}
+
+export function buildTestAlertPayload(
+  provider: AlertProvider,
+  sentAt = new Date(),
+): Record<string, unknown> {
+  if (provider === 'generic') {
+    return {
+      type: 'hooktrials.alert.test',
+      message: 'HookTrials outgoing alert channel is working.',
+      sentAt: sentAt.toISOString(),
+    };
+  }
+  return {
+    username: 'HookTrials',
+    allowed_mentions: { parse: [] },
+    embeds: [
+      {
+        title: 'HookTrials alert test',
+        description: 'Your Discord alert channel is configured correctly.',
+        color: 4_436_849,
+        timestamp: sentAt.toISOString(),
+      },
+    ],
+  };
+}
+
 function score(deductions: ScoreDeduction[]): ReliabilityScore {
   return {
     score: Math.max(0, 100 - deductions.reduce((total, item) => total + item.points, 0)),

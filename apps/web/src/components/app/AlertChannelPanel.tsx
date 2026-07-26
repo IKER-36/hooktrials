@@ -5,6 +5,9 @@ import { apiRequest, readableError } from '../../lib/api';
 interface Channel {
   id: string;
   displayHost: string;
+  provider: 'generic' | 'discord';
+  scopes: Array<'monitor' | 'webhook'>;
+  events: Array<'opened' | 'recovered'>;
   active: boolean;
   allowPrivateNetworks: boolean;
   allowedPrivateCidrs: string[];
@@ -23,6 +26,9 @@ export function AlertChannelPanel() {
   const [channel, setChannel] = useState<Channel | null>(null);
   const [url, setUrl] = useState('');
   const [headers, setHeaders] = useState('');
+  const [provider, setProvider] = useState<'generic' | 'discord'>('generic');
+  const [scopes, setScopes] = useState<Array<'monitor' | 'webhook'>>(['monitor', 'webhook']);
+  const [events, setEvents] = useState<Array<'opened' | 'recovered'>>(['opened', 'recovered']);
   const [active, setActive] = useState(true);
   const [allowPrivate, setAllowPrivate] = useState(false);
   const [cidrs, setCidrs] = useState('');
@@ -33,6 +39,9 @@ export function AlertChannelPanel() {
     const response = await apiRequest<{ channel: Channel | null }>('/v1/alert-channel');
     setChannel(response.channel);
     if (response.channel) {
+      setProvider(response.channel.provider);
+      setScopes(response.channel.scopes);
+      setEvents(response.channel.events);
       setActive(response.channel.active);
       setAllowPrivate(response.channel.allowPrivateNetworks);
       setCidrs(response.channel.allowedPrivateCidrs.join(', '));
@@ -49,13 +58,14 @@ export function AlertChannelPanel() {
     try {
       let parsedHeaders: Record<string, string> = {};
       if (headers.trim()) parsedHeaders = JSON.parse(headers) as Record<string, string>;
-      if (!url.trim() && channel)
-        throw new Error('Enter the URL again to rotate or change alert configuration.');
       await apiRequest('/v1/alert-channel', {
         method: 'PUT',
         body: JSON.stringify({
-          url,
-          headers: parsedHeaders,
+          ...(url.trim() ? { url: url.trim() } : {}),
+          ...(headers.trim() ? { headers: parsedHeaders } : {}),
+          provider,
+          scopes,
+          events,
           active,
           allowPrivateNetworks: setup?.deploymentMode === 'selfhost' ? allowPrivate : false,
           allowedPrivateCidrs:
@@ -87,6 +97,7 @@ export function AlertChannelPanel() {
     setMessage('');
     try {
       const result = await apiRequest<{
+        provider: 'generic' | 'discord';
         delivered: boolean;
         statusCode: number;
         latencyMs: number;
@@ -103,6 +114,18 @@ export function AlertChannelPanel() {
     }
   }
 
+  function toggleScope(scope: 'monitor' | 'webhook') {
+    setScopes((current) =>
+      current.includes(scope) ? current.filter((item) => item !== scope) : [...current, scope],
+    );
+  }
+
+  function toggleEvent(event: 'opened' | 'recovered') {
+    setEvents((current) =>
+      current.includes(event) ? current.filter((item) => item !== event) : [...current, event],
+    );
+  }
+
   return (
     <details className="ht-alert-panel">
       <summary>
@@ -110,20 +133,30 @@ export function AlertChannelPanel() {
           <b>Outgoing incident alerts</b>
           <small>
             {channel
-              ? `${channel.displayHost} · ${channel.active ? 'active' : 'paused'}`
+              ? `${channel.provider === 'discord' ? 'Discord' : 'Webhook'} · ${channel.displayHost} · ${channel.active ? 'active' : 'paused'}`
               : 'Not configured'}
           </small>
         </span>
-        <span>ONE WEBHOOK CHANNEL</span>
+        <span>MONITORS + WEBHOOKS</span>
       </summary>
       <form onSubmit={(event) => void save(event)}>
         <p>
-          HookTrials sends a redacted JSON notification when an incident opens or recovers. This
-          channel is separate from managed webhook destinations.
+          Send redacted incident notifications to Discord or your own webhook. Choose which product
+          areas and lifecycle events may notify this channel.
         </p>
         <div className="ht-monitor-form-grid">
+          <label className="ht-field">
+            Destination type
+            <select
+              value={provider}
+              onChange={(event) => setProvider(event.target.value as 'generic' | 'discord')}
+            >
+              <option value="discord">Discord</option>
+              <option value="generic">Generic webhook</option>
+            </select>
+          </label>
           <label className="ht-field ht-field-wide">
-            Alert URL {channel ? '(enter again only when updating)' : ''}
+            {provider === 'discord' ? 'Discord webhook URL' : 'Alert webhook URL'}
             <input
               type="url"
               value={url}
@@ -132,27 +165,81 @@ export function AlertChannelPanel() {
               placeholder={
                 channel
                   ? `Encrypted · ${channel.displayHost}`
-                  : 'https://alerts.example.com/hooktrials'
+                  : provider === 'discord'
+                    ? 'https://discord.com/api/webhooks/…'
+                    : 'https://alerts.example.com/hooktrials'
               }
             />
+            <small>
+              {channel
+                ? 'Leave empty to keep the encrypted URL already saved.'
+                : provider === 'discord'
+                  ? 'Discord → Server settings → Integrations → Webhooks → Copy webhook URL.'
+                  : 'HookTrials posts a stable, redacted JSON incident contract.'}
+            </small>
           </label>
-          <label className="ht-field ht-field-wide">
-            Headers (optional, write-only JSON)
-            <textarea
-              value={headers}
-              onChange={(event) => setHeaders(event.target.value)}
-              placeholder='{"authorization":"Bearer …"}'
-            />
-          </label>
-          <label className="ht-field">
-            <span>
+          {provider === 'generic' ? (
+            <label className="ht-field ht-field-wide">
+              Headers (optional, write-only JSON)
+              <textarea
+                value={headers}
+                onChange={(event) => setHeaders(event.target.value)}
+                placeholder='{"authorization":"Bearer …"}'
+              />
+              <small>Leave empty to keep existing encrypted headers.</small>
+            </label>
+          ) : null}
+        </div>
+        <div className="ht-alert-preferences">
+          <fieldset>
+            <legend>Notify for</legend>
+            <label>
               <input
                 type="checkbox"
-                checked={active}
-                onChange={(event) => setActive(event.target.checked)}
-              />{' '}
-              Channel active
-            </span>
+                checked={scopes.includes('monitor')}
+                disabled={scopes.length === 1 && scopes.includes('monitor')}
+                onChange={() => toggleScope('monitor')}
+              />
+              Monitoring incidents
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={scopes.includes('webhook')}
+                disabled={scopes.length === 1 && scopes.includes('webhook')}
+                onChange={() => toggleScope('webhook')}
+              />
+              Webhook delivery incidents
+            </label>
+          </fieldset>
+          <fieldset>
+            <legend>Lifecycle events</legend>
+            <label>
+              <input
+                type="checkbox"
+                checked={events.includes('opened')}
+                disabled={events.length === 1 && events.includes('opened')}
+                onChange={() => toggleEvent('opened')}
+              />
+              Incident opened
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={events.includes('recovered')}
+                disabled={events.length === 1 && events.includes('recovered')}
+                onChange={() => toggleEvent('recovered')}
+              />
+              Incident recovered
+            </label>
+          </fieldset>
+          <label className="ht-alert-active">
+            <input
+              type="checkbox"
+              checked={active}
+              onChange={(event) => setActive(event.target.checked)}
+            />
+            Channel active
           </label>
         </div>
         {setup?.deploymentMode === 'selfhost' ? (

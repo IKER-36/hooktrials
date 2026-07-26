@@ -1,6 +1,27 @@
 export type Locale = 'en' | 'es';
 
 export const es: Record<string, string> = {
+  'MONITORS + WEBHOOKS': 'MONITORES + WEBHOOKS',
+  'Send redacted incident notifications to Discord or your own webhook. Choose which product areas and lifecycle events may notify this channel.':
+    'Envía notificaciones redactadas de incidentes a Discord o a tu propio webhook. Elige qué áreas del producto y eventos del ciclo de vida pueden avisar a este canal.',
+  'Destination type': 'Tipo de destino',
+  'Generic webhook': 'Webhook genérico',
+  'Discord webhook URL': 'URL del webhook de Discord',
+  'Alert webhook URL': 'URL del webhook de alertas',
+  'Leave empty to keep the encrypted URL already saved.':
+    'Déjalo vacío para conservar la URL cifrada ya guardada.',
+  'Discord → Server settings → Integrations → Webhooks → Copy webhook URL.':
+    'Discord → Ajustes del servidor → Integraciones → Webhooks → Copiar URL del webhook.',
+  'HookTrials posts a stable, redacted JSON incident contract.':
+    'HookTrials envía un contrato JSON de incidentes estable y redactado.',
+  'Leave empty to keep existing encrypted headers.':
+    'Déjalo vacío para conservar los headers cifrados existentes.',
+  'Notify for': 'Notificar sobre',
+  'Monitoring incidents': 'Incidentes de monitorización',
+  'Webhook delivery incidents': 'Incidentes de entrega de webhooks',
+  'Lifecycle events': 'Eventos del ciclo de vida',
+  'Incident opened': 'Incidente abierto',
+  'Incident recovered': 'Incidente recuperado',
   'ONE WEBHOOK CHANNEL': 'UN CANAL WEBHOOK',
   'EMPTY BODY': 'CUERPO VACÍO',
   'Body hash': 'Hash del cuerpo',

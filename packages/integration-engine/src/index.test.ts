@@ -1,13 +1,86 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
+  buildIncidentAlertPayload,
+  buildTestAlertPayload,
   buildReliabilityReplay,
   calculateIntegrationReadiness,
   calculateMonitorScore,
   calculateWebhookScore,
   evaluateWebhookContract,
+  incidentAlertScope,
+  shouldDeliverIncidentAlert,
   verifyWebhookSignature,
 } from './index.js';
+
+describe('incident alert payloads', () => {
+  const incident = {
+    event: 'opened' as const,
+    incident: {
+      id: 'incident-1',
+      cause: 'timeout',
+      summary: 'Checkout API stopped responding.',
+      openedAt: '2026-07-26T10:00:00.000Z',
+      recoveredAt: null,
+    },
+    integration: {
+      id: 'resource-1',
+      name: 'Checkout API',
+      type: 'external_api',
+      environment: 'production',
+    },
+  };
+
+  it('keeps a machine-readable generic webhook contract', () => {
+    expect(buildIncidentAlertPayload('generic', incident)).toMatchObject({
+      type: 'hooktrials.incident.opened',
+      incident: { status: 'open', cause: 'timeout' },
+      integration: { name: 'Checkout API' },
+    });
+  });
+
+  it('creates a valid Discord embed without mention expansion', () => {
+    const payload = buildIncidentAlertPayload('discord', incident);
+    expect(payload).toMatchObject({
+      username: 'HookTrials',
+      allowed_mentions: { parse: [] },
+    });
+    expect(payload.embeds).toEqual([
+      expect.objectContaining({ title: 'Incident opened · Checkout API', color: 15_154_380 }),
+    ]);
+  });
+
+  it('creates provider-specific test payloads', () => {
+    const sentAt = new Date('2026-07-26T10:00:00.000Z');
+    expect(buildTestAlertPayload('generic', sentAt)).toMatchObject({
+      type: 'hooktrials.alert.test',
+    });
+    expect(buildTestAlertPayload('discord', sentAt)).toMatchObject({
+      embeds: [expect.objectContaining({ title: 'HookTrials alert test' })],
+    });
+  });
+
+  it('routes monitor and webhook incidents through explicit preferences', () => {
+    expect(incidentAlertScope({ monitorId: 'monitor-1' })).toBe('monitor');
+    expect(incidentAlertScope({ deliveryId: 'delivery-1' })).toBe('webhook');
+    expect(
+      shouldDeliverIncidentAlert({
+        scopes: ['monitor'],
+        events: ['opened'],
+        scope: 'monitor',
+        event: 'opened',
+      }),
+    ).toBe(true);
+    expect(
+      shouldDeliverIncidentAlert({
+        scopes: ['monitor'],
+        events: ['opened'],
+        scope: 'webhook',
+        event: 'opened',
+      }),
+    ).toBe(false);
+  });
+});
 
 describe('webhook signatures', () => {
   it('verifies GitHub HMAC and rejects malformed values', () => {

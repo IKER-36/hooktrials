@@ -43,6 +43,7 @@ import {
 } from '@hooktrials/database';
 import { createLogger } from '@hooktrials/logger';
 import {
+  buildTestAlertPayload,
   buildReliabilityReplay,
   calculateIntegrationReadiness,
   calculateMonitorScore,
@@ -1609,6 +1610,9 @@ app.get('/v1/alert-channel', async (request, reply) => {
     channel: {
       id: channel.id,
       displayHost: channel.displayHost,
+      provider: channel.provider,
+      scopes: channel.scopes,
+      events: channel.events,
       active: channel.active,
       allowPrivateNetworks: channel.allowPrivateNetworks,
       allowedPrivateCidrs: channel.allowedPrivateCidrs,
@@ -1622,12 +1626,31 @@ app.put('/v1/alert-channel', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   const input = alertChannelInputSchema.parse(request.body);
-  await validateTarget(input.url, monitorNetworkOptions(input));
+  const existing = (
+    await database.db.select().from(alertChannels).where(eq(alertChannels.userId, user.id)).limit(1)
+  )[0];
+  if (!input.url && !existing) {
+    return reply.code(400).send({ error: 'alert_channel_url_required' });
+  }
+  const url =
+    input.url ??
+    decryptValue(existing!.encryptedUrl, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8');
+  await validateTarget(url, monitorNetworkOptions(input));
   const value = {
     userId: user.id,
-    encryptedUrl: encryptValue(input.url, config.PAYLOAD_ENCRYPTION_KEY),
-    displayHost: new URL(input.url).host,
-    encryptedHeaders: encryptHeaders(input.headers),
+    encryptedUrl: input.url
+      ? encryptValue(url, config.PAYLOAD_ENCRYPTION_KEY)
+      : existing!.encryptedUrl,
+    displayHost: new URL(url).host,
+    encryptedHeaders:
+      input.provider === 'discord'
+        ? null
+        : input.headers === undefined
+          ? (existing?.encryptedHeaders ?? null)
+          : encryptHeaders(input.headers),
+    provider: input.provider,
+    scopes: input.scopes,
+    events: input.events,
     active: input.active,
     allowPrivateNetworks: input.allowPrivateNetworks,
     allowedPrivateCidrs: input.allowedPrivateCidrs,
@@ -1641,6 +1664,9 @@ app.put('/v1/alert-channel', async (request, reply) => {
       .returning({
         id: alertChannels.id,
         displayHost: alertChannels.displayHost,
+        provider: alertChannels.provider,
+        scopes: alertChannels.scopes,
+        events: alertChannels.events,
         active: alertChannels.active,
       })
   )[0];
@@ -1655,13 +1681,8 @@ app.post('/v1/alert-channel/test', async (request, reply) => {
   )[0];
   if (!channel) return reply.code(404).send({ error: 'alert_channel_not_configured' });
   const url = decryptValue(channel.encryptedUrl, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8');
-  const body = Buffer.from(
-    JSON.stringify({
-      type: 'hooktrials.alert.test',
-      message: 'HookTrials outgoing alert channel is working.',
-      sentAt: new Date().toISOString(),
-    }),
-  );
+  const provider = channel.provider === 'discord' ? 'discord' : 'generic';
+  const body = Buffer.from(JSON.stringify(buildTestAlertPayload(provider)));
   const response = await safeRequest(url, {
     method: 'POST',
     headers: {
@@ -1677,6 +1698,7 @@ app.post('/v1/alert-channel/test', async (request, reply) => {
     }),
   });
   return {
+    provider,
     delivered: response.statusCode >= 200 && response.statusCode < 300,
     statusCode: response.statusCode,
     latencyMs: response.latencyMs,

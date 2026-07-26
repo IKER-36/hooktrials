@@ -1,10 +1,43 @@
 import { describe, expect, it } from 'vitest';
 import {
+  alertChannelInputSchema,
   createEndpointInputSchema,
   destinationPreflightInputSchema,
   evidenceExportQuerySchema,
   syntheticEventInputSchema,
 } from './index.js';
+
+describe('alert channel input', () => {
+  it('keeps the existing generic behavior by default', () => {
+    expect(
+      alertChannelInputSchema.parse({ url: 'https://alerts.example.com/hooktrials' }),
+    ).toMatchObject({
+      provider: 'generic',
+      scopes: ['monitor', 'webhook'],
+      events: ['opened', 'recovered'],
+    });
+  });
+
+  it('allows rotating preferences without resubmitting a write-only URL', () => {
+    expect(
+      alertChannelInputSchema.parse({
+        provider: 'discord',
+        scopes: ['monitor'],
+        events: ['opened'],
+      }),
+    ).toMatchObject({ provider: 'discord', scopes: ['monitor'], events: ['opened'] });
+  });
+
+  it('requires at least one scope and one event', () => {
+    expect(() =>
+      alertChannelInputSchema.parse({
+        url: 'https://discord.com/api/webhooks/123/token',
+        provider: 'discord',
+        scopes: [],
+      }),
+    ).toThrow();
+  });
+});
 
 describe('createEndpointInputSchema', () => {
   it('keeps the existing endpoint creation flow in trial mode', () => {

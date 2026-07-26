@@ -136,8 +136,19 @@ export const destinationPreflightInputSchema = z.object({
 
 export const alertChannelInputSchema = z
   .object({
-    url: z.string().url().max(2_048),
-    headers: outboundHeadersSchema.default({}),
+    url: z.string().url().max(2_048).optional(),
+    provider: z.enum(['generic', 'discord']).default('generic'),
+    scopes: z
+      .array(z.enum(['monitor', 'webhook']))
+      .min(1)
+      .max(2)
+      .default(['monitor', 'webhook']),
+    events: z
+      .array(z.enum(['opened', 'recovered']))
+      .min(1)
+      .max(2)
+      .default(['opened', 'recovered']),
+    headers: outboundHeadersSchema.optional(),
     active: z.boolean().default(true),
     allowPrivateNetworks: z.boolean().default(false),
     allowedPrivateCidrs: z.array(z.string().max(64)).max(16).default([]),

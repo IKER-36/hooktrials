@@ -71,6 +71,13 @@
       "when": 1784290780141,
       "tag": "0009_awesome_shadow_king",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785066797690,
+      "tag": "0010_configurable-alert-channels",
+      "breakpoints": true
     }
   ]
 }

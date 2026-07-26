@@ -17,7 +17,12 @@ import {
   sessions,
 } from '@hooktrials/database';
 import { createLogger } from '@hooktrials/logger';
-import { calculateWebhookScore } from '@hooktrials/integration-engine';
+import {
+  buildIncidentAlertPayload,
+  calculateWebhookScore,
+  incidentAlertScope,
+  shouldDeliverIncidentAlert,
+} from '@hooktrials/integration-engine';
 import {
   deriveMonitorState,
   evaluateContract,
@@ -496,6 +501,16 @@ async function performIncidentAlert(incidentId: string, event: 'opened' | 'recov
       .limit(1)
   )[0];
   if (!row) return;
+  const scope = incidentAlertScope(row.incident.evidence);
+  if (
+    !shouldDeliverIncidentAlert({
+      scopes: row.channel.scopes,
+      events: row.channel.events,
+      scope,
+      event,
+    })
+  )
+    return;
   const delivery = (
     await database.db
       .insert(alertDeliveries)
@@ -517,24 +532,26 @@ async function performIncidentAlert(incidentId: string, event: 'opened' | 'recov
     const url = decryptValue(row.channel.encryptedUrl, config.PAYLOAD_ENCRYPTION_KEY).toString(
       'utf8',
     );
+    const provider = row.channel.provider === 'discord' ? 'discord' : 'generic';
     const body = Buffer.from(
-      JSON.stringify({
-        type: `hooktrials.incident.${event}`,
-        incident: {
-          id: row.incident.id,
-          status: event === 'opened' ? 'open' : 'recovered',
-          cause: row.incident.cause,
-          summary: row.incident.summary,
-          openedAt: row.incident.openedAt,
-          recoveredAt: row.incident.recoveredAt,
-        },
-        integration: {
-          id: row.resource.id,
-          name: row.resource.name,
-          type: row.resource.type,
-          environment: row.resource.environment,
-        },
-      }),
+      JSON.stringify(
+        buildIncidentAlertPayload(provider, {
+          event,
+          incident: {
+            id: row.incident.id,
+            cause: row.incident.cause,
+            summary: row.incident.summary,
+            openedAt: row.incident.openedAt,
+            recoveredAt: row.incident.recoveredAt,
+          },
+          integration: {
+            id: row.resource.id,
+            name: row.resource.name,
+            type: row.resource.type,
+            environment: row.resource.environment,
+          },
+        }),
+      ),
     );
     const response = await safeRequest(url, {
       method: 'POST',
