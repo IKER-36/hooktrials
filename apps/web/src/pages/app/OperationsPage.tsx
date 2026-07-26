@@ -63,7 +63,6 @@ export function OperationsPage() {
     <section className="ht-page" data-tour-section="operations" data-product-area="live">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Live operations</p>
           <h1>Operations</h1>
           <p className="ht-muted-line">
             Triage incidents, recover dead letters and verify alert delivery from one queue.
@@ -138,8 +137,7 @@ export function OperationsPage() {
           <section className="ht-operation-panel">
             <header>
               <div>
-                <p className="ht-kicker">Incident timeline</p>
-                <h2>What failed and recovered</h2>
+                <h2>Incident timeline</h2>
               </div>
               <span>{data.incidents.length} retained</span>
             </header>
@@ -183,8 +181,7 @@ export function OperationsPage() {
           <section className="ht-operation-panel">
             <header>
               <div>
-                <p className="ht-kicker">Dead-letter inbox</p>
-                <h2>Deliveries needing a decision</h2>
+                <h2>Dead-letter inbox</h2>
               </div>
               <label className="ht-operation-toggle">
                 <input
@@ -262,8 +259,7 @@ export function OperationsPage() {
           <section className="ht-operation-panel">
             <header>
               <div>
-                <p className="ht-kicker">Alert audit</p>
-                <h2>Recent outgoing notifications</h2>
+                <h2>Alert audit</h2>
               </div>
               <span>{data.alerts.length} deliveries</span>
             </header>

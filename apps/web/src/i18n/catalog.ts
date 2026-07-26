@@ -359,6 +359,7 @@ export const es: Record<string, string> = {
   'Search routes, monitoring, recovery…': 'Buscar rutas, monitorización, recuperación…',
   'Integration workspace': 'Espacio de integraciones',
   'Control Center': 'Centro de control',
+  'Selected route:': 'Ruta seleccionada:',
   'Integration reliability, now': 'Fiabilidad de integraciones, ahora',
   'Control surface': 'Superficie de control',
   'Integration readiness': 'Preparación de la integración',

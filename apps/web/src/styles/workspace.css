@@ -455,6 +455,34 @@ html[data-theme='dark'] .ht-shell .ht-status-share-actions button.danger {
   color: var(--ht-red);
 }
 
+/* Destructive row actions must read as destructive at rest, not only on hover,
+   and must survive the dark surface overrides above. Absorbed into the single
+   button contract when the style layers are consolidated. */
+.ht-shell .ht-endpoint-actions button.danger,
+.ht-shell .ht-monitor-actions button.danger,
+.ht-shell .ht-status-page-actions button.danger,
+.ht-shell .ht-step-card > footer button.danger,
+html[data-theme='dark'] .ht-shell .ht-endpoint-actions button.danger,
+html[data-theme='dark'] .ht-shell .ht-monitor-actions button.danger,
+html[data-theme='dark'] .ht-shell .ht-status-page-actions button.danger,
+html[data-theme='dark'] .ht-shell .ht-step-card > footer button.danger {
+  color: var(--ht-red);
+  background: #ff21570a;
+  border-color: #ff215766;
+}
+
+/* Page subject line: the object the page is currently acting on, kept
+   subordinate to the stable page title. */
+.ht-page-subject {
+  margin: 4px 0 0;
+  color: var(--ht-muted);
+  font-size: 12px;
+}
+.ht-page-subject b {
+  color: var(--ht-ink);
+  font-weight: 650;
+}
+
 html[data-theme='dark'] .ht-shell .ht-status-share-url {
   background: var(--ht-surface-2);
   border-color: var(--ht-hairline);

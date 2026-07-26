@@ -87,7 +87,6 @@ export function EndpointsPage() {
     <section className="ht-page" data-tour-section="endpoints" data-product-area="lab">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Reliability Lab</p>
           <h1>Trial endpoints</h1>
           <p className="ht-muted-line">
             Exercise failure and retry behaviour with synthetic traffic, completely separate from

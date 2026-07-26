@@ -213,7 +213,6 @@ export function LiveWebhooksPage() {
     >
       <header className="ht-page-head ht-live-head">
         <div>
-          <p className="ht-kicker">Live traffic</p>
           <h1>Webhook Hub</h1>
           <p className="ht-muted-line">
             Put HookTrials between every provider and your backend. Inspect the complete request,

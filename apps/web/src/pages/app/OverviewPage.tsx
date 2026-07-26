@@ -110,7 +110,6 @@ export function OverviewPage() {
       <section className="ht-page" data-tour-section="overview" data-product-area="control">
         <header className="ht-page-head">
           <div>
-            <p className="ht-kicker">Control plane</p>
             <h1>Control Center</h1>
           </div>
         </header>
@@ -142,8 +141,10 @@ export function OverviewPage() {
     <section className="ht-page" data-tour-section="overview" data-product-area="control">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Control plane · selected route</p>
-          <h1>{selected.name}</h1>
+          <h1>Control Center</h1>
+          <p className="ht-page-subject">
+            Selected route: <b>{selected.name}</b>
+          </p>
         </div>
         <div className="ht-page-head-actions">
           {endpoints.length > 1 ? (

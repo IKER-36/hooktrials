@@ -2,7 +2,19 @@
 
 Updated: 26 July 2026.
 
-## Release `v0.12.1`
+## Release `v0.12.2`
+
+Release `v0.12.2` makes the dashboard easier to navigate by naming every screen after the menu
+entry that opens it:
+
+- Control Center, Failure scenarios, Guided demo and Documentation now match their navigation
+  labels;
+- Control Center keeps its own title and shows the selected route beneath it;
+- page headings no longer repeat the breadcrumb above them;
+- Operations and Monitoring panels are named after the evidence they hold;
+- delete controls read as destructive in both themes.
+
+## Previous release `v0.12.1`
 
 Release `v0.12.1` makes alert setup easier to find and the dashboard's action controls easier to
 understand:

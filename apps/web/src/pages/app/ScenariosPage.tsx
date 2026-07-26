@@ -112,8 +112,7 @@ export function ScenariosPage() {
     <section className="ht-page" data-tour-section="scenarios" data-product-area="lab">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Reliability Lab</p>
-          <h1>Scenario Studio</h1>
+          <h1>Failure scenarios</h1>
           <p className="ht-muted-line">
             Model the exact response sequence your webhook sender must survive.
           </p>

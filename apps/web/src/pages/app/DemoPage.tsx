@@ -363,8 +363,7 @@ export function DemoPage() {
     <section className="ht-page ht-demo-lab" data-tour-section="demo" data-product-area="lab">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Reliability Lab · guided demo</p>
-          <h1>Break it. Observe it. Recover it.</h1>
+          <h1>Guided demo</h1>
           <p className="ht-muted-line">
             One click fills every HookTrials module with a realistic, synthetic reliability
             workspace.

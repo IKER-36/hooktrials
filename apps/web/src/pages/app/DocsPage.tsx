@@ -233,8 +233,7 @@ export function DocsPage() {
     <section className="ht-page ht-docs" data-tour-section="docs" data-product-area="resources">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Resources</p>
-          <h1>Docs</h1>
+          <h1>Documentation</h1>
           <p className="ht-muted-line">
             What every module does, when to use it and how to verify the result.
           </p>

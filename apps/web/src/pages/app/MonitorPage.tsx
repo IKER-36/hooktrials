@@ -148,7 +148,6 @@ export function MonitorPage() {
     <section className="ht-page" data-tour-section="monitor" data-product-area="live">
       <header className="ht-page-head">
         <div>
-          <p className="ht-kicker">Live operations</p>
           <h1>Monitoring</h1>
           <p className="ht-muted-line">Know what failed, where it failed and when it recovered.</p>
         </div>
@@ -240,7 +239,6 @@ export function MonitorPage() {
         <section className="ht-managed-routes" aria-label="Managed webhook routes">
           <header>
             <div>
-              <p className="ht-kicker">Passive signals</p>
               <h2>Managed webhook routes</h2>
             </div>
             <span>Provider → validation → destination</span>
@@ -381,7 +379,6 @@ function UnifiedIntegrationTable({
     <section className="ht-integration-table" aria-label="All integrations">
       <header>
         <div>
-          <p className="ht-kicker">Unified inventory</p>
           <h2>All integrations</h2>
         </div>
         <span>Active checks + real webhook traffic</span>
@@ -522,7 +519,6 @@ function StatusPagesPanel({
     <section className="ht-status-pages">
       <header>
         <div>
-          <p className="ht-kicker">Public communication</p>
           <h2>Status pages</h2>
           <p>Publish a branded, read-only view containing only the monitors you choose.</p>
         </div>
@@ -768,9 +764,8 @@ function MonitorForm({
     <form className="ht-monitor-create" onSubmit={(event) => void submit(event)}>
       <header>
         <div>
-          <p className="ht-kicker">{monitor ? 'Edit integration' : 'New integration'}</p>
           <h2 id={monitor ? 'edit-monitor-title' : undefined}>
-            {monitor ? 'Update active monitoring' : 'Configure active monitoring'}
+            {monitor ? 'Edit integration' : 'New integration'}
           </h2>
         </div>
         <span>Secrets encrypted at rest</span>
@@ -1144,8 +1139,7 @@ function MonitorDetail({
       </section>
       <section className="ht-status-share">
         <div>
-          <p className="ht-kicker">Public status</p>
-          <h3>Share availability without exposing credentials</h3>
+          <h3>Public status</h3>
           <p>
             Publishes the integration name, monitored host, health metrics, recent checks and
             incident summaries. Authentication headers and response bodies are never included.
@@ -1213,7 +1207,6 @@ function MonitorDetail({
       <section className="ht-monitor-history">
         <header>
           <div>
-            <p className="ht-kicker">Evidence</p>
             <h3>Recent checks</h3>
           </div>
           <small>Auto-refreshes every 10s</small>
