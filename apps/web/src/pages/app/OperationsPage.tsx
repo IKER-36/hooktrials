@@ -73,8 +73,6 @@ export function OperationsPage() {
         </button>
       </header>
 
-      <AlertChannelPanel />
-
       {error && data ? (
         <ProductState
           compact
@@ -295,6 +293,11 @@ export function OperationsPage() {
           </section>
         </>
       )}
+
+      {/* Configuration sits after the triage evidence, but outside the data
+          branch so alerts stay reachable — and the #alert-channel anchor keeps
+          working — even when the operations request fails. */}
+      <AlertChannelPanel />
 
       <ConfirmDialog
         open={pendingAction !== null}

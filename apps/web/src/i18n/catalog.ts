@@ -360,6 +360,7 @@ export const es: Record<string, string> = {
   'Integration workspace': 'Espacio de integraciones',
   'Control Center': 'Centro de control',
   'Selected route:': 'Ruta seleccionada:',
+  'Open in Control Center': 'Abrir en el centro de control',
   'Integration reliability, now': 'Fiabilidad de integraciones, ahora',
   'Control surface': 'Superficie de control',
   'Integration readiness': 'Preparación de la integración',
@@ -1222,6 +1223,7 @@ export const es: Record<string, string> = {
 };
 
 export const phrasePatterns: Array<[RegExp, (match: RegExpMatchArray) => string]> = [
+  [/^Open (.+) in Control Center$/, (m) => `Abrir ${m[1]} en el centro de control`],
   [
     /^Reachable(?: · HTTP (\d+))?(?: · (\d+) ms)?$/,
     (m) => `Accesible${m[1] ? ` · HTTP ${m[1]}` : ''}${m[2] ? ` · ${m[2]} ms` : ''}`,

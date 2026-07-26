@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { EndpointTemplates } from '../../components/app/EndpointTemplates';
 import { ScenarioPicker } from '../../components/app/ScenarioPicker';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -218,6 +219,7 @@ export function EndpointsPage() {
                     selectEndpoint(endpoint.id);
                     navigate('/app');
                   }}
+                  aria-label={`Open ${endpoint.name} in Control Center`}
                 >
                   <span className={`ht-listen ${endpoint.active ? 'on' : 'off'}`}>
                     <i aria-hidden="true" />
@@ -229,6 +231,10 @@ export function EndpointsPage() {
                       {endpoint.scenarioName ?? 'Basic inspection'} · {endpoint.tokenPrefix}… ·
                       created {shortDate(endpoint.createdAt)}
                     </small>
+                  </span>
+                  <span className="ht-endpoint-open" aria-hidden="true">
+                    Open in Control Center
+                    <ArrowRight />
                   </span>
                 </button>
                 <div className="ht-endpoint-actions">

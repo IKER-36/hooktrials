@@ -452,6 +452,32 @@ html[data-theme='dark'] .ht-shell .ht-status-share-url button {
   box-shadow: none;
 }
 
+/* Row navigation affordance. The row body opens the route in Control Center,
+   which was previously indistinguishable from the actions sitting beside it. */
+.ht-endpoint-open {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-left: auto;
+  padding-right: 4px;
+  color: var(--ht-faint);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.ht-endpoint-open > svg {
+  width: 14px;
+  height: 14px;
+}
+.ht-endpoint-select:hover .ht-endpoint-open,
+.ht-endpoint-select:focus-visible .ht-endpoint-open {
+  color: var(--ht-green);
+}
+@media (max-width: 760px) {
+  .ht-endpoint-open {
+    display: none;
+  }
+}
+
 /* Page subject line: the object the page is currently acting on, kept
    subordinate to the stable page title. */
 .ht-page-subject {
