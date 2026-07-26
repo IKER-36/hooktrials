@@ -18,12 +18,18 @@ to deliver:
 - Guided Demo mutations are serialized per account, while cleanup remains constrained to the
   authenticated user and exact run identifier.
 
-The local release gate passes formatting, ESLint, strict TypeScript, 150 automated tests and all
+The release gate passes formatting, ESLint, strict TypeScript, 150 automated tests and all
 production builds. Functional validation covers signed safe traffic, private/public evidence
 exports, real alert payload delivery, concurrent demo setup, scoped cleanup and preservation of
 ordinary same-user resources. Browser validation covers English/Spanish and light/dark changed
-states without console errors. CubePath promotion remains pending until the immutable `v0.12.0`
-images complete their release workflow.
+states without console errors.
+
+The immutable AMD64/ARM64 images were promoted backup-first to CubePath on 26 July 2026. Migration
+`0010` added the alert provider and scope fields. All eight services and four public origins passed
+health checks. A disposable production account then passed destination preflight, scoped Discord
+test delivery, signed Protect ingestion and recovery, authenticated and public JSON/Markdown
+exports, share revocation and exact ten-resource demo cleanup; the account and all QA data were
+removed afterwards.
 
 ## Previous release `v0.11.3`
 
