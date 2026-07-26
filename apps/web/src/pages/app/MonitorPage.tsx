@@ -152,13 +152,18 @@ export function MonitorPage() {
           <h1>Monitoring</h1>
           <p className="ht-muted-line">Know what failed, where it failed and when it recovered.</p>
         </div>
-        <button
-          type="button"
-          className="button primary"
-          onClick={() => setShowCreate((value) => !value)}
-        >
-          {showCreate ? 'Close form' : 'New monitor'}
-        </button>
+        <div className="ht-page-head-actions">
+          <Link className="button secondary compact" to="/app/operations#alert-channel">
+            Configure alerts
+          </Link>
+          <button
+            type="button"
+            className="button primary"
+            onClick={() => setShowCreate((value) => !value)}
+          >
+            {showCreate ? 'Close form' : 'New monitor'}
+          </button>
+        </div>
       </header>
 
       <section className="ht-monitor-summary" aria-label="Monitor summary">

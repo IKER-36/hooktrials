@@ -74,6 +74,8 @@ export function OperationsPage() {
         </button>
       </header>
 
+      <AlertChannelPanel />
+
       {error && data ? (
         <ProductState
           compact
@@ -296,7 +298,6 @@ export function OperationsPage() {
         </>
       )}
 
-      <AlertChannelPanel />
       <ConfirmDialog
         open={pendingAction !== null}
         title={`${pendingAction?.kind === 'replay' ? 'Replay' : 'Retry'} this delivery?`}

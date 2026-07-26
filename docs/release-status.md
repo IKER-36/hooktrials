@@ -2,34 +2,15 @@
 
 Updated: 26 July 2026.
 
-## Release `v0.12.0`
+## Release `v0.12.1`
 
-Release `v0.12.0` makes real integration setup safer and the resulting operational evidence easier
-to deliver:
+Release `v0.12.1` makes alert setup easier to find and the dashboard's action controls easier to
+understand:
 
-- Webhook Hub can preflight a configured destination without sending payload data, then run an
-  explicit signed synthetic event through the real ingestion and destination path;
-- event evidence downloads as redacted JSON or Markdown from the same projection used by expiring
-  public reports;
-- Operations supports generic-webhook JSON and native Discord alerts, independently scoped to
-  Monitor or Webhook incidents and opened or recovered events;
-- Product and Lab expose actionable empty, failure and retry states instead of blank surfaces or
-  indefinite loading;
-- Guided Demo mutations are serialized per account, while cleanup remains constrained to the
-  authenticated user and exact run identifier.
-
-The release gate passes formatting, ESLint, strict TypeScript, 150 automated tests and all
-production builds. Functional validation covers signed safe traffic, private/public evidence
-exports, real alert payload delivery, concurrent demo setup, scoped cleanup and preservation of
-ordinary same-user resources. Browser validation covers English/Spanish and light/dark changed
-states without console errors.
-
-The immutable AMD64/ARM64 images were promoted backup-first to CubePath on 26 July 2026. Migration
-`0010` added the alert provider and scope fields. All eight services and four public origins passed
-health checks. A disposable production account then passed destination preflight, scoped Discord
-test delivery, signed Protect ingestion and recovery, authenticated and public JSON/Markdown
-exports, share revocation and exact ten-resource demo cleanup; the account and all QA data were
-removed afterwards.
+- Discord and generic webhook alerts are available at the top of Operations and from Monitoring;
+- monitor, route, operations and public-status actions now share a clear button treatment;
+- dark mode keeps action controls and public-status controls readable;
+- the landing header stays aligned on wide screens and changes to the compact menu when needed.
 
 ## Previous release `v0.11.3`
 

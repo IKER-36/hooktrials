@@ -3362,10 +3362,12 @@
 .ht-delivery-actions button {
   padding: 6px 8px;
   color: var(--ht-orange);
-  background: transparent;
+  background: var(--ht-surface-2);
   border: 1px solid #6a3a16;
+  border-radius: 7px;
   cursor: pointer;
   font-size: 10px;
+  font-weight: 650;
   text-transform: uppercase;
 }
 .ht-delivery-actions button:hover {

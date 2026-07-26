@@ -684,8 +684,22 @@ html[data-theme='dark'] body {
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
+  color: var(--ht-ink);
   background: var(--surface-soft);
   font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: 150ms ease;
+}
+
+.ht-live-route-actions > button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--surface-soft) 82%, var(--accent));
+}
+
+.ht-live-route-actions > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .ht-live-route-actions > small {

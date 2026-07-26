@@ -638,10 +638,24 @@ pre {
 }
 .ht-status-page-actions button,
 .ht-status-page-actions a {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
   padding: 8px 10px;
   border: 1px solid var(--ht-hairline-bright);
   border-radius: 8px;
   font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: 150ms ease;
+}
+.ht-status-page-actions button:hover:not(:disabled),
+.ht-status-page-actions a:hover {
+  border-color: var(--ht-green);
+  background: var(--ht-positive-bg);
+}
+.ht-status-page-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 .ht-status-page-actions .danger {
   color: var(--ht-red);
@@ -977,16 +991,25 @@ pre {
   color: inherit;
 }
 .ht-endpoint-actions button {
-  color: #526075;
-  background: rgba(248, 250, 252, 0.8);
-  border: 1px solid var(--ht-hairline);
-  border-radius: 9px;
-  font-family: var(--ht-sans);
-}
-.ht-endpoint-actions button:hover {
   color: var(--ht-ink);
-  background: #fff;
-  border-color: var(--ht-hairline-bright);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 9px;
+  padding: 7px 10px;
+  font-family: var(--ht-sans);
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: 150ms ease;
+}
+.ht-endpoint-actions button:hover:not(:disabled) {
+  color: var(--ht-ink);
+  background: var(--ht-positive-bg);
+  border-color: var(--ht-green);
+}
+.ht-endpoint-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* Monitor */
@@ -1060,12 +1083,28 @@ pre {
   background: #eef2f6;
 }
 .ht-monitor-actions button {
-  color: #465166;
-  background: rgba(248, 250, 252, 0.75);
-  border: 1px solid var(--ht-hairline);
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
   border-radius: 9px;
+  padding: 8px 10px;
   font-family: var(--ht-sans);
+  font-size: 11px;
+  font-weight: 650;
   text-transform: none;
+  cursor: pointer;
+  transition: 150ms ease;
+}
+.ht-monitor-actions button:hover:not(:disabled),
+.ht-operation-actions button:hover:not(:disabled) {
+  color: var(--ht-ink);
+  border-color: var(--ht-green);
+  background: var(--ht-positive-bg);
+}
+.ht-monitor-actions button:disabled,
+.ht-operation-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 .ht-monitor-incident {
   color: #9f2730;
@@ -1151,9 +1190,16 @@ pre {
   border-radius: 10px;
 }
 .ht-operation-actions button {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
   border-radius: 8px;
+  padding: 7px 10px;
   font-family: var(--ht-sans);
+  font-size: 11px;
+  font-weight: 650;
   text-transform: none;
+  cursor: pointer;
 }
 .ht-alert-panel > summary,
 .ht-route-config > summary {
@@ -1787,10 +1833,20 @@ pre {
   padding: 7px 10px;
   border: 1px solid var(--ht-hairline-bright);
   border-radius: 9px;
-  background: #fff;
-  color: #334155;
+  background: var(--ht-surface-2);
+  color: var(--ht-ink);
   font: 600 10px var(--ht-sans);
   cursor: pointer;
+  transition: 150ms ease;
+}
+.ht-status-share-actions button:hover:not(:disabled),
+.ht-status-share-url button:hover:not(:disabled) {
+  border-color: var(--ht-green);
+  background: var(--ht-positive-bg);
+}
+.ht-status-share-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 .ht-status-share-actions button.danger {
   color: #b4232a;

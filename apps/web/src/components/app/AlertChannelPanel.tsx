@@ -127,7 +127,7 @@ export function AlertChannelPanel() {
   }
 
   return (
-    <details className="ht-alert-panel">
+    <details id="alert-channel" className="ht-alert-panel" open={!channel}>
       <summary>
         <span>
           <b>Outgoing incident alerts</b>
