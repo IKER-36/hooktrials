@@ -1316,11 +1316,6 @@ html[data-theme]
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ht-green) 14%, transparent);
 }
 
-/* Inventories, lists and tables */
-.ht-integration-table {
-  overflow: hidden;
-}
-
 .ht-integration-table-head {
   min-height: 38px;
   color: var(--ht-faint);
@@ -1428,7 +1423,6 @@ html[data-theme] .ht-route-mode-help article.active:hover {
 
 /* Readiness and replay */
 .ht-readiness {
-  overflow: hidden;
   grid-template-columns: minmax(220px, 0.28fr) minmax(0, 1fr);
 }
 
@@ -1502,9 +1496,9 @@ html[data-theme='dark'] .ht-backdrop {
   width: min(720px, 100%);
   max-height: calc(100dvh - 36px);
   overflow: hidden;
-  color: var(--ht-ink);
+
   background: var(--ht-panel-solid);
-  border-color: var(--ht-hairline-bright);
+
   border-radius: 12px;
 }
 
@@ -1780,7 +1774,6 @@ html[data-theme]
 }
 
 .ht-public-status {
-  color: var(--ht-ink);
   background: var(--ht-surface-1);
   border: 1px solid var(--ht-hairline-bright);
   box-shadow: 0 1px 3px var(--ht-shadow);
@@ -2030,9 +2023,9 @@ html[data-theme='dark']
     position: fixed;
     z-index: 29;
     inset: auto 0 0;
-    display: grid;
+
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 2px;
+
     min-height: 68px;
     padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
     overflow: hidden;

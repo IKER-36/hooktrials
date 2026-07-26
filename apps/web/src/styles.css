@@ -11,13 +11,11 @@ html,
 body {
   min-width: 320px;
   min-height: 100%;
-  background: var(--ht-bg);
 }
 body {
   min-height: 100vh;
   margin: 0;
-  color: var(--ht-ink);
-  font-family: var(--ht-sans);
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -36,10 +34,6 @@ select {
 a {
   color: inherit;
   text-decoration: none;
-}
-code,
-pre {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
 .sr-only {
   position: absolute;
