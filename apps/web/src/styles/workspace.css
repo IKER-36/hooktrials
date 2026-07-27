@@ -623,7 +623,9 @@ html[data-theme] .ht-shell .ht-integration-table > button:nth-of-type(even) {
   border-radius: 0;
 }
 
-/* Mobile navigation remains complete and scrollable instead of squeezing eight modules. */
+/* Mobile navigation shows the four production modules plus one More control, so
+   every destination is reachable without a hidden horizontal scroll. Eight
+   fixed-width items needed 702px of track and only four fitted on a phone. */
 @media (max-width: 980px) {
   .ht-workspace-context {
     min-height: 32px;
@@ -631,19 +633,85 @@ html[data-theme] .ht-shell .ht-integration-table > button:nth-of-type(even) {
   }
 
   .ht-mobilenav {
-    display: flex;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 2px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    overflow: visible;
   }
 
-  .ht-mobilenav::-webkit-scrollbar {
-    display: none;
+  .ht-mobilenav > a,
+  .ht-mobilenav > button {
+    min-width: 0;
   }
 
-  .ht-mobilenav a {
-    flex: 0 0 72px;
+  .ht-mobilenav > a > span,
+  .ht-mobilenav > button > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Secondary modules, raised above the bar. */
+  .ht-mobilemore-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: var(--ht-z-tour-scrim);
+    background: var(--ht-overlay);
+  }
+
+  .ht-mobilemore {
+    position: fixed;
+    z-index: var(--ht-z-tour-target);
+    inset: auto 0 68px;
+    display: grid;
+    gap: 14px;
+    max-height: 60dvh;
+    overflow-y: auto;
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+    background: var(--ht-panel-solid);
+    border-top: 1px solid var(--ht-hairline-bright);
+  }
+
+  .ht-mobilemore > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .ht-mobilemore > div > p {
+    margin: 0 4px 4px;
+    color: var(--ht-faint);
+    font: 650 9px/1.2 var(--ht-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ht-mobilemore a {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    min-height: 46px;
+    padding: 8px 10px;
+    color: var(--ht-muted);
+    border-radius: var(--ht-radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .ht-mobilemore a > svg {
+    flex: none;
+    width: 17px;
+    height: 17px;
+  }
+
+  .ht-mobilemore a > small {
+    margin-left: auto;
+    color: var(--ht-muted);
+    font: 650 10px/1 var(--ht-mono);
+  }
+
+  .ht-mobilemore a.active {
+    color: var(--ht-ink);
+    background: color-mix(in srgb, var(--ht-green) 10%, transparent);
   }
 }
 

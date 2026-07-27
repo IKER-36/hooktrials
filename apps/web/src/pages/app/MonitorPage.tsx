@@ -115,7 +115,7 @@ export function MonitorPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="monitor" data-product-area="live">
+    <section className="ht-page" data-tour-section="monitor" data-product-area="product">
       <header className="ht-page-head">
         <div>
           <h1>Monitoring</h1>

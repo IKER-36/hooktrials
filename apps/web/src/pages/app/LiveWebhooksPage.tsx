@@ -208,7 +208,7 @@ export function LiveWebhooksPage() {
   return (
     <section
       className="ht-page ht-live-webhooks"
-      data-product-area="live"
+      data-product-area="product"
       data-tour-section="live-webhooks"
     >
       <header className="ht-page-head ht-live-head">

@@ -60,7 +60,7 @@ export function OperationsPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="operations" data-product-area="live">
+    <section className="ht-page" data-tour-section="operations" data-product-area="product">
       <header className="ht-page-head">
         <div>
           <h1>Operations</h1>

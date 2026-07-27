@@ -11,6 +11,7 @@ import {
   BookOpen,
   LogOut,
   Moon,
+  MoreHorizontal,
   PanelLeftClose,
   PanelLeftOpen,
   Radar,
@@ -86,6 +87,7 @@ export function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem('ht.sidebarCollapsed') === 'true',
   );
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -99,7 +101,17 @@ export function AppLayout() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    setMoreOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMoreOpen(false);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [moreOpen]);
 
   useEffect(() => {
     if (authLoading || !user || tourDecided) return;
@@ -284,10 +296,11 @@ export function AppLayout() {
       areaLabel: group.contextLabel ?? group.label,
     })),
   );
-  const activeModule =
-    navigationItems.find((item) =>
-      item.end ? location.pathname === item.to : location.pathname.startsWith(item.to),
-    ) ?? navigationItems[0]!;
+  const isCurrent = (item: { to: string; end?: boolean }) =>
+    item.end ? location.pathname === item.to : location.pathname.startsWith(item.to);
+  const activeModule = navigationItems.find(isCurrent) ?? navigationItems[0]!;
+  const secondaryGroups = navigation.filter((group) => group.id !== 'product');
+  const secondaryActive = secondaryGroups.some((group) => group.items.some(isCurrent));
 
   return (
     <div className={`ht-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -322,14 +335,50 @@ export function AppLayout() {
           </button>
         </div>
       </header>
+      {/* The bar carries the four production modules plus More. Eight fixed-width
+          items needed 702px of track, so half of them were unreachable on a
+          phone behind a scroll with no scrollbar and no other affordance. */}
       <nav className="ht-mobilenav" aria-label="Dashboard sections">
-        {navigationItems.map(({ to, label, icon: Icon, end }) => (
+        {navigation[0]!.items.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} aria-label={label}>
             <Icon aria-hidden="true" />
             <span>{label}</span>
           </NavLink>
         ))}
+        <button
+          type="button"
+          className={secondaryActive ? 'active' : undefined}
+          onClick={() => setMoreOpen((value) => !value)}
+          aria-expanded={moreOpen}
+          aria-controls="ht-mobilemore"
+        >
+          <MoreHorizontal aria-hidden="true" />
+          <span>More</span>
+        </button>
       </nav>
+      {moreOpen ? (
+        <>
+          <div
+            className="ht-mobilemore-scrim"
+            role="presentation"
+            onClick={() => setMoreOpen(false)}
+          />
+          <div className="ht-mobilemore" id="ht-mobilemore">
+            {secondaryGroups.map((group) => (
+              <div key={group.id}>
+                <p>{group.label}</p>
+                {group.items.map(({ to, label, icon: Icon, count, end }) => (
+                  <NavLink key={to} to={to} end={end} onClick={() => setMoreOpen(false)}>
+                    <Icon aria-hidden="true" />
+                    <span>{label}</span>
+                    {count !== undefined ? <small>{count}</small> : null}
+                  </NavLink>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
 
       <aside className="ht-sidebar">
         <div className="ht-sidebar-brand">

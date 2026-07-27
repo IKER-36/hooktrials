@@ -192,6 +192,7 @@ export const es: Record<string, string> = {
   Product: 'Producto',
   'Production workspace': 'Espacio productivo',
   Lab: 'Laboratorio',
+  More: 'Más',
   Monitoring: 'Monitorización',
   'Reliability Lab': 'Laboratorio de fiabilidad',
   'Reliability Lab · guided demo': 'Laboratorio de fiabilidad · demo guiada',

@@ -107,7 +107,7 @@ export function OverviewPage() {
 
   if (!selected) {
     return (
-      <section className="ht-page" data-tour-section="overview" data-product-area="control">
+      <section className="ht-page" data-tour-section="overview" data-product-area="product">
         <header className="ht-page-head">
           <div>
             <h1>Control Center</h1>
@@ -138,7 +138,7 @@ export function OverviewPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="overview" data-product-area="control">
+    <section className="ht-page" data-tour-section="overview" data-product-area="product">
       <header className="ht-page-head">
         <div>
           <h1>Control Center</h1>
