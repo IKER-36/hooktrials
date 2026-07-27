@@ -1,6 +1,7 @@
 export type Locale = 'en' | 'es';
 
 export const es: Record<string, string> = {
+  'View releases': 'Ver releases',
   'Another Demo Lab operation is still finishing. Wait a moment and try again.':
     'Otra operación de Demo Lab todavía está terminando. Espera un momento y vuelve a intentarlo.',
   'Next action': 'Siguiente acción',

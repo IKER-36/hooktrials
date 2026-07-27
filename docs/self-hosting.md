@@ -62,6 +62,32 @@ application. Never expose PostgreSQL or Redis ports.
 ./hooktrials down
 ```
 
+### Updating without losing data
+
+Self-hosted updates are currently operator-driven. The repository checkout is the update source;
+`./hooktrials update` rebuilds the code already checked out and recreates changed containers. It
+does not run `git pull`, select a release, or create a backup automatically.
+
+Use this sequence for a release update:
+
+```bash
+git status --short                 # keep local changes out of production
+git fetch --tags origin
+git checkout v0.12.4               # replace with the release you want
+./hooktrials backup                # do this before every update
+./hooktrials update
+./hooktrials doctor --external     # omit --external for local-only mode
+```
+
+PostgreSQL and Redis live in named Docker volumes, while `.hooktrials/runtime.env` is ignored and
+preserved. Updating the checkout or rebuilding containers therefore keeps users, endpoints,
+events and encryption keys. Never run `./hooktrials reset --yes` as part of an update: it deletes
+the volumes and runtime secrets. Keep the backup and encrypted runtime configuration off-host so a
+failed migration or host loss has a recovery path.
+
+There is no automatic in-app update notifier or unattended updater yet. A future updater can wrap
+the same flow with release selection, backup, migration health checks, smoke tests and rollback.
+
 `./hooktrials reset --yes` permanently deletes PostgreSQL, Redis data and generated runtime secrets.
 
 ## Backups

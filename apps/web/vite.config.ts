@@ -1,5 +1,12 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const rootPackage = JSON.parse(
+  readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'),
+) as { version?: string };
+const appVersion = process.env.VITE_APP_VERSION ?? rootPackage.version ?? 'dev';
 
 // Local UI development proxies same-origin `/api` and `/i` to a running local
 // stack, so the dev server needs no CORS exception and keeps session cookies.
@@ -22,6 +29,9 @@ interface ProxyRequest {
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
+  },
   server: {
     port: 5173,
     proxy: {

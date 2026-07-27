@@ -952,6 +952,43 @@ html[data-theme='dark'] body {
   background: var(--ht-danger-bg);
 }
 
+.ht-sidebar-version {
+  display: flex;
+  min-height: 26px;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 7px;
+  overflow: hidden;
+  color: var(--ht-muted);
+  background: color-mix(in srgb, var(--ht-green) 5%, var(--ht-surface-1));
+  border: 1px solid color-mix(in srgb, var(--ht-green) 20%, var(--ht-hairline));
+  border-radius: 7px;
+  font-size: 9px;
+  text-decoration: none;
+  transition: 150ms ease;
+}
+
+.ht-sidebar-version-label {
+  flex: 0 0 auto;
+  padding: 2px 5px;
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+  border-radius: 4px;
+  font: 700 9px/1 var(--ht-mono);
+}
+
+.ht-sidebar-version-copy {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ht-sidebar-version:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border-color: color-mix(in srgb, var(--ht-green) 42%, var(--ht-hairline));
+}
+
 .ht-sidebar-tools .ht-language-switcher.compact {
   position: relative;
   gap: 0;
@@ -1846,6 +1883,7 @@ html[data-theme='dark']
 .ht-shell.sidebar-collapsed .ht-sidebar nav a > small,
 .ht-shell.sidebar-collapsed .ht-account,
 .ht-shell.sidebar-collapsed .ht-runtime-dot,
+.ht-shell.sidebar-collapsed .ht-sidebar-version-copy,
 .ht-shell.sidebar-collapsed .ht-cubepath-brand > span {
   display: none;
 }
@@ -1884,6 +1922,13 @@ html[data-theme='dark']
   justify-content: flex-start;
   margin-inline: auto;
   padding: 6px;
+}
+
+.ht-shell.sidebar-collapsed .ht-sidebar-version {
+  width: 38px;
+  justify-content: center;
+  margin-inline: auto;
+  padding-inline: 3px;
 }
 
 .ht-shell.sidebar-collapsed .ht-cubepath-brand img {

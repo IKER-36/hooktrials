@@ -23,10 +23,13 @@ import { Brand } from '../components/Brand';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { OnboardingTour } from '../components/app/OnboardingTour';
 import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../i18n/I18nContext';
 import { apiRequest, isAuthError, readableError } from '../lib/api';
 import type { AccountLimits, Endpoint, Scenario } from '../lib/types';
 
 const SELECTED_KEY = 'ht.selectedEndpoint';
+const APP_VERSION = (import.meta.env.VITE_APP_VERSION ?? 'dev').replace(/^v/, '');
+const RELEASES_URL = 'https://github.com/IKER-36/hooktrials/tree/main/docs/releases';
 
 interface NavigationItem {
   to: string;
@@ -71,6 +74,7 @@ export function useDashboard(): DashboardContext {
 export function AppLayout() {
   const location = useLocation();
   const { user, loading: authLoading, setup, logout, clearSession, completeOnboarding } = useAuth();
+  const { t } = useI18n();
   const [endpoints, setEndpoints] = useState<Endpoint[]>([]);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [limits, setLimits] = useState<AccountLimits | null>(null);
@@ -470,6 +474,17 @@ export function AppLayout() {
               <LogOut aria-hidden="true" />
             </button>
           </div>
+          <a
+            className="ht-sidebar-version"
+            href={RELEASES_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`${t('View releases')} · v${APP_VERSION}`}
+            title={`${t('View releases')} · v${APP_VERSION}`}
+          >
+            <span className="ht-sidebar-version-label">v{APP_VERSION}</span>
+            <span className="ht-sidebar-version-copy">{t('View releases')}</span>
+          </a>
           <a
             className="ht-cubepath-brand"
             href="https://cubepath.com/"
