@@ -56,15 +56,18 @@ export function EvidencePage() {
         </div>
       </header>
       {missing ? (
-        <section className="ht-evidence-missing">
+        // An <article>, not a <section>, so it matches the same
+        // `.ht-public-evidence > article` container rules as the loaded
+        // state — this had no card of its own and floated as bare text.
+        <article className="ht-evidence-missing">
           <h1>Evidence link unavailable.</h1>
           <p>It expired, was revoked or never existed.</p>
           <Link to="/">Open HookTrials</Link>
-        </section>
+        </article>
       ) : !evidence ? (
-        <section>
+        <article className="ht-evidence-missing" aria-label="Loading">
           <p>Loading verified evidence…</p>
-        </section>
+        </article>
       ) : (
         <article>
           <p className="ht-kicker">Integration reliability evidence</p>

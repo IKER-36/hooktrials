@@ -379,7 +379,11 @@ export function LiveWebhooksPage() {
             >
               {preflighting ? 'Checking destination…' : 'Check destination'}
             </button>
-            {preflightError ? <p className="ht-form-error">{preflightError}</p> : null}
+            {preflightError ? (
+              <p className="ht-form-error" role="alert">
+                {preflightError}
+              </p>
+            ) : null}
             {preflight ? (
               <div className="ht-preflight-results">
                 <strong className={preflight.reachable ? 'passed' : 'failed'}>
@@ -459,7 +463,11 @@ export function LiveWebhooksPage() {
             </label>
           ) : null}
 
-          {error ? <p className="ht-form-error">{error}</p> : null}
+          {error ? (
+            <p className="ht-form-error" role="alert">
+              {error}
+            </p>
+          ) : null}
           {atLimit ? (
             <p className="ht-form-note">Hosted limit reached — remove an endpoint first.</p>
           ) : null}
@@ -529,7 +537,9 @@ export function LiveWebhooksPage() {
                     required
                   />
                   {activationError ? (
-                    <span className="ht-form-error">{activationError}</span>
+                    <span className="ht-form-error" role="alert">
+                      {activationError}
+                    </span>
                   ) : null}
                   <button className="button secondary" type="submit" disabled={activatingSignature}>
                     {activatingSignature ? 'Enabling…' : 'Enable signature verification'}
@@ -551,7 +561,10 @@ export function LiveWebhooksPage() {
                   {testingRouteId === created.id ? 'Sending synthetic event…' : 'Send test event'}
                 </button>
                 {testResult?.routeId === created.id ? (
-                  <p className={testResult.error ? 'ht-form-error' : 'ht-form-success'}>
+                  <p
+                    className={testResult.error ? 'ht-form-error' : 'ht-form-success'}
+                    role={testResult.error ? 'alert' : 'status'}
+                  >
                     {testResult.error ??
                       `Event recorded · HTTP ${testResult.result?.statusCode ?? '—'} · ${testResult.result?.latencyMs ?? '—'} ms`}
                   </p>

@@ -1716,6 +1716,7 @@ html[data-theme]
     .ht-public-evidence > article,
     .ht-public-status,
     .ht-public-status > article,
+    .ht-status-missing,
     .ht-auth-aside,
     .ht-auth-card,
     .ht-public-component
@@ -1732,7 +1733,11 @@ html[data-theme]
   background: var(--ht-bg);
 }
 
-.ht-public-status {
+/* .ht-status-missing shares the public-status card frame: same shape, but
+   this selector was missing from the correction above, so it kept modern.css's
+   light-only translucent white — a light card stranded on the dark page. */
+.ht-public-status,
+.ht-status-missing {
   background: var(--ht-surface-1);
   border: 1px solid var(--ht-hairline-bright);
   box-shadow: 0 1px 3px var(--ht-shadow);

@@ -171,7 +171,11 @@ export function StatusPagesPanel({
           ))}
         </div>
       )}
-      {message && !editing ? <p className="ht-form-error">{message}</p> : null}
+      {message && !editing ? (
+        <p className="ht-form-error" role="alert">
+          {message}
+        </p>
+      ) : null}
       {editing ? (
         <form className="ht-status-page-form" onSubmit={(event) => void save(event)}>
           <div className="ht-monitor-form-grid">
@@ -245,7 +249,11 @@ export function StatusPagesPanel({
               </label>
             ))}
           </fieldset>
-          {message ? <p className="ht-form-error">{message}</p> : null}
+          {message ? (
+            <p className="ht-form-error" role="alert">
+              {message}
+            </p>
+          ) : null}
           <div className="ht-form-actions">
             <button type="button" className="button secondary" onClick={() => setEditing(null)}>
               Cancel

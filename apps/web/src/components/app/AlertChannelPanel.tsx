@@ -34,6 +34,15 @@ export function AlertChannelPanel() {
   const [cidrs, setCidrs] = useState('');
   const [busy, setBusy] = useState('');
   const [message, setMessage] = useState('');
+  // `message` alone doesn't say whether the last outcome was good or bad, so a
+  // save failure or a failed test delivery rendered with the same success
+  // styling and a polite (not alert) live-region role as an actual success.
+  const [messageTone, setMessageTone] = useState<'success' | 'error'>('success');
+
+  function report(text: string, tone: 'success' | 'error') {
+    setMessage(text);
+    setMessageTone(tone);
+  }
 
   async function load() {
     const response = await apiRequest<{ channel: Channel | null }>('/v1/alert-channel');
@@ -48,7 +57,7 @@ export function AlertChannelPanel() {
     }
   }
   useEffect(() => {
-    void load().catch((error) => setMessage(readableError(error)));
+    void load().catch((error) => report(readableError(error), 'error'));
   }, []);
 
   async function save(event: FormEvent) {
@@ -79,13 +88,14 @@ export function AlertChannelPanel() {
       });
       setUrl('');
       setHeaders('');
-      setMessage('Alert channel saved. Send a test before relying on it.');
+      report('Alert channel saved. Send a test before relying on it.', 'success');
       await load();
     } catch (error) {
-      setMessage(
+      report(
         error instanceof SyntaxError || (error instanceof Error && !('status' in error))
           ? error.message
           : readableError(error),
+        'error',
       );
     } finally {
       setBusy('');
@@ -102,13 +112,14 @@ export function AlertChannelPanel() {
         statusCode: number;
         latencyMs: number;
       }>('/v1/alert-channel/test', { method: 'POST' });
-      setMessage(
+      report(
         result.delivered
           ? `Test delivered · HTTP ${result.statusCode} · ${result.latencyMs} ms`
           : `Test failed · HTTP ${result.statusCode}`,
+        result.delivered ? 'success' : 'error',
       );
     } catch (error) {
-      setMessage(readableError(error));
+      report(readableError(error), 'error');
     } finally {
       setBusy('');
     }
@@ -264,7 +275,10 @@ export function AlertChannelPanel() {
           </div>
         ) : null}
         {message ? (
-          <p className="ht-form-success" role="status">
+          <p
+            className={messageTone === 'error' ? 'ht-form-error' : 'ht-form-success'}
+            role={messageTone === 'error' ? 'alert' : 'status'}
+          >
             {message}
           </p>
         ) : null}
