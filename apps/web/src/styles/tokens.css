@@ -88,16 +88,17 @@
   --ht-measure-max: 1440px;
 }
 
-/* Stacking order. Every z-index in the product comes from this scale.
-   The modal layer currently sits below the tour layers; correcting that
-   ordering is a behaviour change and is handled separately. */
+/* Stacking order. Every z-index in the product comes from this scale, listed
+   bottom to top. Dialogs sit above the tour: a confirmation raised while the
+   tour is open must stay reachable, and the tour spotlight promotes arbitrary
+   page sections, so anything below it can be occluded. */
 :root {
   --ht-z-raised: 1;
   --ht-z-sticky: 2;
   --ht-z-nav: 29;
   --ht-z-header: 30;
-  --ht-z-modal: 60;
-  --ht-z-tour-scrim: 1000;
-  --ht-z-tour-target: 1001;
-  --ht-z-tour-panel: 1002;
+  --ht-z-tour-scrim: 100;
+  --ht-z-tour-target: 101;
+  --ht-z-tour-panel: 102;
+  --ht-z-modal: 200;
 }

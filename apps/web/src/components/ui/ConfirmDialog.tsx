@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -22,7 +23,10 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+
+  useFocusTrap(dialogRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -45,11 +49,13 @@ export function ConfirmDialog({
   return (
     <div className="ht-backdrop" role="presentation" onMouseDown={onCancel}>
       <div
+        ref={dialogRef}
         className="ht-dialog"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="ht-dialog-title"
         aria-describedby="ht-dialog-body"
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h2 id="ht-dialog-title">{title}</h2>

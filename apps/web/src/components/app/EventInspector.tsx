@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { API_ORIGIN, apiRequest, readableError } from '../../lib/api';
 import { clockTime, shortDate, shortHash } from '../../lib/format';
 import type { AttemptDetail, EventDetail } from '../../lib/types';
@@ -104,6 +105,8 @@ export function EventInspector({ eventId, onClose }: { eventId: string; onClose(
   const [share, setShare] = useState<{ shareUrl: string; expiresAt: string } | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+
+  useFocusTrap(dialogRef, true);
 
   useEffect(() => {
     previousFocus.current = document.activeElement as HTMLElement | null;
