@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { ArrowRight, CheckCircle2, RadioTower, ShieldCheck, Waypoints } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  CreditCard,
+  GitPullRequest,
+  MessageSquare,
+  RadioTower,
+  ShieldCheck,
+  Store,
+  Waypoints,
+  Webhook,
+  type LucideIcon,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
@@ -32,12 +44,29 @@ type TestEventResult = {
   destinationTriggered: boolean;
 };
 
-const PROVIDERS: Array<{ id: Provider; name: string; detail: string }> = [
-  { id: 'generic', name: 'Generic', detail: 'Any HTTPS webhook provider' },
-  { id: 'stripe', name: 'Stripe', detail: 'Native Stripe-Signature verification' },
-  { id: 'github', name: 'GitHub', detail: 'Native X-Hub-Signature-256 verification' },
-  { id: 'shopify', name: 'Shopify', detail: 'Topic and delivery header contract' },
-  { id: 'slack', name: 'Slack', detail: 'Timestamp and signature header contract' },
+// Lucide carries no brand marks, so each provider gets the line icon that best
+// describes what it sends. Icons support the label; they never replace it.
+const PROVIDERS: Array<{ id: Provider; name: string; detail: string; icon: LucideIcon }> = [
+  { id: 'generic', name: 'Generic', detail: 'Any HTTPS webhook provider', icon: Webhook },
+  {
+    id: 'stripe',
+    name: 'Stripe',
+    detail: 'Native Stripe-Signature verification',
+    icon: CreditCard,
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    detail: 'Native X-Hub-Signature-256 verification',
+    icon: GitPullRequest,
+  },
+  { id: 'shopify', name: 'Shopify', detail: 'Topic and delivery header contract', icon: Store },
+  {
+    id: 'slack',
+    name: 'Slack',
+    detail: 'Timestamp and signature header contract',
+    icon: MessageSquare,
+  },
 ];
 
 function providerContract(provider: Provider) {
@@ -281,15 +310,17 @@ export function LiveWebhooksPage() {
 
           <fieldset className="ht-provider-choice">
             <legend>Provider</legend>
-            {PROVIDERS.map((item) => (
+            {PROVIDERS.map(({ id, name, detail, icon: Icon }) => (
               <button
-                key={item.id}
+                key={id}
                 type="button"
-                className={provider === item.id ? 'active' : ''}
-                onClick={() => setProvider(item.id)}
+                className={provider === id ? 'active' : ''}
+                onClick={() => setProvider(id)}
+                aria-pressed={provider === id}
               >
-                <b>{item.name}</b>
-                <small>{item.detail}</small>
+                <Icon aria-hidden="true" />
+                <b>{name}</b>
+                <small>{detail}</small>
               </button>
             ))}
           </fieldset>

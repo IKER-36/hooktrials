@@ -27,18 +27,18 @@ html[data-theme='dark'] body {
   gap: 8px;
   align-items: baseline;
   padding: 11px 14px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 10px;
-  background: var(--surface);
+  background: var(--ht-surface-1);
 }
 
 .ht-live-summary strong {
-  color: var(--accent);
-  font: 700 18px/1 var(--font-mono);
+  color: var(--ht-green);
+  font: 700 18px/1 var(--ht-mono);
 }
 
 .ht-live-summary span {
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 11px;
 }
 
@@ -46,7 +46,7 @@ html[data-theme='dark'] body {
   width: 1px;
   height: 20px;
   margin: 0 5px;
-  background: var(--line);
+  background: var(--ht-hairline);
 }
 
 .ht-live-flow {
@@ -59,7 +59,7 @@ html[data-theme='dark'] body {
 
 .ht-live-flow > svg {
   width: 16px;
-  color: var(--muted);
+  color: var(--ht-muted);
 }
 
 .ht-live-flow article {
@@ -70,28 +70,28 @@ html[data-theme='dark'] body {
   align-items: center;
   min-height: 78px;
   padding: 14px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 10px;
-  background: var(--surface);
+  background: var(--ht-surface-1);
 }
 
 .ht-live-flow article.active {
-  border-color: color-mix(in srgb, var(--accent) 58%, var(--line));
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  border-color: color-mix(in srgb, var(--ht-green) 58%, var(--ht-hairline));
+  background: color-mix(in srgb, var(--ht-green) 7%, var(--ht-surface-1));
 }
 
 .ht-live-flow article > svg {
   grid-row: 1 / 3;
   width: 24px;
-  color: var(--accent);
+  color: var(--ht-green);
 }
 
 .ht-live-flow article > span {
   position: absolute;
   top: 8px;
   right: 10px;
-  color: var(--muted);
-  font: 600 9px/1 var(--font-mono);
+  color: var(--ht-muted);
+  font: 600 9px/1 var(--ht-mono);
 }
 
 .ht-live-flow b,
@@ -105,7 +105,7 @@ html[data-theme='dark'] body {
 
 .ht-live-flow small {
   margin-top: 4px;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 10px;
 }
 
@@ -119,9 +119,9 @@ html[data-theme='dark'] body {
 .ht-live-connect,
 .ht-live-activation,
 .ht-live-routes {
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 12px;
-  background: var(--surface);
+  background: var(--ht-surface-1);
 }
 
 .ht-live-connect {
@@ -141,7 +141,7 @@ html[data-theme='dark'] body {
 .ht-live-activation > p,
 .ht-live-routes > header > p {
   margin: 0;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -162,29 +162,43 @@ html[data-theme='dark'] body {
 .ht-delivery-choice legend {
   grid-column: 1 / -1;
   margin-bottom: 2px;
-  color: var(--text);
+  color: var(--ht-ink);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .ht-provider-choice button {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 5px 8px;
+  align-content: start;
   min-height: 68px;
   padding: 10px;
   text-align: left;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 8px;
-  background: var(--surface-soft);
+  background: var(--ht-surface-2);
+}
+
+.ht-provider-choice button > svg {
+  width: 16px;
+  height: 16px;
+  color: var(--ht-faint);
+}
+
+.ht-provider-choice button.active > svg {
+  color: var(--ht-green);
 }
 
 .ht-provider-choice button:hover {
-  border-color: var(--line-strong);
-  background: color-mix(in srgb, var(--accent) 5%, var(--surface-soft));
+  border-color: var(--ht-hairline-bright);
+  background: color-mix(in srgb, var(--ht-green) 5%, var(--ht-surface-2));
 }
 
 .ht-provider-choice button.active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-color: var(--ht-green);
+  background: color-mix(in srgb, var(--ht-green) 10%, var(--ht-surface-1));
 }
 
 .ht-provider-choice b,
@@ -193,13 +207,14 @@ html[data-theme='dark'] body {
 }
 
 .ht-provider-choice b {
-  color: var(--text);
+  grid-column: 2;
+  color: var(--ht-ink);
   font-size: 12px;
 }
 
 .ht-provider-choice small {
-  margin-top: 5px;
-  color: var(--muted);
+  grid-column: 1 / -1;
+  color: var(--ht-muted);
   font-size: 9px;
   line-height: 1.35;
 }
@@ -213,22 +228,22 @@ html[data-theme='dark'] body {
   grid-template-columns: 18px 1fr;
   gap: 3px 8px;
   padding: 13px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 9px;
-  background: var(--surface-soft);
+  background: var(--ht-surface-2);
   cursor: pointer;
 }
 
 .ht-delivery-choice label.active {
-  border-color: color-mix(in srgb, var(--accent) 70%, var(--line));
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-color: color-mix(in srgb, var(--ht-green) 70%, var(--ht-hairline));
+  background: color-mix(in srgb, var(--ht-green) 8%, var(--ht-surface-1));
 }
 
 .ht-delivery-choice input {
   grid-row: 1 / 3;
   width: 14px;
   margin: 1px 0 0;
-  accent-color: var(--accent);
+  accent-color: var(--ht-green);
 }
 
 .ht-delivery-choice b {
@@ -236,7 +251,7 @@ html[data-theme='dark'] body {
 }
 
 .ht-delivery-choice span {
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 10px;
   line-height: 1.45;
 }
@@ -246,17 +261,17 @@ html[data-theme='dark'] body {
   gap: 9px;
   align-items: flex-start;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--warning) 45%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--ht-amber) 45%, var(--ht-hairline));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--warning) 6%, var(--surface));
-  color: var(--muted);
+  background: color-mix(in srgb, var(--ht-amber) 6%, var(--ht-surface-1));
+  color: var(--ht-muted);
   font-size: 11px;
   line-height: 1.45;
 }
 
 .ht-production-confirm input {
   margin-top: 2px;
-  accent-color: var(--accent);
+  accent-color: var(--ht-green);
 }
 
 .ht-destination-preflight {
@@ -265,9 +280,9 @@ html[data-theme='dark'] body {
   gap: 10px 16px;
   align-items: center;
   padding: 14px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 9px;
-  background: var(--surface-soft);
+  background: var(--ht-surface-2);
 }
 
 .ht-destination-preflight > div:first-child b,
@@ -281,7 +296,7 @@ html[data-theme='dark'] body {
 
 .ht-destination-preflight > div:first-child span {
   margin-top: 4px;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 10px;
   line-height: 1.45;
 }
@@ -293,17 +308,17 @@ html[data-theme='dark'] body {
 
 .ht-preflight-results {
   padding-top: 11px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--ht-hairline);
 }
 
 .ht-preflight-results > strong {
   display: inline-flex;
   margin-bottom: 8px;
-  font: 700 10px/1 var(--font-mono);
+  font: 700 10px/1 var(--ht-mono);
 }
 
 .ht-preflight-results > strong.passed {
-  color: var(--accent);
+  color: var(--ht-green);
 }
 
 .ht-preflight-results > strong.failed {
@@ -323,7 +338,7 @@ html[data-theme='dark'] body {
   grid-template-columns: 8px 1fr;
   gap: 8px;
   align-items: start;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 9px;
   line-height: 1.45;
 }
@@ -333,15 +348,15 @@ html[data-theme='dark'] body {
   height: 6px;
   margin-top: 3px;
   border-radius: 50%;
-  background: var(--muted);
+  background: var(--ht-muted);
 }
 
 .ht-preflight-results li.passed i {
-  background: var(--accent);
+  background: var(--ht-green);
 }
 
 .ht-preflight-results li.warning i {
-  background: var(--warning);
+  background: var(--ht-amber);
 }
 
 .ht-preflight-results li.failed i {
@@ -359,7 +374,7 @@ html[data-theme='dark'] body {
   gap: 14px;
   margin: 18px 0;
   padding-left: 22px;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 11px;
   line-height: 1.5;
 }
@@ -384,10 +399,10 @@ html[data-theme='dark'] body {
   width: 23px;
   height: 23px;
   place-items: center;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--ht-hairline-bright);
   border-radius: 50%;
-  color: var(--accent);
-  font: 700 9px/1 var(--font-mono);
+  color: var(--ht-green);
+  font: 700 9px/1 var(--ht-mono);
 }
 
 .ht-activation-steps b,
@@ -397,7 +412,7 @@ html[data-theme='dark'] body {
 
 .ht-activation-steps b {
   margin-bottom: 3px;
-  color: var(--text);
+  color: var(--ht-ink);
   font-size: 11px;
 }
 
@@ -407,16 +422,16 @@ html[data-theme='dark'] body {
   align-items: center;
   margin: 16px 0;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--ht-green) 45%, var(--ht-hairline));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  background: color-mix(in srgb, var(--ht-green) 8%, var(--ht-surface-1));
 }
 
 .ht-route-ready svg,
 .ht-live-security-note svg {
   flex: 0 0 auto;
   width: 20px;
-  color: var(--accent);
+  color: var(--ht-green);
 }
 
 .ht-route-ready b,
@@ -430,7 +445,7 @@ html[data-theme='dark'] body {
 
 .ht-route-ready span {
   margin-top: 3px;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 9px;
 }
 
@@ -444,10 +459,10 @@ html[data-theme='dark'] body {
 .ht-ingest-copy code {
   overflow: hidden;
   padding: 9px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 7px;
-  color: var(--accent);
-  background: var(--surface-soft);
+  color: var(--ht-green);
+  background: var(--ht-surface-2);
   font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -459,7 +474,7 @@ html[data-theme='dark'] body {
   align-items: flex-start;
   margin-top: 18px;
   padding-top: 15px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--ht-hairline);
 }
 
 .ht-signature-activation {
@@ -467,9 +482,9 @@ html[data-theme='dark'] body {
   gap: 8px;
   margin: 16px 0;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--warning) 38%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--ht-amber) 38%, var(--ht-hairline));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--warning) 5%, var(--surface));
+  background: color-mix(in srgb, var(--ht-amber) 5%, var(--ht-surface-1));
 }
 
 .ht-signature-activation b {
@@ -478,7 +493,7 @@ html[data-theme='dark'] body {
 
 .ht-signature-activation p {
   margin: 0;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 9px;
   line-height: 1.45;
 }
@@ -486,10 +501,10 @@ html[data-theme='dark'] body {
 .ht-signature-activation input {
   width: 100%;
   padding: 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 6px;
-  color: var(--text);
-  background: var(--surface-soft);
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
   font-size: 10px;
 }
 
@@ -498,9 +513,9 @@ html[data-theme='dark'] body {
   gap: 8px;
   margin: 16px 0;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--ht-green) 38%, var(--ht-hairline));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  background: color-mix(in srgb, var(--ht-green) 6%, var(--ht-surface-1));
 }
 
 .ht-synthetic-test > b {
@@ -515,7 +530,7 @@ html[data-theme='dark'] body {
 
 .ht-live-security-note p {
   margin: 0;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 9px;
   line-height: 1.5;
 }
@@ -530,7 +545,7 @@ html[data-theme='dark'] body {
   justify-content: space-between;
   align-items: end;
   padding: 18px 20px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--ht-hairline);
 }
 
 .ht-live-route-list article {
@@ -539,7 +554,7 @@ html[data-theme='dark'] body {
   gap: 14px;
   align-items: center;
   padding: 13px 20px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--ht-hairline);
 }
 
 .ht-live-route-list article:last-child {
@@ -547,7 +562,7 @@ html[data-theme='dark'] body {
 }
 
 .ht-live-route-list article:hover {
-  background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+  background: color-mix(in srgb, var(--ht-green) 4%, var(--ht-surface-1));
 }
 
 .ht-live-route-title strong,
@@ -561,16 +576,16 @@ html[data-theme='dark'] body {
 
 .ht-live-route-title small {
   margin-top: 3px;
-  color: var(--muted);
-  font: 500 9px/1.3 var(--font-mono);
+  color: var(--ht-muted);
+  font: 500 9px/1.3 var(--ht-mono);
 }
 
 .ht-demo-data-badge {
   display: inline-flex;
   margin-left: 7px;
   padding: 2px 5px;
-  color: var(--accent);
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  color: var(--ht-green);
+  border: 1px solid color-mix(in srgb, var(--ht-green) 34%, var(--ht-hairline));
   border-radius: 4px;
   font-size: 7px;
   font-weight: 800;
@@ -583,7 +598,7 @@ html[data-theme='dark'] body {
   gap: 7px;
   align-items: center;
   min-width: 0;
-  color: var(--muted);
+  color: var(--ht-muted);
   font-size: 9px;
 }
 
@@ -594,7 +609,7 @@ html[data-theme='dark'] body {
 }
 
 .ht-route-mini-flow b {
-  color: var(--accent);
+  color: var(--ht-green);
 }
 
 .ht-route-mini-flow svg {
@@ -604,16 +619,16 @@ html[data-theme='dark'] body {
 
 .ht-mode-badge {
   padding: 4px 7px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 5px;
-  font: 700 8px/1 var(--font-mono);
+  font: 700 8px/1 var(--ht-mono);
   text-align: center;
   text-transform: uppercase;
 }
 
 .ht-mode-badge.protect {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+  color: var(--ht-green);
+  border-color: color-mix(in srgb, var(--ht-green) 40%, var(--ht-hairline));
 }
 
 .ht-live-route-actions {
@@ -625,10 +640,10 @@ html[data-theme='dark'] body {
 
 .ht-live-route-actions > button {
   padding: 7px 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ht-hairline);
   border-radius: 6px;
   color: var(--ht-ink);
-  background: var(--surface-soft);
+  background: var(--ht-surface-2);
   font-size: 10px;
   font-weight: 650;
   cursor: pointer;
@@ -636,8 +651,8 @@ html[data-theme='dark'] body {
 }
 
 .ht-live-route-actions > button:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--surface-soft) 82%, var(--accent));
+  border-color: var(--ht-green);
+  background: color-mix(in srgb, var(--ht-surface-2) 82%, var(--ht-green));
 }
 
 .ht-live-route-actions > button:disabled {
@@ -650,11 +665,11 @@ html[data-theme='dark'] body {
   top: calc(100% + 4px);
   right: 0;
   min-width: max-content;
-  font: 600 8px/1.2 var(--font-mono);
+  font: 600 8px/1.2 var(--ht-mono);
 }
 
 .ht-live-route-actions > small.passed {
-  color: var(--accent);
+  color: var(--ht-green);
 }
 
 .ht-live-route-actions > small.failed {
