@@ -20,9 +20,11 @@ const runtimeConfigSchema = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
   INGEST_HOST: z.string().default('0.0.0.0'),
   INGEST_PORT: z.coerce.number().int().min(1).max(65_535).default(3002),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
   MAX_BODY_BYTES: z.coerce.number().int().positive().default(524_288),
   EVENT_RETENTION_HOURS: z.coerce.number().int().positive().default(72),
   ENDPOINTS_LIMIT: z.coerce.number().int().nonnegative().default(0),
+  MONITORS_LIMIT: z.coerce.number().int().nonnegative().default(0),
   DAILY_EVENTS_LIMIT: z.coerce.number().int().nonnegative().default(0),
 });
 

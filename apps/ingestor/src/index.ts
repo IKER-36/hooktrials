@@ -13,7 +13,7 @@ import {
   incidents,
   scenarios,
 } from '@hooktrials/database';
-import { createLogger } from '@hooktrials/logger';
+import { createLogger, isBlockedForwardHeaderName, redactHeaders } from '@hooktrials/logger';
 import {
   evaluateWebhookContract,
   verifyWebhookSignature,
@@ -38,7 +38,7 @@ const deliveryQueue = new Queue('destination-deliveries', { connection: redis })
 const alertQueue = new Queue('incident-alerts', { connection: redis });
 const app = Fastify({
   loggerInstance: createLogger(config.LOG_LEVEL),
-  trustProxy: true,
+  trustProxy: config.TRUST_PROXY_HOPS,
   bodyLimit: config.MAX_BODY_BYTES,
 });
 
@@ -126,6 +126,7 @@ function destinationHeaders(
         const normalized = key.toLowerCase();
         return (
           !blocked.has(normalized) &&
+          !isBlockedForwardHeaderName(normalized) &&
           normalized !== 'via' &&
           !normalized.startsWith('forwarded') &&
           !normalized.startsWith('x-forwarded-') &&
@@ -137,6 +138,11 @@ function destinationHeaders(
   const custom = decryptText(encrypted);
   if (custom) Object.assign(headers, JSON.parse(custom) as Record<string, string>);
   return headers;
+}
+
+function safeRequestPath(url: string): string {
+  const path = url.split('?', 1)[0] ?? '';
+  return path.replace(/^\/i\/[^/]+(?=\/|$)/, '/i/:token');
 }
 
 async function openDestinationIncident(
@@ -339,8 +345,12 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
       eventId: event.id,
       sequence,
       method: request.method,
-      path: request.url,
-      headers: request.headers,
+      path: safeRequestPath(request.url),
+      headers: redactHeaders(request.headers),
+      encryptedHeaders: encryptValue(
+        JSON.stringify(request.headers),
+        config.PAYLOAD_ENCRYPTION_KEY,
+      ),
       encryptedBody: encryptValue(body, config.PAYLOAD_ENCRYPTION_KEY),
       responseStatus: validationStatus ?? (managed ? 202 : step.statusCode),
       responseDelayMs: managed ? 0 : step.delayMs,

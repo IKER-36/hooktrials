@@ -174,6 +174,7 @@ export const attempts = pgTable(
     method: varchar('method', { length: 16 }).notNull(),
     path: text('path').notNull(),
     headers: jsonb('headers').notNull(),
+    encryptedHeaders: text('encrypted_headers'),
     encryptedBody: text('encrypted_body').notNull(),
     receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
     responseStatus: integer('response_status').notNull(),

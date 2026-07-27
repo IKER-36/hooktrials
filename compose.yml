@@ -16,7 +16,9 @@ x-app-environment: &app-environment
   MAX_BODY_BYTES: ${MAX_BODY_BYTES:-524288}
   EVENT_RETENTION_HOURS: ${EVENT_RETENTION_HOURS:-72}
   ENDPOINTS_LIMIT: ${ENDPOINTS_LIMIT:-0}
+  MONITORS_LIMIT: ${MONITORS_LIMIT:-0}
   DAILY_EVENTS_LIMIT: ${DAILY_EVENTS_LIMIT:-0}
+  TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
 
 x-logging: &default-logging
   driver: json-file
@@ -28,6 +30,7 @@ services:
   gateway:
     image: caddy:2.10-alpine
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
     volumes:
       - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
     networks: [edge]
@@ -44,6 +47,9 @@ services:
       args:
         VITE_API_ORIGIN: /api
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/var/cache/nginx, /var/run]
     networks: [edge]
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8080/healthz']
@@ -70,6 +76,10 @@ services:
       dockerfile: deploy/docker/Dockerfile.service
     command: ['node', 'apps/api/dist/index.js']
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
     environment:
       <<: *app-environment
       API_HOST: 0.0.0.0
@@ -97,6 +107,10 @@ services:
       dockerfile: deploy/docker/Dockerfile.service
     command: ['node', 'apps/ingestor/dist/index.js']
     restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
     environment:
       <<: *app-environment
       INGEST_HOST: 0.0.0.0
@@ -125,6 +139,10 @@ services:
     command: ['node', 'apps/worker/dist/index.js']
     cap_add:
       - NET_RAW
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
     restart: unless-stopped
     environment: *app-environment
     # Monitor checks, protected deliveries and outgoing alerts require egress.

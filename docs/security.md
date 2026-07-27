@@ -16,12 +16,16 @@ a product requirement, not a deployment option.
 - Bounded request bodies.
 - Rate limits on API and ingestion traffic.
 - Random endpoint tokens stored as hashes.
+- Endpoint tokens can be rotated without deleting the endpoint; the previous token stops working
+  immediately.
 - Recoverable endpoint URLs encrypted at rest; lookup continues to use the non-reversible hash.
 - Session tokens stored as hashes.
 - Argon2id password hashes.
 - HttpOnly, Secure and SameSite session cookies in production.
 - AES-256-GCM payload encryption at rest.
-- Log redaction for credentials, cookies and common secret fields.
+- Captured request headers are encrypted at rest; the visible projection is redacted and ingestion
+  paths never retain endpoint tokens or query strings.
+- Log redaction for credentials, cookies, common secret fields and ingestion URLs.
 - Short default retention.
 - Automatic expired-event and expired-session cleanup.
 - Containers run without published database or Redis ports.
@@ -32,6 +36,9 @@ a product requirement, not a deployment option.
 - Redirects disabled, DNS lookup pinned, response bytes bounded and request phases timed out.
 - Self-host private access requires explicit CIDR allowlists; Cloud always blocks private targets.
 - Destination headers, monitor headers and signature secrets encrypted and write-only.
+- Inbound authentication and cookie headers are never forwarded automatically to a destination;
+  provider delivery signatures remain available for destination verification, while explicit
+  destination headers stay encrypted and owner-controlled.
 - Manual retry/replay requires confirmation and stores user/source audit metadata.
 - Public evidence uses a hashed expiring token and excludes bodies, headers, credentials and URLs.
 - Authenticated and public JSON/Markdown evidence exports use that same redacted server-side model.
@@ -43,6 +50,10 @@ a product requirement, not a deployment option.
   `NET_RAW`; the API, dashboard and ingestor do not.
 - Guided Demo setup, cleanup and reset are serialized by an expiring per-user Redis lock; cleanup
   still requires both authenticated ownership and the exact private run identifier.
+- Cloud monitor creation and manual checks have per-user quotas and route-level throttles; set the
+  quota to zero for an unlimited self-hosted installation.
+- API and ingestion services trust only the configured reverse-proxy hop count. Cloud deployments
+  must still restrict the VPS firewall to Cloudflare origin ranges so the proxy cannot be bypassed.
 
 ## Rules for rendering captured content
 

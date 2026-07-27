@@ -1,6 +1,23 @@
 # Current release status
 
-Updated: 26 July 2026.
+Updated: 27 July 2026.
+
+## Release `v0.12.4` — security-control
+
+Release `v0.12.4` protects captured integration data and makes shared installations safer:
+
+- captured request metadata is protected at rest and sensitive values stay redacted in logs and
+  event views;
+- endpoint tokens can be rotated without deleting the endpoint;
+- authentication and cookie headers are not forwarded automatically to destinations, while provider
+  signatures remain available for verification;
+- monitor creation and manual checks have clear limits in managed installations;
+- the installation includes safer backup handling, dependency updates and container defaults.
+
+## Fixed
+
+- ingestion URLs no longer retain endpoint tokens or query strings in stored request metadata;
+- legacy request metadata is sanitized during the database upgrade.
 
 ## Release `v0.12.3`
 

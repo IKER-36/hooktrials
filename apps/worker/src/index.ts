@@ -16,7 +16,7 @@ import {
   reports,
   sessions,
 } from '@hooktrials/database';
-import { createLogger } from '@hooktrials/logger';
+import { createLogger, isBlockedForwardHeaderName } from '@hooktrials/logger';
 import {
   buildIncidentAlertPayload,
   calculateWebhookScore,
@@ -171,7 +171,26 @@ analysisWorker.on('failed', (job, error) => {
   logger.error({ jobId: job?.id, error }, 'Analysis job failed');
 });
 
-function forwardingHeaders(value: unknown, encryptedCustom: string | null): Record<string, string> {
+function decryptedHeaders(value: string | null): Record<string, unknown> {
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(
+      decryptValue(value, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8'),
+    ) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    logger.warn('Unable to decrypt captured request headers; forwarding without them');
+    return {};
+  }
+}
+
+function forwardingHeaders(
+  encryptedValue: string | null,
+  fallbackValue: unknown,
+  encryptedCustom: string | null,
+): Record<string, string> {
   const blocked = new Set([
     'connection',
     'content-length',
@@ -185,16 +204,20 @@ function forwardingHeaders(value: unknown, encryptedCustom: string | null): Reco
     'upgrade',
     'via',
   ]);
+  const decrypted = decryptedHeaders(encryptedValue);
   const inbound =
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : {};
+    Object.keys(decrypted).length > 0
+      ? decrypted
+      : fallbackValue && typeof fallbackValue === 'object' && !Array.isArray(fallbackValue)
+        ? (fallbackValue as Record<string, unknown>)
+        : {};
   const headers = Object.fromEntries(
     Object.entries(inbound)
       .filter(([key, headerValue]) => {
         const normalized = key.toLowerCase();
         return (
           !blocked.has(normalized) &&
+          !isBlockedForwardHeaderName(normalized) &&
           !normalized.startsWith('forwarded') &&
           !normalized.startsWith('x-forwarded-') &&
           typeof headerValue === 'string'
@@ -326,7 +349,11 @@ async function performDestinationDelivery(deliveryId: string) {
       }
       const response = await safeRequest(url, {
         method: row.attempt.method as 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-        headers: forwardingHeaders(row.attempt.headers, row.endpoint.encryptedDestinationHeaders),
+        headers: forwardingHeaders(
+          row.attempt.encryptedHeaders,
+          row.attempt.headers,
+          row.endpoint.encryptedDestinationHeaders,
+        ),
         body: decryptValue(row.attempt.encryptedBody, config.PAYLOAD_ENCRYPTION_KEY),
         timeoutMs: row.endpoint.destinationTimeoutMs,
         maxResponseBytes: 65_536,

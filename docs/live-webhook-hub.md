@@ -22,7 +22,8 @@ destination of that route.
 - destination status, latency, response size and failure classification;
 - a single event journey from provider to HookTrials, validation, destination and provider response;
 - incidents, recovery evidence, alerting and manual dead-letter operations;
-- encrypted payloads, destinations, destination headers and signing secrets at rest.
+- encrypted payloads, captured request headers, destinations, destination headers and signing
+  secrets at rest.
 
 The current route model connects one provider-facing ingestion URL to one destination. Create
 multiple routes to concentrate different providers and backends in the same workspace.
@@ -137,8 +138,9 @@ reverse proxy. Explicit private CIDR access is available only in self-hosted mod
 - retain the previous provider destination for rollback.
 
 Do not place authentication middleware in front of `/i/*`; providers cannot complete an interactive
-login. The ingestion URL itself is a high-entropy secret and should be rotated by replacing the route
-if it is exposed.
+login. The ingestion URL itself is a high-entropy secret. If it is exposed, rotate it from an
+authenticated client with `POST /v1/endpoints/:id/rotate` and body `{"confirm":true}`; the previous
+URL stops working immediately.
 
 Continue with [Protect mode](protect-mode.md), [Contracts and signatures](contracts-and-signatures.md),
 [Product guide](product-guide.md) and [Security](security.md).

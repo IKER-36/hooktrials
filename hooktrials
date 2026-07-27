@@ -75,7 +75,9 @@ REDIS_URL=redis://:$redis_password@redis:6379/0
 SESSION_SECRET=$(openssl rand -hex 48)
 PAYLOAD_ENCRYPTION_KEY=$(openssl rand -hex 32)
 ENDPOINTS_LIMIT=0
+MONITORS_LIMIT=0
 DAILY_EVENTS_LIMIT=0
+TRUST_PROXY_HOPS=1
 EVENT_RETENTION_HOURS=72
 MAX_BODY_BYTES=524288
 EOF
@@ -247,7 +249,18 @@ case "${1:-up}" in
     [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
     mkdir -p "$ROOT/backups"
     backup="$ROOT/backups/hooktrials-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
-    compose exec -T postgres pg_dump -U hooktrials hooktrials | gzip >"$backup"
+    dump="$backup.sql.tmp.$$"
+    compressed="$backup.tmp.$$"
+    if ! compose exec -T postgres pg_dump -U hooktrials hooktrials >"$dump"; then
+      rm -f "$dump" "$compressed"
+      die "PostgreSQL backup failed"
+    fi
+    if ! gzip <"$dump" >"$compressed"; then
+      rm -f "$dump" "$compressed"
+      die "Backup compression failed"
+    fi
+    rm -f "$dump"
+    mv "$compressed" "$backup"
     chmod 600 "$backup"
     printf '%s\n' "Backup created: $backup"
     ;;

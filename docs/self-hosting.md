@@ -40,6 +40,10 @@ instructions.
 The current release gives the worker outbound access for Monitoring, Protect and outgoing alerts while
 keeping PostgreSQL and Redis on the internal data network.
 
+For public deployments, keep `TRUST_PROXY_HOPS=1` when one reverse proxy sits in front of HookTrials.
+If the service is exposed directly, set it to `0` and apply a firewall or tunnel in front of the
+application. Never expose PostgreSQL or Redis ports.
+
 ## First useful trial
 
 1. Open **Trial endpoints** in the Lab workspace and choose a starter template.

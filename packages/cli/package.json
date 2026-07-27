@@ -23,7 +23,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "yaml": "2.8.1"
+    "yaml": "2.9.0"
   },
   "devDependencies": {
     "@types/node": "26.1.1",

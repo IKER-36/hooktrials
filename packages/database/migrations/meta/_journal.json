@@ -78,6 +78,13 @@
       "when": 1785066797690,
       "tag": "0010_configurable-alert-channels",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785162374152,
+      "tag": "0011_noisy_ben_grimm",
+      "breakpoints": true
     }
   ]
 }

@@ -41,7 +41,7 @@ import {
   statusPages,
   users,
 } from '@hooktrials/database';
-import { createLogger } from '@hooktrials/logger';
+import { createLogger, redactHeaders } from '@hooktrials/logger';
 import {
   buildTestAlertPayload,
   buildReliabilityReplay,
@@ -106,7 +106,7 @@ async function ensureBuiltInScenarios() {
 
 await ensureBuiltInScenarios();
 
-const app = Fastify({ loggerInstance: logger, trustProxy: true });
+const app = Fastify({ loggerInstance: logger, trustProxy: config.TRUST_PROXY_HOPS });
 const allowedOrigins = new Set([config.APP_ORIGIN]);
 if (config.NODE_ENV === 'development') {
   allowedOrigins.add('http://localhost:5173');
@@ -125,6 +125,11 @@ await app.register(cors, {
 });
 await app.register(helmet);
 await app.register(rateLimit, { max: 120, timeWindow: '1 minute' });
+
+app.addHook('onSend', async (request, reply, payload) => {
+  if (request.url.startsWith('/v1/')) reply.header('cache-control', 'no-store');
+  return payload;
+});
 
 app.setErrorHandler((error, request, reply) => {
   if (error instanceof ZodError) {
@@ -258,21 +263,8 @@ function syntheticProviderHeaders(input: {
   return headers;
 }
 
-function safeHeaders(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
-  const sensitive = new Set([
-    'authorization',
-    'cookie',
-    'set-cookie',
-    'x-api-key',
-    'proxy-authorization',
-  ]);
-  return Object.fromEntries(
-    Object.entries(value).map(([key, headerValue]) => [
-      key,
-      sensitive.has(key.toLowerCase()) ? '[redacted]' : headerValue,
-    ]),
-  );
+function safeHeaders(value: unknown): Record<string, string | string[]> {
+  return redactHeaders(value);
 }
 
 function monitorNetworkOptions(input: {
@@ -991,52 +983,69 @@ app.get('/v1/monitors', async (request, reply) => {
   };
 });
 
-app.post('/v1/monitors', async (request, reply) => {
-  const user = await requireUser(request, reply);
-  if (!user) return;
-  const input = monitorInputSchema.parse(request.body);
-  const target = normalizeMonitorTarget(input.protocol, input.url);
-  await validateMonitorTarget({ ...input, url: target });
-  const presentation = monitorTargetPresentation(input.protocol, target);
-  const created = await database.db.transaction(async (tx) => {
-    const resource = (
-      await tx
-        .insert(integrationResources)
-        .values({
-          userId: user.id,
-          type: input.resourceType,
-          name: input.name,
-          environment: input.environment,
-          metadata: { displayUrl: presentation.displayUrl },
-        })
-        .returning({ id: integrationResources.id })
-    )[0];
-    if (!resource) throw new Error('Monitor resource creation returned no record');
-    return (
-      await tx
-        .insert(monitors)
-        .values({
-          resourceId: resource.id,
-          encryptedUrl: encryptValue(target, config.PAYLOAD_ENCRYPTION_KEY),
-          displayHost: presentation.displayHost,
-          protocol: input.protocol,
-          method: input.method,
-          encryptedHeaders: encryptedMonitorHeaders(input.headers),
-          intervalSeconds: input.intervalSeconds,
-          timeoutMs: input.timeoutMs,
-          expectedMinStatus: input.expectedMinStatus,
-          expectedMaxStatus: input.expectedMaxStatus,
-          expectedText: input.expectedText,
-          expectedJsonPath: input.expectedJsonPath,
-          consecutiveFailuresToOpen: input.consecutiveFailuresToOpen,
-          allowPrivateNetworks: input.allowPrivateNetworks,
-          allowedPrivateCidrs: input.allowedPrivateCidrs,
-        })
-        .returning({ id: monitors.id, resourceId: monitors.resourceId, state: monitors.state })
-    )[0];
-  });
-  return reply.code(201).send({ monitor: created });
-});
+app.post(
+  '/v1/monitors',
+  { config: { rateLimit: { max: 20, timeWindow: '1 hour' } } },
+  async (request, reply) => {
+    const user = await requireUser(request, reply);
+    if (!user) return;
+    const input = monitorInputSchema.parse(request.body);
+    const existing = await database.db
+      .select({ value: count() })
+      .from(monitors)
+      .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+      .where(
+        and(
+          eq(integrationResources.userId, user.id),
+          sql`not coalesce(${integrationResources.metadata} ? 'demoRunId', false)`,
+        ),
+      );
+    if (config.MONITORS_LIMIT > 0 && (existing[0]?.value ?? 0) >= config.MONITORS_LIMIT) {
+      return reply.code(403).send({ error: 'monitor_limit_reached' });
+    }
+    const target = normalizeMonitorTarget(input.protocol, input.url);
+    await validateMonitorTarget({ ...input, url: target });
+    const presentation = monitorTargetPresentation(input.protocol, target);
+    const created = await database.db.transaction(async (tx) => {
+      const resource = (
+        await tx
+          .insert(integrationResources)
+          .values({
+            userId: user.id,
+            type: input.resourceType,
+            name: input.name,
+            environment: input.environment,
+            metadata: { displayUrl: presentation.displayUrl },
+          })
+          .returning({ id: integrationResources.id })
+      )[0];
+      if (!resource) throw new Error('Monitor resource creation returned no record');
+      return (
+        await tx
+          .insert(monitors)
+          .values({
+            resourceId: resource.id,
+            encryptedUrl: encryptValue(target, config.PAYLOAD_ENCRYPTION_KEY),
+            displayHost: presentation.displayHost,
+            protocol: input.protocol,
+            method: input.method,
+            encryptedHeaders: encryptedMonitorHeaders(input.headers),
+            intervalSeconds: input.intervalSeconds,
+            timeoutMs: input.timeoutMs,
+            expectedMinStatus: input.expectedMinStatus,
+            expectedMaxStatus: input.expectedMaxStatus,
+            expectedText: input.expectedText,
+            expectedJsonPath: input.expectedJsonPath,
+            consecutiveFailuresToOpen: input.consecutiveFailuresToOpen,
+            allowPrivateNetworks: input.allowPrivateNetworks,
+            allowedPrivateCidrs: input.allowedPrivateCidrs,
+          })
+          .returning({ id: monitors.id, resourceId: monitors.resourceId, state: monitors.state })
+      )[0];
+    });
+    return reply.code(201).send({ monitor: created });
+  },
+);
 
 app.get('/v1/monitors/:id', async (request, reply) => {
   const user = await requireUser(request, reply);
@@ -1218,43 +1227,47 @@ app.delete('/v1/monitors/:id/status-page', async (request, reply) => {
   return reply.code(204).send();
 });
 
-app.post('/v1/monitors/:id/run', async (request, reply) => {
-  const user = await requireUser(request, reply);
-  if (!user) return;
-  const { id } = request.params as { id: string };
-  const owned = (
+app.post(
+  '/v1/monitors/:id/run',
+  { config: { rateLimit: { max: 30, timeWindow: '1 hour' } } },
+  async (request, reply) => {
+    const user = await requireUser(request, reply);
+    if (!user) return;
+    const { id } = request.params as { id: string };
+    const owned = (
+      await database.db
+        .select({
+          id: monitors.id,
+          intervalSeconds: monitors.intervalSeconds,
+          state: monitors.state,
+          active: integrationResources.active,
+        })
+        .from(monitors)
+        .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+        .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+        .limit(1)
+    )[0];
+    if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
+    if (!owned.active || owned.state === 'paused') {
+      return reply.code(409).send({ error: 'monitor_paused' });
+    }
+    const queuedAt = Date.now();
     await database.db
-      .select({
-        id: monitors.id,
-        intervalSeconds: monitors.intervalSeconds,
-        state: monitors.state,
-        active: integrationResources.active,
-      })
-      .from(monitors)
-      .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
-      .limit(1)
-  )[0];
-  if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
-  if (!owned.active || owned.state === 'paused') {
-    return reply.code(409).send({ error: 'monitor_paused' });
-  }
-  const queuedAt = Date.now();
-  await database.db
-    .update(monitors)
-    .set({ nextCheckAt: new Date(queuedAt + owned.intervalSeconds * 1_000) })
-    .where(eq(monitors.id, id));
-  await monitorQueue.add(
-    'manual-check',
-    { monitorId: id },
-    {
-      jobId: `monitor-manual-${id}-${queuedAt}`,
-      removeOnComplete: 100,
-      removeOnFail: 100,
-    },
-  );
-  return reply.code(202).send({ queued: true });
-});
+      .update(monitors)
+      .set({ nextCheckAt: new Date(queuedAt + owned.intervalSeconds * 1_000) })
+      .where(eq(monitors.id, id));
+    await monitorQueue.add(
+      'manual-check',
+      { monitorId: id },
+      {
+        jobId: `monitor-manual-${id}-${queuedAt}`,
+        removeOnComplete: 100,
+        removeOnFail: 100,
+      },
+    );
+    return reply.code(202).send({ queued: true });
+  },
+);
 
 app.post('/v1/monitors/:id/pause', async (request, reply) => {
   const user = await requireUser(request, reply);
@@ -2962,6 +2975,37 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
   return { endpoint: { ...updated, destinationConfigured: Boolean(destinationUrl) } };
 });
 
+app.post('/v1/endpoints/:id/rotate', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  deliveryActionInputSchema.parse(request.body);
+  const { id } = request.params as { id: string };
+  const publicToken = `ht_${nanoid(32)}`;
+  const rotated = await database.db
+    .update(endpoints)
+    .set({
+      publicTokenHash: sha256(publicToken),
+      publicTokenPrefix: publicToken.slice(0, 12),
+      encryptedToken: encryptValue(publicToken, config.PAYLOAD_ENCRYPTION_KEY),
+    })
+    .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+    .returning({
+      id: endpoints.id,
+      name: endpoints.name,
+      active: endpoints.active,
+      mode: endpoints.mode,
+      environment: endpoints.environment,
+      tokenPrefix: endpoints.publicTokenPrefix,
+    });
+  if (!rotated[0]) return reply.code(404).send({ error: 'endpoint_not_found' });
+  return {
+    endpoint: {
+      ...rotated[0],
+      ingestUrl: `${config.INGEST_ORIGIN}/i/${publicToken}`,
+    },
+  };
+});
+
 app.delete('/v1/endpoints/:id', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
@@ -3182,15 +3226,17 @@ app.get('/v1/events/:id', async (request, reply) => {
   return {
     event: {
       ...event,
-      attempts: attemptRows.map(({ encryptedBody, headers, ...attempt }) => {
-        const body = decryptValue(encryptedBody, config.PAYLOAD_ENCRYPTION_KEY);
-        return {
-          ...attempt,
-          headers: safeHeaders(headers),
-          body: body.toString('utf8'),
-          bodyBase64: body.toString('base64'),
-        };
-      }),
+      attempts: attemptRows.map(
+        ({ encryptedBody, encryptedHeaders: _encryptedHeaders, headers, ...attempt }) => {
+          const body = decryptValue(encryptedBody, config.PAYLOAD_ENCRYPTION_KEY);
+          return {
+            ...attempt,
+            headers: safeHeaders(headers),
+            body: body.toString('utf8'),
+            bodyBase64: body.toString('base64'),
+          };
+        },
+      ),
       deliveries: deliveryRows,
       report: report ?? null,
       replay: buildReliabilityReplay({
