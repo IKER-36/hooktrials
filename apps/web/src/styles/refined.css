@@ -1085,7 +1085,6 @@ html[data-theme]
     .ht-demo-console,
     .ht-route-config,
     .ht-alert-panel,
-    .ht-managed-routes,
     .ht-webhook-journey,
     .ht-onboarding,
     .ht-guided-demo,
@@ -1096,7 +1095,6 @@ html[data-theme]
     .ht-readiness,
     .ht-operation-summary,
     .ht-monitor-summary,
-    .ht-metrics article,
     .ht-status-share,
     .ht-docs-nav,
     .ht-docs-article,
@@ -1117,7 +1115,6 @@ html[data-theme]
     .ht-operation-panel > header,
     .ht-events > header,
     .ht-template-section > header,
-    .ht-managed-routes > header,
     .ht-monitor-create > header,
     .ht-integration-table > header,
     .ht-inspector-head,
@@ -1132,7 +1129,6 @@ html[data-theme]
 .ht-operation-panel > header,
 .ht-events > header,
 .ht-template-section > header,
-.ht-managed-routes > header,
 .ht-monitor-create > header,
 .ht-integration-table > header {
   padding: 18px 20px;
@@ -1142,7 +1138,6 @@ html[data-theme]
 .ht-operation-panel h2,
 .ht-events h2,
 .ht-template-section h2,
-.ht-managed-routes h2,
 .ht-monitor-create h2 {
   font-size: 17px;
   letter-spacing: -0.025em;
@@ -1152,7 +1147,6 @@ html[data-theme]
 .ht-operation-summary,
 .ht-monitor-summary,
 .ht-monitor-metrics,
-.ht-metrics,
 .ht-demo-proof {
   gap: 0;
   padding: 10px;
@@ -1168,7 +1162,6 @@ html[data-theme]
     .ht-operation-summary article,
     .ht-monitor-summary article,
     .ht-monitor-metrics article,
-    .ht-metrics article,
     .ht-demo-proof div
   ) {
   min-height: 76px;
@@ -1187,32 +1180,18 @@ html[data-theme]
     .ht-operation-summary article,
     .ht-monitor-summary article,
     .ht-monitor-metrics article,
-    .ht-metrics article,
     .ht-demo-proof div
   ):last-child {
   border-right: 0;
 }
 
-:where(
-    .ht-control-metrics,
-    .ht-operation-summary,
-    .ht-monitor-summary,
-    .ht-monitor-metrics,
-    .ht-metrics
-  )
-  span {
+:where(.ht-control-metrics, .ht-operation-summary, .ht-monitor-summary, .ht-monitor-metrics) span {
   color: var(--ht-faint);
   font-size: 9px;
   letter-spacing: 0.08em;
 }
 
-:where(
-    .ht-control-metrics,
-    .ht-operation-summary,
-    .ht-monitor-summary,
-    .ht-monitor-metrics,
-    .ht-metrics
-  )
+:where(.ht-control-metrics, .ht-operation-summary, .ht-monitor-summary, .ht-monitor-metrics)
   strong {
   margin-top: 6px;
   font-size: 23px;
@@ -2067,8 +2046,7 @@ html[data-theme='dark']
   .ht-control-metrics,
   .ht-operation-summary,
   .ht-monitor-summary,
-  .ht-monitor-metrics,
-  .ht-metrics {
+  .ht-monitor-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -2077,8 +2055,7 @@ html[data-theme='dark']
       .ht-control-metrics article,
       .ht-operation-summary article,
       .ht-monitor-summary article,
-      .ht-monitor-metrics article,
-      .ht-metrics article
+      .ht-monitor-metrics article
     ) {
     border-right: 0;
     border-bottom: 1px solid var(--ht-hairline);
@@ -2108,8 +2085,7 @@ html[data-theme='dark']
   .ht-control-metrics,
   .ht-operation-summary,
   .ht-monitor-summary,
-  .ht-monitor-metrics,
-  .ht-metrics {
+  .ht-monitor-metrics {
     grid-template-columns: 1fr;
   }
 }

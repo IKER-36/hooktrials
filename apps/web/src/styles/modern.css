@@ -360,7 +360,6 @@ pre {
 .ht-demo-console,
 .ht-route-config,
 .ht-alert-panel,
-.ht-managed-routes,
 .ht-webhook-journey,
 .ht-onboarding,
 .ht-guided-demo,
@@ -578,7 +577,6 @@ pre {
 .ht-operation-panel > header,
 .ht-events > header,
 .ht-template-section > header,
-.ht-managed-routes > header,
 .ht-monitor-create > header {
   border-color: var(--ht-hairline);
   background: rgba(248, 250, 252, 0.55);
@@ -596,8 +594,7 @@ pre {
 .ht-control-center h2,
 .ht-operation-panel h2,
 .ht-events h2,
-.ht-template-section h2,
-.ht-managed-routes h2 {
+.ht-template-section h2 {
   color: var(--ht-ink);
 }
 
@@ -606,7 +603,6 @@ pre {
 .ht-operation-summary,
 .ht-monitor-summary,
 .ht-monitor-metrics,
-.ht-metrics,
 .ht-demo-proof,
 .ht-evidence-summary {
   gap: 10px;
@@ -618,7 +614,6 @@ pre {
 .ht-operation-summary article,
 .ht-monitor-summary article,
 .ht-monitor-metrics article,
-.ht-metrics article,
 .ht-demo-proof div,
 .ht-evidence-summary div {
   min-width: 0;
@@ -631,7 +626,6 @@ pre {
 .ht-operation-summary article:last-child,
 .ht-monitor-summary article:last-child,
 .ht-monitor-metrics article:last-child,
-.ht-metrics article:last-child,
 .ht-evidence-summary div:last-child {
   border: 1px solid var(--ht-hairline);
 }
@@ -639,7 +633,6 @@ pre {
 .ht-operation-summary span,
 .ht-monitor-summary span,
 .ht-monitor-metrics span,
-.ht-metrics span,
 .ht-demo-proof dt,
 .ht-evidence-summary span {
   color: var(--ht-muted);
@@ -650,8 +643,7 @@ pre {
 .ht-control-metrics strong,
 .ht-operation-summary strong,
 .ht-monitor-summary strong,
-.ht-monitor-metrics strong,
-.ht-metrics strong {
+.ht-monitor-metrics strong {
   color: var(--ht-ink);
   letter-spacing: -0.04em;
 }
@@ -966,10 +958,6 @@ pre {
   border: 1px solid var(--ht-hairline);
   border-radius: 11px;
 }
-.ht-managed-routes article {
-  border-color: var(--ht-hairline);
-}
-.ht-managed-routes article a,
 .ht-score-mini,
 .ht-score-card h3 {
   color: var(--ht-green-deep);
@@ -1790,8 +1778,7 @@ pre {
   .ht-monitor-summary,
   .ht-monitor-metrics,
   .ht-operation-summary,
-  .ht-control-metrics,
-  .ht-metrics {
+  .ht-control-metrics {
     grid-template-columns: repeat(2, 1fr);
   }
   .ht-demo-grid {
@@ -1848,8 +1835,7 @@ pre {
   .ht-monitor-summary,
   .ht-monitor-metrics,
   .ht-operation-summary,
-  .ht-control-metrics,
-  .ht-metrics {
+  .ht-control-metrics {
     grid-template-columns: 1fr 1fr;
   }
   .ht-monitor-form-grid,

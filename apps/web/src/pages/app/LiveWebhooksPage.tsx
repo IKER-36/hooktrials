@@ -605,7 +605,6 @@ export function LiveWebhooksPage() {
       <section className="ht-live-routes">
         <header>
           <div>
-            <p className="ht-kicker">Concentrator</p>
             <h2>Live connections</h2>
           </div>
           <p>One control plane for every provider and backend.</p>

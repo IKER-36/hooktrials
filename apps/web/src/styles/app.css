@@ -1211,25 +1211,6 @@
   line-height: 1.55;
 }
 
-/* ---------- Overview: metrics ---------- */
-
-.ht-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.ht-metrics article {
-  display: grid;
-  gap: 8px;
-}
-.ht-metrics span {
-  font-weight: 700;
-
-  text-transform: uppercase;
-}
-.ht-metrics strong {
-  font-size: 24px;
-}
-
 /* ---------- Overview: events ---------- */
 
 .ht-events {
@@ -2544,9 +2525,6 @@
   .ht-template-grid {
     grid-template-columns: 1fr;
   }
-  .ht-metrics {
-    grid-template-columns: 1fr;
-  }
   .ht-url-row {
     flex-direction: column;
   }
@@ -2656,45 +2634,6 @@
 .ht-remove-contract {
   display: block;
   margin-top: 12px;
-}
-.ht-managed-routes {
-  margin-bottom: 24px;
-}
-.ht-managed-routes > header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-
-  border-bottom: 1px solid var(--ht-hairline);
-}
-.ht-managed-routes h2 {
-  margin: 3px 0 0;
-}
-.ht-managed-routes > header > span {
-  color: var(--ht-muted);
-  font-size: 11px;
-}
-.ht-managed-routes > div {
-  display: grid;
-}
-.ht-managed-routes article {
-  display: grid;
-  grid-template-columns: auto minmax(140px, 1fr) minmax(180px, 1.4fr) auto auto auto;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 16px;
-  border-bottom: 1px solid var(--ht-hairline);
-}
-.ht-managed-routes article:last-child {
-  border-bottom: 0;
-}
-.ht-managed-routes article small,
-.ht-managed-routes article > span:not(.ht-monitor-state) {
-  color: var(--ht-muted);
-  font-size: 11px;
-}
-.ht-managed-routes article a {
-  font-size: 11px;
 }
 .ht-score-mini {
   font-size: 11px;
@@ -2866,18 +2805,5 @@
 @media (max-width: 760px) {
   .ht-route-mode-help {
     grid-template-columns: 1fr;
-  }
-  .ht-managed-routes > header {
-    align-items: start;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .ht-managed-routes article {
-    grid-template-columns: auto 1fr;
-  }
-  .ht-managed-routes article small,
-  .ht-managed-routes article > span:not(.ht-monitor-state),
-  .ht-managed-routes article a {
-    grid-column: 1 / -1;
   }
 }
