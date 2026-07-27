@@ -162,21 +162,22 @@ html[data-theme]
   background: transparent;
 }
 
-/* Sections use dividers and whitespace. Forms and dialogs remain intentionally contained. */
+/* Section blocks share the Webhook Hub container: one hairline border, the
+   product's small radius and the same resting surface in both themes. Rows,
+   metric strips and subsections that live inside a block stay open — only the
+   outer block itself gets the frame, so nothing doubles up. */
 html[data-theme]
   .ht-shell
   :where(
     .ht-control-center,
-    .ht-operation-panel,
-    .ht-monitor-list,
-    .ht-monitor-detail,
-    .ht-studio-library,
-    .ht-studio-editor,
     .ht-endpoint-card,
+    .ht-operation-panel,
+    .ht-monitor-grid,
+    .ht-studio-grid,
+    .ht-docs-layout,
     .ht-template-section,
     .ht-endpoint-list,
     .ht-events,
-    .ht-demo-rail,
     .ht-demo-console,
     .ht-route-config,
     .ht-alert-panel,
@@ -185,36 +186,31 @@ html[data-theme]
     .ht-guided-demo,
     .ht-integration-table,
     .ht-readiness,
-    .ht-status-share,
+    .ht-status-pages
+  ) {
+  overflow: hidden;
+  background: var(--ht-surface-1);
+  border: 1px solid var(--ht-hairline);
+  border-radius: var(--ht-radius-md);
+  box-shadow: none;
+}
+
+/* Subsections inside a framed block: divided by rhythm, not their own card. */
+html[data-theme]
+  .ht-shell
+  :where(
+    .ht-monitor-list,
+    .ht-monitor-detail,
+    .ht-studio-library,
+    .ht-studio-editor,
     .ht-docs-nav,
     .ht-docs-article,
-    .ht-status-pages
+    .ht-status-share
   ) {
   background: transparent;
   border: 0;
   border-radius: 0;
   box-shadow: none;
-}
-
-html[data-theme]
-  .ht-shell
-  :where(
-    .ht-control-center,
-    .ht-operation-panel,
-    .ht-template-section,
-    .ht-events,
-    .ht-demo-console,
-    .ht-route-config,
-    .ht-alert-panel,
-    .ht-managed-routes,
-    .ht-guided-demo,
-    .ht-integration-table,
-    .ht-readiness,
-    .ht-status-pages
-  ) {
-  overflow: hidden;
-  border-top: 1px solid var(--ht-hairline-bright);
-  border-bottom: 1px solid var(--ht-hairline-bright);
 }
 
 html[data-theme]
@@ -228,7 +224,7 @@ html[data-theme]
     .ht-monitor-create > header,
     .ht-integration-table > header
   ) {
-  padding: 18px 0;
+  padding: 18px 20px;
 }
 
 /* Keep task surfaces legible without making every section a floating card. */
@@ -243,11 +239,10 @@ html[data-theme] .ht-shell :where(.ht-create-card, .ht-monitor-create) > header 
   padding-inline: 0;
 }
 
-/* Inventory rows */
+/* Inventory rows sit inside a framed block; only an internal divider separates
+   the list from the item beside it, matching the Webhook Hub route list. */
 html[data-theme] .ht-shell :where(.ht-endpoint-list, .ht-monitor-list, .ht-studio-library) {
   overflow: hidden;
-  border-top: 1px solid var(--ht-hairline-bright);
-  border-bottom: 1px solid var(--ht-hairline-bright);
 }
 
 html[data-theme]
@@ -321,12 +316,10 @@ html[data-theme] .ht-shell .ht-template-card.selected:hover:not(:disabled) {
   background: color-mix(in srgb, var(--ht-green) 9%, transparent);
 }
 
-/* Split workspaces are joined by a single structural divider. */
+/* Split workspaces are one framed block, joined by a single internal divider
+   between the list and the detail beside it — not two bordered halves. */
 html[data-theme] .ht-shell :where(.ht-monitor-grid, .ht-studio-grid, .ht-docs-layout) {
   gap: 0;
-  overflow: hidden;
-  border-top: 1px solid var(--ht-hairline-bright);
-  border-bottom: 1px solid var(--ht-hairline-bright);
 }
 
 html[data-theme] .ht-shell :where(.ht-monitor-list, .ht-studio-library, .ht-docs-nav) {
