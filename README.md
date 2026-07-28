@@ -127,7 +127,7 @@ conclusion or hides a grading formula.
 
 ### See the product, not a mock-up
 
-The current `v0.15.0` interface keeps real delivery work in **Product** and deterministic
+The current `v0.15.1` interface keeps real delivery work in **Product** and deterministic
 experiments in **Lab**. These captures come from the deployed Cloud application; the same dashboard
 is included in the self-hosted distribution.
 
