@@ -54,6 +54,10 @@ export const signatureStatusEnum = pgEnum('signature_status', [
 ]);
 export const alertEventEnum = pgEnum('alert_event', ['opened', 'recovered']);
 export const alertStateEnum = pgEnum('alert_state', ['pending', 'sent', 'failed']);
+export const authTokenPurposeEnum = pgEnum('auth_token_purpose', [
+  'email_verification',
+  'password_reset',
+]);
 
 export const users = pgTable(
   'users',
@@ -86,6 +90,26 @@ export const sessions = pgTable(
   (table) => [
     uniqueIndex('sessions_token_hash_unique').on(table.tokenHash),
     index('sessions_user_id_idx').on(table.userId),
+  ],
+);
+
+export const authTokens = pgTable(
+  'auth_tokens',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    purpose: authTokenPurposeEnum('purpose').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('auth_tokens_token_hash_unique').on(table.tokenHash),
+    index('auth_tokens_user_purpose_idx').on(table.userId, table.purpose),
+    index('auth_tokens_expiry_idx').on(table.expiresAt),
   ],
 );
 

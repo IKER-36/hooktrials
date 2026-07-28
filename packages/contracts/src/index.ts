@@ -17,6 +17,19 @@ export const loginInputSchema = z.object({
   password: z.string().min(1).max(128),
 });
 
+export const emailInputSchema = z.object({
+  email: z.string().email().max(254),
+});
+
+export const authTokenInputSchema = z.object({
+  token: z.string().min(32).max(256),
+});
+
+export const resetPasswordInputSchema = z.object({
+  token: z.string().min(32).max(256),
+  password: z.string().min(12).max(128),
+});
+
 export const onboardingInputSchema = z.object({
   completed: z.literal(true),
 });

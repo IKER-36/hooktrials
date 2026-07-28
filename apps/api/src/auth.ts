@@ -50,6 +50,7 @@ export async function getAuthenticatedUser(db: Database, request: FastifyRequest
       email: users.email,
       displayName: users.displayName,
       role: users.role,
+      emailVerified: users.emailVerified,
       onboardingCompletedAt: users.onboardingCompletedAt,
     })
     .from(sessions)

@@ -166,6 +166,7 @@ the marketing website are outside its scope and are not required to run HookTria
 - [Configuration](docs/configuration.md)
 - [Development](docs/development.md)
 - [Security](docs/security.md)
+- [Transactional email](docs/email.md)
 - [Current release status](docs/release-status.md)
 
 ## Source development

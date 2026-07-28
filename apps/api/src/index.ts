@@ -7,14 +7,17 @@ import { readRuntimeConfig } from '@hooktrials/config';
 import {
   createEndpointInputSchema,
   alertChannelInputSchema,
+  authTokenInputSchema,
   destinationPreflightInputSchema,
   deliveryActionInputSchema,
+  emailInputSchema,
   evidenceExportQuerySchema,
   incidentTriageInputSchema,
   loginInputSchema,
   monitorInputSchema,
   onboardingInputSchema,
   registerInputSchema,
+  resetPasswordInputSchema,
   scenarioInputSchema,
   shareEvidenceInputSchema,
   statusPageInputSchema,
@@ -26,6 +29,7 @@ import {
 import { decryptValue, encryptValue, sha256 } from '@hooktrials/crypto';
 import {
   attempts,
+  authTokens,
   alertChannels,
   alertDeliveries,
   createDatabase,
@@ -37,6 +41,7 @@ import {
   monitorChecks,
   monitors,
   reports,
+  sessions,
   scenarios,
   statusPageMonitors,
   statusPages,
@@ -60,12 +65,20 @@ import {
 import { builtInScenarios } from '@hooktrials/scenario-engine';
 import argon2 from 'argon2';
 import { Queue } from 'bullmq';
-import { and, asc, count, desc, eq, gt, gte, inArray, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, inArray, isNull, or, sql } from 'drizzle-orm';
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import { Redis } from 'ioredis';
 import { nanoid } from 'nanoid';
 import { ZodError } from 'zod';
 import { clearSession, createSession, getAuthenticatedUser, setSessionCookie } from './auth.js';
+import { hashAuthToken, issueAuthToken } from './email/tokens.js';
+import {
+  passwordChangedEmail,
+  passwordResetEmail,
+  verificationEmail,
+  welcomeEmail,
+} from './email/templates.js';
+import { createMailer } from './email/mailer.js';
 import { acquireDemoMutationLock } from './demo-lock.js';
 import {
   evidenceFilename,
@@ -80,6 +93,7 @@ const externalAccess = !['localhost', '127.0.0.1', '::1'].includes(
 );
 const logger = createLogger(config.LOG_LEVEL);
 const database = createDatabase(config.DATABASE_URL);
+const mailer = createMailer(config, logger);
 const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: null });
 const deliveryQueue = new Queue('destination-deliveries', { connection: redis });
 const monitorQueue = new Queue('monitor-checks', { connection: redis });
@@ -159,7 +173,69 @@ async function requireUser(request: FastifyRequest, reply: FastifyReply) {
     await reply.code(401).send({ error: 'authentication_required' });
     return null;
   }
+  if (config.AUTH_EMAIL_VERIFICATION_REQUIRED && !user.emailVerified) {
+    await reply.code(403).send({ error: 'email_not_verified' });
+    return null;
+  }
   return user;
+}
+
+function publicUser(user: {
+  id: string;
+  email: string;
+  displayName: string;
+  role: string;
+  onboardingCompletedAt: Date | null;
+  emailVerified?: boolean;
+}) {
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    role: user.role,
+    onboardingCompletedAt: user.onboardingCompletedAt,
+    emailVerified: user.emailVerified ?? false,
+  };
+}
+
+async function sendVerificationMessage(user: { id: string; email: string; displayName: string }) {
+  const token = await issueAuthToken(
+    database.db,
+    user.id,
+    'email_verification',
+    new Date(Date.now() + config.AUTH_EMAIL_VERIFICATION_TTL_HOURS * 60 * 60 * 1_000),
+  );
+  const verifyUrl = `${config.APP_ORIGIN.replace(/\/$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
+  return mailer.send({
+    to: { address: user.email, display_name: user.displayName },
+    tag: 'email-verification',
+    email: verificationEmail({
+      name: user.displayName,
+      verifyUrl,
+      origin: config.APP_ORIGIN,
+      ttlHours: config.AUTH_EMAIL_VERIFICATION_TTL_HOURS,
+    }),
+  });
+}
+
+async function sendPasswordResetMessage(user: { id: string; email: string; displayName: string }) {
+  const token = await issueAuthToken(
+    database.db,
+    user.id,
+    'password_reset',
+    new Date(Date.now() + config.AUTH_PASSWORD_RESET_TTL_MINUTES * 60 * 1_000),
+  );
+  const resetUrl = `${config.APP_ORIGIN.replace(/\/$/, '')}/reset-password?token=${encodeURIComponent(token)}`;
+  return mailer.send({
+    to: { address: user.email, display_name: user.displayName },
+    tag: 'password-reset',
+    email: passwordResetEmail({
+      name: user.displayName,
+      resetUrl,
+      origin: config.APP_ORIGIN,
+      ttlMinutes: config.AUTH_PASSWORD_RESET_TTL_MINUTES,
+    }),
+  });
 }
 
 function decryptToken(value: string | null): string | null {
@@ -459,6 +535,7 @@ app.post(
             email: users.email,
             displayName: users.displayName,
             role: users.role,
+            emailVerified: users.emailVerified,
             onboardingCompletedAt: users.onboardingCompletedAt,
           });
         return created[0] ?? null;
@@ -473,9 +550,26 @@ app.post(
     if (!user) return reply.code(409).send({ error: 'email_already_registered' });
     if (!user) throw new Error('User creation returned no record');
 
+    const emailVerificationRequired = config.AUTH_EMAIL_VERIFICATION_REQUIRED;
+    const emailVerificationEnabled = emailVerificationRequired || Boolean(config.MAILEROO_API_KEY);
+    const emailVerificationSent = emailVerificationEnabled
+      ? await sendVerificationMessage(user)
+      : false;
+    if (emailVerificationRequired) {
+      return reply.code(201).send({
+        user: null,
+        emailVerificationRequired: true,
+        emailVerificationSent,
+      });
+    }
+
     const session = await createSession(database.db, user.id);
     setSessionCookie(reply, session.token, session.expiresAt, config.COOKIE_SECURE);
-    return reply.code(201).send({ user });
+    return reply.code(201).send({
+      user: publicUser(user),
+      emailVerificationRequired: false,
+      emailVerificationSent,
+    });
   },
 );
 
@@ -491,17 +585,140 @@ app.post(
       return reply.code(401).send({ error: 'invalid_credentials' });
     }
 
+    if (config.AUTH_EMAIL_VERIFICATION_REQUIRED && !user.emailVerified) {
+      await sendVerificationMessage(user);
+      return reply.code(403).send({ error: 'email_not_verified' });
+    }
+
     const session = await createSession(database.db, user.id);
     setSessionCookie(reply, session.token, session.expiresAt, config.COOKIE_SECURE);
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        displayName: user.displayName,
-        role: user.role,
-        onboardingCompletedAt: user.onboardingCompletedAt,
-      },
+      user: publicUser(user),
     };
+  },
+);
+
+app.post(
+  '/v1/auth/resend-verification',
+  { config: { rateLimit: { max: 3, timeWindow: '15 minutes' } } },
+  async (request, reply) => {
+    const input = emailInputSchema.parse(request.body);
+    const email = input.email.trim().toLowerCase();
+    const result = await database.db.select().from(users).where(eq(users.email, email)).limit(1);
+    const user = result[0];
+    if (
+      user &&
+      !user.emailVerified &&
+      (config.AUTH_EMAIL_VERIFICATION_REQUIRED || config.MAILEROO_API_KEY)
+    ) {
+      await sendVerificationMessage(user);
+    }
+    return reply.code(202).send({ accepted: true });
+  },
+);
+
+app.post(
+  '/v1/auth/verify-email',
+  { config: { rateLimit: { max: 10, timeWindow: '15 minutes' } } },
+  async (request, reply) => {
+    const { token } = authTokenInputSchema.parse(request.body);
+    const result = await database.db
+      .select({
+        tokenId: authTokens.id,
+        userId: users.id,
+        email: users.email,
+        displayName: users.displayName,
+        emailVerified: users.emailVerified,
+      })
+      .from(authTokens)
+      .innerJoin(users, eq(authTokens.userId, users.id))
+      .where(
+        and(
+          eq(authTokens.tokenHash, hashAuthToken(token)),
+          eq(authTokens.purpose, 'email_verification'),
+          isNull(authTokens.usedAt),
+          gt(authTokens.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+    const record = result[0];
+    if (!record) return reply.code(400).send({ error: 'email_verification_invalid' });
+
+    const now = new Date();
+    await database.db.transaction(async (tx) => {
+      await tx.update(authTokens).set({ usedAt: now }).where(eq(authTokens.id, record.tokenId));
+      await tx
+        .update(users)
+        .set({ emailVerified: true, updatedAt: now })
+        .where(eq(users.id, record.userId));
+    });
+    if (!record.emailVerified) {
+      await mailer.send({
+        to: { address: record.email, display_name: record.displayName },
+        tag: 'welcome',
+        email: welcomeEmail({ name: record.displayName, origin: config.APP_ORIGIN }),
+      });
+    }
+    return { verified: true };
+  },
+);
+
+app.post(
+  '/v1/auth/forgot-password',
+  { config: { rateLimit: { max: 3, timeWindow: '15 minutes' } } },
+  async (request, reply) => {
+    const input = emailInputSchema.parse(request.body);
+    const email = input.email.trim().toLowerCase();
+    const result = await database.db.select().from(users).where(eq(users.email, email)).limit(1);
+    const user = result[0];
+    if (user && config.MAILEROO_API_KEY) await sendPasswordResetMessage(user);
+    // Always return the same response so account existence cannot be enumerated.
+    return reply.code(202).send({ accepted: true });
+  },
+);
+
+app.post(
+  '/v1/auth/reset-password',
+  { config: { rateLimit: { max: 10, timeWindow: '15 minutes' } } },
+  async (request, reply) => {
+    const input = resetPasswordInputSchema.parse(request.body);
+    const result = await database.db
+      .select({
+        tokenId: authTokens.id,
+        userId: users.id,
+        email: users.email,
+        displayName: users.displayName,
+      })
+      .from(authTokens)
+      .innerJoin(users, eq(authTokens.userId, users.id))
+      .where(
+        and(
+          eq(authTokens.tokenHash, hashAuthToken(input.token)),
+          eq(authTokens.purpose, 'password_reset'),
+          isNull(authTokens.usedAt),
+          gt(authTokens.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+    const record = result[0];
+    if (!record) return reply.code(400).send({ error: 'password_reset_invalid' });
+
+    const now = new Date();
+    const passwordHash = await argon2.hash(input.password, { type: argon2.argon2id });
+    await database.db.transaction(async (tx) => {
+      await tx.update(authTokens).set({ usedAt: now }).where(eq(authTokens.id, record.tokenId));
+      await tx
+        .update(users)
+        .set({ passwordHash, updatedAt: now })
+        .where(eq(users.id, record.userId));
+      await tx.delete(sessions).where(eq(sessions.userId, record.userId));
+    });
+    await mailer.send({
+      to: { address: record.email, display_name: record.displayName },
+      tag: 'password-changed',
+      email: passwordChangedEmail({ name: record.displayName, origin: config.APP_ORIGIN }),
+    });
+    return { reset: true };
   },
 );
 

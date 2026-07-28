@@ -3,6 +3,7 @@ export interface User {
   email: string;
   displayName: string;
   role?: string;
+  emailVerified?: boolean;
   onboardingCompletedAt?: string | null;
 }
 export interface ScenarioStep {

@@ -23,6 +23,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
       : '/app';
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   if (!loading && user) return <Navigate to={nextPath} replace />;
   if (!loading && registerMode && setup && !setup.registrationOpen) {
@@ -38,11 +39,15 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
     const data = new FormData(event.currentTarget);
     try {
       if (registerMode) {
-        await register(
+        const result = await register(
           String(data.get('displayName')),
           String(data.get('email')),
           String(data.get('password')),
         );
+        if (result.requiresVerification) {
+          setNotice('Account created. Check your inbox to verify your email before logging in.');
+          return;
+        }
       } else {
         await login(String(data.get('email')), String(data.get('password')));
       }
@@ -151,6 +156,11 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                 {error}
               </p>
             ) : null}
+            {notice ? (
+              <p className="ht-form-success" role="status">
+                {notice}
+              </p>
+            ) : null}
             <button className="button primary" type="submit" disabled={submitting}>
               {submitting ? 'Please wait…' : registerMode ? 'Create account' : 'Log in'}
               {!submitting ? <ArrowRight aria-hidden="true" /> : null}
@@ -167,6 +177,11 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             </p>
           ) : !registerMode && setup?.deploymentMode === 'selfhost' ? (
             <p className="ht-auth-switch">Owner access · registration closed</p>
+          ) : null}
+          {!registerMode ? (
+            <p className="ht-auth-switch">
+              <Link to="/forgot-password">Forgot your password?</Link>
+            </p>
           ) : null}
           <p className="ht-auth-switch">
             <a href="https://github.com/IKER-36/hooktrials" target="_blank" rel="noreferrer">

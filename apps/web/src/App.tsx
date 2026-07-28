@@ -12,6 +12,7 @@ import { DemoPage } from './pages/app/DemoPage';
 import { DocsPage } from './pages/app/DocsPage';
 import { LiveWebhooksPage } from './pages/app/LiveWebhooksPage';
 import { useAuth } from './context/AuthContext';
+import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/EmailActionPage';
 
 function RootRedirect() {
   const { user, loading, setup } = useAuth();
@@ -26,6 +27,9 @@ export function App() {
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/evidence/:token" element={<EvidencePage />} />
       <Route path="/status/:token" element={<StatusPage />} />
       <Route path="/app" element={<AppLayout />}>

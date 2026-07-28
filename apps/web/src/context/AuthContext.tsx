@@ -7,7 +7,11 @@ interface AuthContextValue {
   loading: boolean;
   setup: SetupState | null;
   login(email: string, password: string): Promise<void>;
-  register(displayName: string, email: string, password: string): Promise<void>;
+  register(
+    displayName: string,
+    email: string,
+    password: string,
+  ): Promise<{ requiresVerification: boolean }>;
   logout(): Promise<void>;
   completeOnboarding(): Promise<void>;
   /** Drops the local session state without calling the API (e.g. after a 401). */
@@ -52,11 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
       },
       async register(displayName, email, password) {
-        const response = await apiRequest<{ user: User }>('/v1/auth/register', {
+        const response = await apiRequest<{
+          user: User | null;
+          emailVerificationRequired?: boolean;
+        }>('/v1/auth/register', {
           method: 'POST',
           body: JSON.stringify({ displayName, email, password }),
         });
-        setUser(response.user);
+        if (response.user) setUser(response.user);
         setSetup((current) =>
           current
             ? {
@@ -66,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
             : current,
         );
+        return { requiresVerification: response.emailVerificationRequired === true };
       },
       async logout() {
         await apiRequest('/v1/auth/logout', { method: 'POST' });
