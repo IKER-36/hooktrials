@@ -1,6 +1,18 @@
 # Current release status
 
-Updated: 27 July 2026.
+Updated: 28 July 2026.
+
+## Release `v0.13.0` — safe self-hosted updates
+
+Release `v0.13.0` adds a release-aware update path for self-hosted installations:
+
+- create a protected PostgreSQL backup before changing versions;
+- select a published release tag explicitly;
+- wait for migrations and Compose health checks;
+- restore the previous checkout and restart the previous stack when an update fails.
+
+The managed cloud environment runs the same application release. Self-hosting keeps its own
+database, runtime secrets and named volumes.
 
 ## Release `v0.12.4` — security-control
 
