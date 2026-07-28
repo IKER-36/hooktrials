@@ -47,3 +47,18 @@ standard artifact/test-report action used by your organization.
 
 The CLI deliberately does not create endpoints or modify dashboard configuration. It only sends
 the declared synthetic requests to the URL you provide.
+
+## Self-host update CLI
+
+The root `./hooktrials` CLI also manages safe self-hosted upgrades:
+
+```bash
+git fetch --tags origin
+./hooktrials update --release v0.13.0
+./hooktrials doctor --external
+```
+
+The update creates a mode-`0600` PostgreSQL backup, switches to the selected tag, rebuilds the
+containers, waits for migrations and health checks, and prints the backup path. It requires a clean
+Git checkout. If the application fails after the switch, the previous source checkout is restored;
+database migrations are recovered from the printed backup rather than silently reversed.

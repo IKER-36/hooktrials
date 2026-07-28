@@ -88,8 +88,7 @@ never use `Flexible`.
 
 ```bash
 ./hooktrials logs
-./hooktrials backup
-./hooktrials update
+./hooktrials update --release v0.13.0
 ./hooktrials doctor --external
 ```
 

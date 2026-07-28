@@ -201,6 +201,99 @@ external_doctor() {
   printf '%s\n' "External HTTPS probe: OK ($origin)"
 }
 
+create_backup() {
+  [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+  mkdir -p "$ROOT/backups"
+  backup="$ROOT/backups/hooktrials-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
+  dump="$backup.sql.tmp.$$"
+  compressed="$backup.tmp.$$"
+  if ! compose exec -T postgres pg_dump -U hooktrials hooktrials >"$dump"; then
+    rm -f "$dump" "$compressed"
+    die "PostgreSQL backup failed"
+  fi
+  if ! gzip <"$dump" >"$compressed"; then
+    rm -f "$dump" "$compressed"
+    die "Backup compression failed"
+  fi
+  rm -f "$dump"
+  mv "$compressed" "$backup"
+  chmod 600 "$backup"
+  printf '%s\n' "$backup"
+}
+
+assert_clean_checkout() {
+  require git
+  git -C "$ROOT" rev-parse --show-toplevel >/dev/null 2>&1 ||
+    die "self-hosted updates require a Git checkout"
+  [ -z "$(git -C "$ROOT" status --porcelain)" ] ||
+    die "working tree is not clean; commit or stash local changes before updating"
+}
+
+update_stack() {
+  compose build --pull
+  compose up -d --wait --wait-timeout 120
+  compose ps
+}
+
+restore_previous_checkout() {
+  if [ -n "${previous_ref:-}" ] && git -C "$ROOT" show-ref --verify --quiet "refs/heads/$previous_ref"; then
+    git -C "$ROOT" switch "$previous_ref" >/dev/null 2>&1 ||
+      git -C "$ROOT" switch --detach "$previous_sha" >/dev/null
+  else
+    git -C "$ROOT" switch --detach "$previous_sha" >/dev/null
+  fi
+}
+
+update_installation() {
+  release=
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --release)
+        [ "$#" -ge 2 ] || die "--release requires a tag, e.g. v0.13.0"
+        release=$2
+        shift 2
+        ;;
+      --release=*)
+        release=${1#*=}
+        shift
+        ;;
+      *) die "unknown update option: $1" ;;
+    esac
+  done
+
+  assert_clean_checkout
+  previous_sha=$(git -C "$ROOT" rev-parse HEAD)
+  previous_ref=$(git -C "$ROOT" symbolic-ref --quiet --short HEAD || true)
+
+  if [ -n "$release" ]; then
+    git -C "$ROOT" fetch --tags origin
+    git -C "$ROOT" rev-parse --verify --quiet "refs/tags/$release^{commit}" >/dev/null ||
+      die "release tag not found: $release"
+  fi
+
+  backup_path=$(create_backup)
+  if [ -n "$release" ]; then
+    git -C "$ROOT" switch --detach "$release" >/dev/null || {
+      printf '%s\n' "error: could not switch to release; checkout unchanged" >&2
+      exit 1
+    }
+  fi
+
+  if ! update_stack; then
+    printf '%s\n' "update failed; restoring previous checkout: $previous_sha" >&2
+    restore_previous_checkout || true
+    if ! update_stack; then
+      printf '%s\n' "rollback stack restart failed; inspect logs before retrying" >&2
+    fi
+    die "update failed; database backup available at $backup_path"
+  fi
+
+  printf '%s\n' "Update complete."
+  printf '%s\n' "Release: ${release:-current checkout}"
+  printf '%s\n' "Backup: $backup_path"
+  printf '%s\n' "Run ./hooktrials doctor --external to verify public access."
+}
+
 require docker
 docker compose version >/dev/null 2>&1 || die "Docker Compose v2 is required"
 
@@ -241,28 +334,11 @@ case "${1:-up}" in
     ;;
   update)
     [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
-    compose build --pull
-    compose up -d
-    compose ps
+    shift
+    update_installation "$@"
     ;;
   backup)
-    [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
-    mkdir -p "$ROOT/backups"
-    backup="$ROOT/backups/hooktrials-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
-    dump="$backup.sql.tmp.$$"
-    compressed="$backup.tmp.$$"
-    if ! compose exec -T postgres pg_dump -U hooktrials hooktrials >"$dump"; then
-      rm -f "$dump" "$compressed"
-      die "PostgreSQL backup failed"
-    fi
-    if ! gzip <"$dump" >"$compressed"; then
-      rm -f "$dump" "$compressed"
-      die "Backup compression failed"
-    fi
-    rm -f "$dump"
-    mv "$compressed" "$backup"
-    chmod 600 "$backup"
-    printf '%s\n' "Backup created: $backup"
+    printf 'Backup created: %s\n' "$(create_backup)"
     ;;
   reset)
     [ "${2:-}" = "--yes" ] || die "reset deletes all HookTrials data; rerun: ./hooktrials reset --yes"
@@ -272,10 +348,10 @@ case "${1:-up}" in
     printf '%s\n' "HookTrials data and runtime secrets removed."
     ;;
   help | -h | --help)
-    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update|backup|reset --yes}"
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update [--release vX.Y.Z]|backup|reset --yes}"
     ;;
   *)
-    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update|backup|reset --yes}" >&2
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update [--release vX.Y.Z]|backup|reset --yes}" >&2
     exit 2
     ;;
 esac

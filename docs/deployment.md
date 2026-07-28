@@ -21,7 +21,8 @@ preloaded images without changing persisted database/Redis volumes.
 Before promoting a release, read [Release status](release-status.md), back up PostgreSQL and the
 runtime encryption key, validate Compose configuration and run an authenticated smoke test.
 
-For self-hosted installations, updates are currently manual and checkout-based: fetch/select a
-tag, run `./hooktrials backup`, then `./hooktrials update` and `./hooktrials doctor`. The updater
-does not pull Git changes or back up data for you; named PostgreSQL/Redis volumes and the ignored
-runtime configuration remain intact unless `./hooktrials reset --yes` is run.
+For self-hosted installations, `./hooktrials update --release vX.Y.Z` performs a backup, release
+switch, source build, migration wait and Compose health check. It requires a clean checkout and
+does not pull Git changes automatically. On failure it restores the previous source checkout;
+database migrations require the printed backup for recovery. Named PostgreSQL/Redis volumes and the
+ignored runtime configuration remain intact unless `./hooktrials reset --yes` is run.

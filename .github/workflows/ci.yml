@@ -31,6 +31,9 @@ jobs:
       - name: Run project checks
         run: pnpm check
 
+      - name: Check self-host CLI
+        run: ./scripts/test-cli.sh
+
   containers:
     runs-on: ubuntu-latest
     timeout-minutes: 20

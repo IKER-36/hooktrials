@@ -64,29 +64,35 @@ application. Never expose PostgreSQL or Redis ports.
 
 ### Updating without losing data
 
-Self-hosted updates are currently operator-driven. The repository checkout is the update source;
-`./hooktrials update` rebuilds the code already checked out and recreates changed containers. It
-does not run `git pull`, select a release, or create a backup automatically.
+`./hooktrials update` now performs a backup, rebuilds the checked-out release, runs migrations,
+waits for Compose health checks and prints a rollback backup reference. It never runs `git pull` or
+modifies `.hooktrials/runtime.env` for you. Use `--release` to select a tagged release; the working
+tree must be clean.
 
-Use this sequence for a release update:
+Update to a tagged release:
 
 ```bash
 git status --short                 # keep local changes out of production
 git fetch --tags origin
-git checkout v0.12.4               # replace with the release you want
-./hooktrials backup                # do this before every update
-./hooktrials update
+./hooktrials update --release v0.13.0
 ./hooktrials doctor --external     # omit --external for local-only mode
 ```
+
+To rebuild the current checkout without changing Git refs:
+
+```bash
+./hooktrials update
+```
+
+If build, migration or health checks fail after a release switch, the CLI restores the previous
+source checkout and restarts it. Database migrations are not automatically reversed: use the
+printed mode-`0600` backup and the documented restore procedure if schema recovery is required.
 
 PostgreSQL and Redis live in named Docker volumes, while `.hooktrials/runtime.env` is ignored and
 preserved. Updating the checkout or rebuilding containers therefore keeps users, endpoints,
 events and encryption keys. Never run `./hooktrials reset --yes` as part of an update: it deletes
 the volumes and runtime secrets. Keep the backup and encrypted runtime configuration off-host so a
 failed migration or host loss has a recovery path.
-
-There is no automatic in-app update notifier or unattended updater yet. A future updater can wrap
-the same flow with release selection, backup, migration health checks, smoke tests and rollback.
 
 `./hooktrials reset --yes` permanently deletes PostgreSQL, Redis data and generated runtime secrets.
 

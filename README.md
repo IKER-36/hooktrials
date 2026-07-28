@@ -29,8 +29,12 @@ then closes. Self-hosted mode has no endpoint or daily-event quota by default.
 ./hooktrials status
 ./hooktrials logs
 ./hooktrials backup
-./hooktrials update
+./hooktrials update --release v0.13.0
 ```
+
+Updates back up PostgreSQL, rebuild the selected checkout and wait for migrations and health checks.
+See [self-hosting updates](docs/self-hosting.md#updating-without-losing-data) before upgrading a
+production installation.
 
 To receive webhooks from external providers, configure your existing HTTPS proxy or let the
 included Caddy profile manage a public domain:
