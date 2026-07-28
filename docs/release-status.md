@@ -2,6 +2,36 @@
 
 Updated: 28 July 2026.
 
+## Release `v0.16.0` — Account security and recovery
+
+This release adds a complete transactional email layer for account safety.
+
+### Added
+
+- Verify an email address after registration before entering a Cloud workspace.
+- Request a fresh verification link when an unverified account tries to log in.
+- Recover access through a single-use password reset link with a short expiry.
+- Receive a welcome message after verification and a confirmation when the password changes.
+- New verification, recovery and password-change screens with clear next steps and accessible
+  error states.
+
+### Improved
+
+- Account emails share a responsive HookTrials design with the product logo, black/green palette and
+  a plain-text alternative for mail clients that do not render HTML.
+- Sensitive links are single-use, expire automatically and are never stored in readable form.
+- Password reset requests use the same response whether or not an account exists.
+- Changing a password signs out existing sessions so an old session cannot remain active.
+
+### Fixed
+
+- New Cloud accounts can no longer remain permanently unverified when email delivery is enabled.
+- Expired or reused verification and recovery links now show an actionable error instead of failing
+  silently.
+
+Self-hosted installations keep email optional by default. Cloud operators can enable the same flow
+with a verified sending domain and a Maileroo sending key.
+
 ## Release `v0.15.2` — Complete Linear starter headers
 
 This patch completes the Linear contract starter introduced in `v0.15.1`.
