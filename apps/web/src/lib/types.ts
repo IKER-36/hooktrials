@@ -33,6 +33,7 @@ export interface Endpoint {
   retryMaxAttempts?: number;
   retryBaseDelayMs?: number;
   retryMaxDelayMs?: number;
+  deliveryPaused?: boolean;
   contractConfigured?: boolean;
   signatureProvider?: 'none' | 'github' | 'stripe';
   signatureConfigured?: boolean;

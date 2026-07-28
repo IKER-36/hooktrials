@@ -1904,6 +1904,7 @@ app.get('/v1/endpoints', async (request, reply) => {
       retryMaxAttempts: endpoints.retryMaxAttempts,
       retryBaseDelayMs: endpoints.retryBaseDelayMs,
       retryMaxDelayMs: endpoints.retryMaxDelayMs,
+      deliveryPaused: endpoints.deliveryPaused,
       contractConfigured: sql<boolean>`${endpoints.encryptedContract} is not null`,
       signatureProvider: endpoints.signatureProvider,
       signatureConfigured: sql<boolean>`${endpoints.encryptedSignatureSecret} is not null`,
@@ -2827,6 +2828,7 @@ app.post('/v1/endpoints', async (request, reply) => {
       retryMaxAttempts: input.retryMaxAttempts,
       retryBaseDelayMs: input.retryBaseDelayMs,
       retryMaxDelayMs: input.retryMaxDelayMs,
+      deliveryPaused: false,
       contractConfigured: Boolean(input.contract),
       signatureProvider: input.signatureProvider,
       signatureConfigured: Boolean(input.signatureSecret),
@@ -2937,6 +2939,7 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
     ...(input.retryMaxAttempts !== undefined ? { retryMaxAttempts: input.retryMaxAttempts } : {}),
     ...(input.retryBaseDelayMs !== undefined ? { retryBaseDelayMs: input.retryBaseDelayMs } : {}),
     ...(input.retryMaxDelayMs !== undefined ? { retryMaxDelayMs: input.retryMaxDelayMs } : {}),
+    ...(input.deliveryPaused !== undefined ? { deliveryPaused: input.deliveryPaused } : {}),
     ...(input.contract !== undefined
       ? {
           encryptedContract: input.contract
@@ -2987,6 +2990,7 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
           retryMaxAttempts: endpoints.retryMaxAttempts,
           retryBaseDelayMs: endpoints.retryBaseDelayMs,
           retryMaxDelayMs: endpoints.retryMaxDelayMs,
+          deliveryPaused: endpoints.deliveryPaused,
           contractConfigured: sql<boolean>`${endpoints.encryptedContract} is not null`,
           signatureProvider: endpoints.signatureProvider,
           signatureConfigured: sql<boolean>`${endpoints.encryptedSignatureSecret} is not null`,

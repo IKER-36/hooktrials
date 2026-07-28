@@ -1,0 +1,1 @@
+ALTER TABLE "endpoints" ADD COLUMN "delivery_paused" boolean DEFAULT false NOT NULL;

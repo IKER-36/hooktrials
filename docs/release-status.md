@@ -2,6 +2,16 @@
 
 Updated: 28 July 2026.
 
+## Release `v0.15.0` — Delivery Control Plane
+
+Release `v0.15.0` adds a safe outbound pause for Protect routes:
+
+- pause destination delivery while inbound events remain captured and correlated;
+- keep queued work and attempt history intact;
+- resume from Route control and continue the existing retry policy.
+
+The setting defaults to normal delivery and does not change Trial or Observe behaviour.
+
 ## Release `v0.14.0` — Incident Center
 
 Release `v0.14.0` adds a practical triage workflow to Operations:

@@ -125,6 +125,7 @@ export const endpoints = pgTable(
     retryMaxAttempts: integer('retry_max_attempts').notNull().default(5),
     retryBaseDelayMs: integer('retry_base_delay_ms').notNull().default(2_000),
     retryMaxDelayMs: integer('retry_max_delay_ms').notNull().default(300_000),
+    deliveryPaused: boolean('delivery_paused').notNull().default(false),
     encryptedContract: text('encrypted_contract'),
     signatureProvider: signatureProviderEnum('signature_provider').notNull().default('none'),
     encryptedSignatureSecret: text('encrypted_signature_secret'),

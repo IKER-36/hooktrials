@@ -50,6 +50,7 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
   const [retryMaxDelayMs, setRetryMaxDelayMs] = useState(
     String(endpoint.retryMaxDelayMs ?? 300_000),
   );
+  const [deliveryPaused, setDeliveryPaused] = useState(endpoint.deliveryPaused ?? false);
   const [contractMethod, setContractMethod] = useState('');
   const [contractHeaders, setContractHeaders] = useState('');
   const [contractJsonPaths, setContractJsonPaths] = useState('');
@@ -91,6 +92,7 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
     setRetryMaxAttempts(String(endpoint.retryMaxAttempts ?? 5));
     setRetryBaseDelayMs(String(endpoint.retryBaseDelayMs ?? 2_000));
     setRetryMaxDelayMs(String(endpoint.retryMaxDelayMs ?? 300_000));
+    setDeliveryPaused(endpoint.deliveryPaused ?? false);
     setSignatureProvider(endpoint.signatureProvider ?? 'none');
     setSignatureTolerance(String(endpoint.signatureToleranceSeconds ?? 300));
     setExpectedMinStatus(String(endpoint.destinationExpectedMinStatus ?? 200));
@@ -142,6 +144,7 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
         retryMaxAttempts: Number(retryMaxAttempts),
         retryBaseDelayMs: Number(retryBaseDelayMs),
         retryMaxDelayMs: Number(retryMaxDelayMs),
+        deliveryPaused: mode === 'protect' ? deliveryPaused : false,
         destinationExpectedMinStatus: Number(expectedMinStatus),
         destinationExpectedMaxStatus: Number(expectedMaxStatus),
         ...(removeContract
@@ -274,6 +277,21 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
                   value={retryMaxDelayMs}
                   onChange={(event) => setRetryMaxDelayMs(event.target.value)}
                 />
+              </label>
+              <label className="ht-field ht-delivery-pause-field">
+                <span>Outbound delivery</span>
+                <span className="ht-switch-line">
+                  <input
+                    type="checkbox"
+                    checked={!deliveryPaused}
+                    onChange={(event) => setDeliveryPaused(!event.target.checked)}
+                  />{' '}
+                  {deliveryPaused ? 'Paused safely' : 'Delivering normally'}
+                </span>
+                <small>
+                  Inbound events remain captured while paused. Queued protected deliveries resume
+                  when you switch delivery back on.
+                </small>
               </label>
             </>
           ) : null}

@@ -874,9 +874,11 @@ async function scheduleQueuedDeliveries() {
   const queued = await database.db
     .select({ id: destinationDeliveries.id, nextAttemptAt: destinationDeliveries.nextAttemptAt })
     .from(destinationDeliveries)
+    .innerJoin(endpoints, eq(destinationDeliveries.resourceId, endpoints.resourceId))
     .where(
       and(
         eq(destinationDeliveries.state, 'queued'),
+        eq(endpoints.deliveryPaused, false),
         or(
           isNull(destinationDeliveries.nextAttemptAt),
           lte(destinationDeliveries.nextAttemptAt, now),

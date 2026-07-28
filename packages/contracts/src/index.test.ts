@@ -6,6 +6,7 @@ import {
   evidenceExportQuerySchema,
   incidentTriageInputSchema,
   syntheticEventInputSchema,
+  updateEndpointInputSchema,
 } from './index.js';
 
 describe('alert channel input', () => {
@@ -80,6 +81,11 @@ describe('createEndpointInputSchema', () => {
       destinationUrl: 'https://api.example.com/webhooks',
     });
     expect(result.success).toBe(false);
+  });
+
+  it('accepts pausing outbound Protect delivery', () => {
+    const result = updateEndpointInputSchema.safeParse({ deliveryPaused: true });
+    expect(result.success).toBe(true);
   });
 });
 

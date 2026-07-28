@@ -238,6 +238,7 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
       expiresAt: endpoints.expiresAt,
       name: endpoints.name,
       mode: endpoints.mode,
+      deliveryPaused: endpoints.deliveryPaused,
       encryptedDestinationUrl: endpoints.encryptedDestinationUrl,
       encryptedDestinationHeaders: endpoints.encryptedDestinationHeaders,
       destinationTimeoutMs: endpoints.destinationTimeoutMs,
@@ -422,7 +423,7 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
     if (!delivery) throw new Error('Destination delivery creation returned no record');
 
     if (protectedMode) {
-      if (!previousDelivery) {
+      if (!previousDelivery && !endpoint.deliveryPaused) {
         await deliveryQueue.add(
           'protected-forward',
           { deliveryId: delivery.id },
@@ -442,7 +443,7 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
         .send({
           accepted: true,
           eventId: event.id,
-          delivery: previousDelivery ? 'duplicate' : 'queued',
+          delivery: previousDelivery ? 'duplicate' : endpoint.deliveryPaused ? 'paused' : 'queued',
         });
     }
 

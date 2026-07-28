@@ -638,6 +638,22 @@ html[data-theme] .ht-shell .ht-operation-list article {
   font-style: italic;
 }
 
+.ht-delivery-pause-field {
+  align-content: start;
+}
+
+.ht-switch-line {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--ht-ink);
+  font-size: 11px;
+}
+
+.ht-switch-line input {
+  accent-color: var(--ht-green);
+}
+
 html[data-theme] .ht-shell .ht-integration-table-head,
 html[data-theme] .ht-shell .ht-integration-table > button {
   background: transparent;

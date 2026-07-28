@@ -92,6 +92,13 @@
       "when": 1785228048742,
       "tag": "0012_typical_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785228311756,
+      "tag": "0013_sloppy_sharon_ventura",
+      "breakpoints": true
     }
   ]
 }

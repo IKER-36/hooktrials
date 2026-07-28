@@ -102,6 +102,7 @@ export const updateEndpointInputSchema = z
     retryMaxAttempts: z.number().int().min(1).max(8).optional(),
     retryBaseDelayMs: z.number().int().min(1_000).max(300_000).optional(),
     retryMaxDelayMs: z.number().int().min(5_000).max(3_600_000).optional(),
+    deliveryPaused: z.boolean().optional(),
     contract: webhookContractSchema.nullable().optional(),
     signatureProvider: z.enum(['none', 'github', 'stripe']).optional(),
     signatureSecret: z.string().min(8).max(512).nullable().optional(),
