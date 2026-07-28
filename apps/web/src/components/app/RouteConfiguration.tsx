@@ -48,8 +48,13 @@ const PROVIDER_PRESETS = [
     id: 'linear',
     name: 'Linear',
     provider: 'none' as const,
-    headers: { 'linear-event': '', 'linear-delivery': '', 'linear-signature': '' },
-    note: 'Contract starter · delivery and signature headers captured',
+    headers: {
+      'linear-event': '',
+      'linear-delivery': '',
+      'linear-signature': '',
+      'linear-timestamp': '',
+    },
+    note: 'Contract starter · delivery, signature and timestamp headers captured',
   },
   {
     id: 'hubspot',

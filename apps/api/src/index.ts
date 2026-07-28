@@ -269,6 +269,7 @@ function syntheticProviderHeaders(input: {
     headers['linear-event'] = 'Issue';
     headers['linear-delivery'] = input.eventId;
     headers['linear-signature'] = 'synthetic-test';
+    headers['linear-timestamp'] = String(Date.now());
   }
   if (input.provider === 'hubspot') {
     headers['x-hubspot-signature-v3'] = 'synthetic-test';

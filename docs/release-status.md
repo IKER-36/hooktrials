@@ -2,6 +2,25 @@
 
 Updated: 28 July 2026.
 
+## Release `v0.15.2` — Complete Linear starter headers
+
+This patch completes the Linear contract starter introduced in `v0.15.1`.
+
+### Improved
+
+- Linear routes now expect the complete event, delivery, signature and timestamp header set.
+- Safe Linear test events include a representative timestamp, making the captured request easier to
+  compare with the provider's replay-protection guidance.
+- The same header expectations are used consistently by new live connections and route contract
+  presets.
+
+### Fixed
+
+- Linear starter contracts no longer omit `Linear-Timestamp` when validating or simulating a test
+  delivery.
+
+No existing route mode, retry policy or signature verification behaviour changes in this patch.
+
 ## Release `v0.15.1` — Expanded provider starters
 
 This patch expands Webhook Hub coverage without changing the existing route model or delivery
@@ -10,7 +29,7 @@ semantics.
 ### Added
 
 - GitLab starter with event, webhook UUID and token header expectations.
-- Linear starter with event, delivery and signature header expectations.
+- Linear starter with event, delivery, signature and timestamp header expectations.
 - HubSpot starter with signature and request-timestamp header expectations.
 - The same provider choices are available when creating a live connection and when applying a
   route contract preset.

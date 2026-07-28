@@ -116,6 +116,7 @@ function providerContract(provider: Provider) {
     requiredHeaders['linear-event'] = '';
     requiredHeaders['linear-delivery'] = '';
     requiredHeaders['linear-signature'] = '';
+    requiredHeaders['linear-timestamp'] = '';
   }
   if (provider === 'hubspot') {
     requiredHeaders['x-hubspot-signature-v3'] = '';

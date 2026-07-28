@@ -39,7 +39,7 @@ Route control includes seven provider starters:
 - **Shopify:** POST contract and required topic, webhook-ID and HMAC header presence;
 - **Slack:** POST contract and required timestamp/signature header presence.
 - **GitLab:** POST contract and event, webhook UUID and token header presence;
-- **Linear:** POST contract and event, delivery and signature header presence;
+- **Linear:** POST contract and event, delivery, signature and timestamp header presence;
 - **HubSpot:** POST contract and timestamp and signature header presence.
 
 Stripe and GitHub perform native cryptographic verification. Shopify, Slack, GitLab, Linear and
