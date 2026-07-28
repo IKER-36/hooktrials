@@ -65,6 +65,13 @@ describe('createEndpointInputSchema', () => {
     expect(input.retryMaxAttempts).toBe(5);
   });
 
+  it('accepts the extended provider starter catalog', () => {
+    for (const provider of ['gitlab', 'linear', 'hubspot'] as const) {
+      const input = createEndpointInputSchema.parse({ name: `${provider}-route`, provider });
+      expect(input.provider).toBe(provider);
+    }
+  });
+
   it('rejects a managed route without a destination', () => {
     const result = createEndpointInputSchema.safeParse({
       name: 'missing-destination',

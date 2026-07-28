@@ -3,8 +3,11 @@ import {
   ArrowRight,
   CheckCircle2,
   CreditCard,
+  Building2,
+  GitBranch,
   GitPullRequest,
   MessageSquare,
+  Network,
   RadioTower,
   ShieldCheck,
   Store,
@@ -67,6 +70,24 @@ const PROVIDERS: Array<{ id: Provider; name: string; detail: string; icon: Lucid
     detail: 'Timestamp and signature header contract',
     icon: MessageSquare,
   },
+  {
+    id: 'gitlab',
+    name: 'GitLab',
+    detail: 'Event, UUID and token contract',
+    icon: GitBranch,
+  },
+  {
+    id: 'linear',
+    name: 'Linear',
+    detail: 'Delivery and signature header contract',
+    icon: Network,
+  },
+  {
+    id: 'hubspot',
+    name: 'HubSpot',
+    detail: 'Timestamp and signature header contract',
+    icon: Building2,
+  },
 ];
 
 function providerContract(provider: Provider) {
@@ -85,6 +106,20 @@ function providerContract(provider: Provider) {
   if (provider === 'slack') {
     requiredHeaders['x-slack-request-timestamp'] = '';
     requiredHeaders['x-slack-signature'] = '';
+  }
+  if (provider === 'gitlab') {
+    requiredHeaders['x-gitlab-event'] = '';
+    requiredHeaders['x-gitlab-webhook-uuid'] = '';
+    requiredHeaders['x-gitlab-token'] = '';
+  }
+  if (provider === 'linear') {
+    requiredHeaders['linear-event'] = '';
+    requiredHeaders['linear-delivery'] = '';
+    requiredHeaders['linear-signature'] = '';
+  }
+  if (provider === 'hubspot') {
+    requiredHeaders['x-hubspot-signature-v3'] = '';
+    requiredHeaders['x-hubspot-request-timestamp'] = '';
   }
   return { method: 'POST', requiredHeaders, jsonPaths: {} };
 }
@@ -270,7 +305,7 @@ export function LiveWebhooksPage() {
           <span>1</span>
           <div>
             <b>Provider sends</b>
-            <small>Stripe, GitHub, Shopify, Slack or any service</small>
+            <small>Stripe, GitHub, Shopify, Slack, GitLab, Linear, HubSpot or any service</small>
           </div>
         </article>
         <ArrowRight aria-hidden="true" />

@@ -260,6 +260,20 @@ function syntheticProviderHeaders(input: {
     headers['x-slack-request-timestamp'] = String(Math.floor(Date.now() / 1_000));
     headers['x-slack-signature'] = 'v0=synthetic-test';
   }
+  if (input.provider === 'gitlab') {
+    headers['x-gitlab-event'] = 'Push Hook';
+    headers['x-gitlab-webhook-uuid'] = input.eventId;
+    headers['x-gitlab-token'] = 'synthetic-test';
+  }
+  if (input.provider === 'linear') {
+    headers['linear-event'] = 'Issue';
+    headers['linear-delivery'] = input.eventId;
+    headers['linear-signature'] = 'synthetic-test';
+  }
+  if (input.provider === 'hubspot') {
+    headers['x-hubspot-signature-v3'] = 'synthetic-test';
+    headers['x-hubspot-request-timestamp'] = String(Date.now());
+  }
 
   return headers;
 }
@@ -1930,9 +1944,16 @@ app.get('/v1/endpoints', async (request, reply) => {
     endpoints: items.map(({ encryptedToken, resourceMetadata, ...item }) => {
       const token = decryptToken(encryptedToken);
       const metadata = resourceMetadata as { demoRunId?: unknown; provider?: unknown } | null;
-      const provider = ['generic', 'stripe', 'github', 'shopify', 'slack'].includes(
-        String(metadata?.provider),
-      )
+      const provider = [
+        'generic',
+        'stripe',
+        'github',
+        'shopify',
+        'slack',
+        'gitlab',
+        'linear',
+        'hubspot',
+      ].includes(String(metadata?.provider))
         ? String(metadata?.provider)
         : item.signatureProvider === 'github' || item.signatureProvider === 'stripe'
           ? item.signatureProvider
@@ -1978,9 +1999,16 @@ app.post('/v1/endpoints/:id/test-event', async (request, reply) => {
   const token = decryptToken(owned.endpoint.encryptedToken);
   if (!token) return reply.code(409).send({ error: 'ingest_token_unavailable' });
   const metadata = owned.metadata as { provider?: unknown } | null;
-  const provider = ['generic', 'stripe', 'github', 'shopify', 'slack'].includes(
-    String(metadata?.provider),
-  )
+  const provider = [
+    'generic',
+    'stripe',
+    'github',
+    'shopify',
+    'slack',
+    'gitlab',
+    'linear',
+    'hubspot',
+  ].includes(String(metadata?.provider))
     ? String(metadata?.provider)
     : owned.endpoint.signatureProvider === 'github' || owned.endpoint.signatureProvider === 'stripe'
       ? owned.endpoint.signatureProvider

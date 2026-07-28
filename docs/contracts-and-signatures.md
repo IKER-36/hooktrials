@@ -32,13 +32,17 @@ The dashboard only reports whether a secret is configured. Re-enter a secret onl
 
 ## Provider starters
 
-Route control includes four starters:
+Route control includes seven provider starters:
 
 - **Stripe:** POST contract plus native `Stripe-Signature` verification;
 - **GitHub:** delivery/event headers plus native `X-Hub-Signature-256` verification;
 - **Shopify:** POST contract and required topic, webhook-ID and HMAC header presence;
 - **Slack:** POST contract and required timestamp/signature header presence.
+- **GitLab:** POST contract and event, webhook UUID and token header presence;
+- **Linear:** POST contract and event, delivery and signature header presence;
+- **HubSpot:** POST contract and timestamp and signature header presence.
 
-Stripe and GitHub perform native cryptographic verification. Shopify and Slack starters verify the
-expected header surface but do not claim native HMAC verification. Always review a starter before
-saving it and provide a real secret only through the encrypted route form.
+Stripe and GitHub perform native cryptographic verification. Shopify, Slack, GitLab, Linear and
+HubSpot starters verify the expected header surface but do not claim native cryptographic
+verification yet. Always review a starter before saving it and provide any provider secret only
+through the encrypted route form.

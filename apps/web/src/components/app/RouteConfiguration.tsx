@@ -33,6 +33,31 @@ const PROVIDER_PRESETS = [
     headers: { 'x-slack-request-timestamp': '', 'x-slack-signature': '' },
     note: 'Contract starter · signing headers captured',
   },
+  {
+    id: 'gitlab',
+    name: 'GitLab',
+    provider: 'none' as const,
+    headers: {
+      'x-gitlab-event': '',
+      'x-gitlab-webhook-uuid': '',
+      'x-gitlab-token': '',
+    },
+    note: 'Contract starter · event, UUID and token headers captured',
+  },
+  {
+    id: 'linear',
+    name: 'Linear',
+    provider: 'none' as const,
+    headers: { 'linear-event': '', 'linear-delivery': '', 'linear-signature': '' },
+    note: 'Contract starter · delivery and signature headers captured',
+  },
+  {
+    id: 'hubspot',
+    name: 'HubSpot',
+    provider: 'none' as const,
+    headers: { 'x-hubspot-signature-v3': '', 'x-hubspot-request-timestamp': '' },
+    note: 'Contract starter · timestamp and signature headers captured',
+  },
 ] as const;
 
 export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {

@@ -15,7 +15,8 @@ destination of that route.
 
 ## What the hub provides
 
-- one dashboard for Stripe, GitHub, Shopify, Slack and generic webhook providers;
+- one dashboard for Stripe, GitHub, Shopify, Slack, GitLab, Linear, HubSpot and generic webhook
+  providers, with a provider-specific contract starter for each;
 - complete inbound method, headers, body, timestamps and correlation evidence;
 - native Stripe and GitHub signature verification;
 - method, header and JSON-path contracts before forwarding;
@@ -26,13 +27,16 @@ destination of that route.
   secrets at rest.
 
 The current route model connects one provider-facing ingestion URL to one destination. Create
-multiple routes to concentrate different providers and backends in the same workspace.
+multiple routes to concentrate different providers and backends in the same workspace. Provider
+starters configure the expected method and header surface; native cryptographic verification is
+currently available for Stripe and GitHub, while the other starters remain contract-first.
 
 ## Create a live connection
 
 1. Open **Webhook Hub** in the Product workspace and select **Connect a real webhook**.
 2. Choose the provider. Provider starters configure an inbound POST contract; Stripe and GitHub
-   support native signature verification.
+   support native signature verification, while the other starters validate the expected header
+   surface before delivery.
 3. Enter the public HTTPS URL that currently receives the webhook.
 4. Optionally enter an existing signing secret, then choose **Observe** or **Protect**.
 5. Select the environment. Production requires explicit acknowledgement because HookTrials becomes

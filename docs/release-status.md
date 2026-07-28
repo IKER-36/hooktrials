@@ -2,6 +2,37 @@
 
 Updated: 28 July 2026.
 
+## Release `v0.15.1` — Expanded provider starters
+
+This patch expands Webhook Hub coverage without changing the existing route model or delivery
+semantics.
+
+### Added
+
+- GitLab starter with event, webhook UUID and token header expectations.
+- Linear starter with event, delivery and signature header expectations.
+- HubSpot starter with signature and request-timestamp header expectations.
+- The same provider choices are available when creating a live connection and when applying a
+  route contract preset.
+
+### Improved
+
+- Provider-specific contract starters make it faster to move a real integration behind HookTrials
+  while keeping the expected inbound shape visible before traffic arrives.
+- Safe test events now include representative headers for the three additional provider starters,
+  making the full capture and evidence flow easier to validate.
+- Existing Stripe and GitHub native signature verification remains clearly distinguished from the
+  contract-first starters.
+
+### Fixed
+
+- Provider metadata is preserved when listing and reopening live routes, including the new starter
+  choices.
+
+The new starters validate the expected method and headers. Native cryptographic verification remains
+available for Stripe and GitHub; review and configure any provider's own secret requirements before
+accepting production traffic.
+
 ## Release `v0.15.0` — Delivery Control Plane
 
 Release `v0.15.0` adds a safe outbound pause for Protect routes:

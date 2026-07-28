@@ -37,7 +37,9 @@ export const createEndpointInputSchema = z
   .object({
     name: z.string().trim().min(2).max(80),
     scenarioId: z.string().uuid().optional(),
-    provider: z.enum(['generic', 'stripe', 'github', 'shopify', 'slack']).default('generic'),
+    provider: z
+      .enum(['generic', 'stripe', 'github', 'shopify', 'slack', 'gitlab', 'linear', 'hubspot'])
+      .default('generic'),
     mode: z.enum(['trial', 'observe', 'protect']).default('trial'),
     environment: z.enum(['test', 'staging', 'production']).default('test'),
     destinationUrl: z.string().url().max(2_048).optional(),
@@ -138,7 +140,9 @@ export const syntheticEventInputSchema = z.object({
 
 export const destinationPreflightInputSchema = z.object({
   url: z.string().url().max(2_048),
-  provider: z.enum(['generic', 'stripe', 'github', 'shopify', 'slack']).default('generic'),
+  provider: z
+    .enum(['generic', 'stripe', 'github', 'shopify', 'slack', 'gitlab', 'linear', 'hubspot'])
+    .default('generic'),
   signatureConfigured: z.boolean().default(false),
   contractConfigured: z.boolean().default(true),
   timeoutMs: z.number().int().min(1_000).max(30_000).default(10_000),
