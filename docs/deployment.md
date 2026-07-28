@@ -18,6 +18,17 @@ The current tagged release is `v0.15.0`. Self-hosted Compose intentionally build
 source so local modifications remain auditable. Managed deployments pin immutable registry or
 preloaded images without changing persisted database/Redis volumes.
 
+## Versioning
+
+HookTrials follows conservative semantic versioning. Normal fixes, UI polish, accessibility work,
+documentation and backwards-compatible improvements use the next patch number (`v0.15.1`,
+`v0.15.2`, and so on). A minor release such as `v0.16.0` is reserved for a substantial new,
+user-visible capability or a coordinated feature set. Breaking compatibility changes require a
+separate major-version decision.
+
+Release notes describe the user-visible additions, improvements and fixes in practical language.
+They do not contain private deployment details or internal development planning.
+
 Before promoting a release, read [Release status](release-status.md), back up PostgreSQL and the
 runtime encryption key, validate Compose configuration and run an authenticated smoke test.
 
