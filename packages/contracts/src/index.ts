@@ -122,6 +122,15 @@ export const deliveryActionInputSchema = z.object({
   confirm: z.literal(true),
 });
 
+export const incidentTriageInputSchema = z
+  .object({
+    acknowledged: z.boolean().optional(),
+    note: z.string().trim().min(1).max(2_000).nullable().optional(),
+  })
+  .refine((value) => value.acknowledged !== undefined || value.note !== undefined, {
+    message: 'At least one triage field is required',
+  });
+
 export const syntheticEventInputSchema = z.object({
   confirm: z.literal(true),
 });
@@ -258,6 +267,7 @@ export type LoginInput = z.infer<typeof loginInputSchema>;
 export type CreateEndpointInput = z.infer<typeof createEndpointInputSchema>;
 export type UpdateEndpointInput = z.infer<typeof updateEndpointInputSchema>;
 export type DeliveryActionInput = z.infer<typeof deliveryActionInputSchema>;
+export type IncidentTriageInput = z.infer<typeof incidentTriageInputSchema>;
 export type SyntheticEventInput = z.infer<typeof syntheticEventInputSchema>;
 export type DestinationPreflightInput = z.infer<typeof destinationPreflightInputSchema>;
 export type WebhookContract = z.infer<typeof webhookContractSchema>;

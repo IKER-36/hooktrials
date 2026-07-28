@@ -2,6 +2,17 @@
 
 Updated: 28 July 2026.
 
+## Release `v0.14.0` — Incident Center
+
+Release `v0.14.0` adds a practical triage workflow to Operations:
+
+- filter open, recovered and unacknowledged incidents;
+- acknowledge an incident with an ownership timestamp;
+- add a short operator note for handoffs and investigation context;
+- keep recovery evidence and outgoing alert delivery audit independent.
+
+The migration is additive. Existing incidents, captured data and delivery history remain intact.
+
 ## Release `v0.13.0` — safe self-hosted updates
 
 Release `v0.13.0` adds a release-aware update path for self-hosted installations:

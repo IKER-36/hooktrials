@@ -10,6 +10,7 @@ import {
   destinationPreflightInputSchema,
   deliveryActionInputSchema,
   evidenceExportQuerySchema,
+  incidentTriageInputSchema,
   loginInputSchema,
   monitorInputSchema,
   onboardingInputSchema,
@@ -1363,6 +1364,41 @@ app.get('/v1/incidents', async (request, reply) => {
   };
 });
 
+app.patch('/v1/incidents/:id', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const patch = incidentTriageInputSchema.parse(request.body);
+  const owned = (
+    await database.db
+      .select({ incident: incidents, resourceName: integrationResources.name })
+      .from(incidents)
+      .innerJoin(integrationResources, eq(incidents.resourceId, integrationResources.id))
+      .where(and(eq(incidents.id, id), eq(integrationResources.userId, user.id)))
+      .limit(1)
+  )[0];
+  if (!owned) return reply.code(404).send({ error: 'incident_not_found' });
+
+  const values: Partial<typeof incidents.$inferInsert> = { updatedAt: new Date() };
+  if (patch.acknowledged !== undefined) {
+    values.acknowledgedAt = patch.acknowledged ? new Date() : null;
+    values.acknowledgedByUserId = patch.acknowledged ? user.id : null;
+  }
+  if (patch.note !== undefined) values.resolutionNote = patch.note;
+
+  const [updated] = await database.db
+    .update(incidents)
+    .set(values)
+    .where(eq(incidents.id, id))
+    .returning();
+  return {
+    incident: {
+      ...updated,
+      resourceName: owned.resourceName,
+    },
+  };
+});
+
 app.get('/v1/operations', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
@@ -1478,6 +1514,9 @@ app.get('/v1/operations', async (request, reply) => {
   return {
     summary: {
       openIncidents: incidentItems.filter((incident) => incident.status === 'open').length,
+      unacknowledgedOpenIncidents: incidentItems.filter(
+        (incident) => incident.status === 'open' && !incident.acknowledgedAt,
+      ).length,
       recovered24h: incidentItems.filter(
         (incident) =>
           incident.recoveredAt && new Date(incident.recoveredAt).getTime() >= since24h.getTime(),

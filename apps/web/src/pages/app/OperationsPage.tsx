@@ -6,7 +6,7 @@ import { ProductState } from '../../components/ui/ProductState';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { shortDate, timeAgo } from '../../lib/format';
-import type { OperationalDeadLetter, OperationsResponse } from '../../lib/types';
+import type { Incident, OperationalDeadLetter, OperationsResponse } from '../../lib/types';
 
 type DeliveryAction = { delivery: OperationalDeadLetter; kind: 'retry' | 'replay' };
 
@@ -16,6 +16,11 @@ export function OperationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showResolved, setShowResolved] = useState(false);
+  const [incidentFilter, setIncidentFilter] = useState<
+    'all' | 'open' | 'unacknowledged' | 'recovered'
+  >('all');
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [triageBusy, setTriageBusy] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<DeliveryAction | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -41,6 +46,18 @@ export function OperationsPage() {
     [data, showResolved],
   );
 
+  const incidents = useMemo(() => {
+    const rows = data?.incidents ?? [];
+    if (incidentFilter === 'open') return rows.filter((incident) => incident.status === 'open');
+    if (incidentFilter === 'recovered') {
+      return rows.filter((incident) => incident.status === 'recovered');
+    }
+    if (incidentFilter === 'unacknowledged') {
+      return rows.filter((incident) => incident.status === 'open' && !incident.acknowledgedAt);
+    }
+    return rows;
+  }, [data, incidentFilter]);
+
   async function runDeliveryAction() {
     if (!pendingAction) return;
     setBusy(true);
@@ -56,6 +73,25 @@ export function OperationsPage() {
       setError(readableError(requestError));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function updateIncident(
+    incident: Incident,
+    patch: { acknowledged?: boolean; note?: string | null },
+  ) {
+    setTriageBusy(incident.id);
+    setError('');
+    try {
+      await apiRequest(`/v1/incidents/${incident.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      });
+      await load();
+    } catch (requestError) {
+      setError(readableError(requestError));
+    } finally {
+      setTriageBusy(null);
     }
   }
 
@@ -118,6 +154,10 @@ export function OperationsPage() {
               <span>Open incidents</span>
               <strong>{data.summary.openIncidents}</strong>
             </article>
+            <article className={data.summary.unacknowledgedOpenIncidents ? 'danger' : 'healthy'}>
+              <span>Needs acknowledgement</span>
+              <strong>{data.summary.unacknowledgedOpenIncidents}</strong>
+            </article>
             <article>
               <span>Recovered 24h</span>
               <strong>{data.summary.recovered24h}</strong>
@@ -137,24 +177,52 @@ export function OperationsPage() {
               <div>
                 <h2>Incident timeline</h2>
               </div>
-              <span>{data.incidents.length} retained</span>
+              <label className="ht-operation-filter">
+                <span className="sr-only">Incident filter</span>
+                <select
+                  value={incidentFilter}
+                  onChange={(event) =>
+                    setIncidentFilter(
+                      event.target.value as 'all' | 'open' | 'unacknowledged' | 'recovered',
+                    )
+                  }
+                >
+                  <option value="all">All incidents</option>
+                  <option value="unacknowledged">Needs acknowledgement</option>
+                  <option value="open">Open</option>
+                  <option value="recovered">Recovered</option>
+                </select>
+              </label>
             </header>
-            {data.incidents.length === 0 ? (
+            {incidents.length === 0 ? (
               <ProductState
                 compact
                 eyebrow="No action required"
-                title="No incidents are open."
-                description="Create a monitor or run a protected webhook test to start collecting operational evidence."
+                title={
+                  data.incidents.length === 0
+                    ? 'No incidents are open.'
+                    : 'No incidents match this filter.'
+                }
+                description={
+                  data.incidents.length === 0
+                    ? 'Create a monitor or run a protected webhook test to start collecting operational evidence.'
+                    : 'Change the filter to review another part of the incident history.'
+                }
                 action={
-                  <Link className="button secondary compact" to="/app/monitor">
-                    Open monitoring
-                  </Link>
+                  data.incidents.length === 0 ? (
+                    <Link className="button secondary compact" to="/app/monitor">
+                      Open monitoring
+                    </Link>
+                  ) : undefined
                 }
               />
             ) : (
               <div className="ht-operation-list">
-                {data.incidents.map((incident) => (
-                  <article key={incident.id}>
+                {incidents.map((incident) => (
+                  <article
+                    key={incident.id}
+                    className={incident.acknowledgedAt ? 'acknowledged' : ''}
+                  >
                     <span
                       className={`ht-monitor-state ${incident.status === 'open' ? 'down' : 'healthy'}`}
                     >
@@ -170,6 +238,56 @@ export function OperationsPage() {
                         ? `opened ${timeAgo(incident.openedAt)}`
                         : `recovered ${incident.recoveredAt ? timeAgo(incident.recoveredAt) : '—'}`}
                     </small>
+                    <div className="ht-incident-triage">
+                      <div className="ht-operation-actions">
+                        <button
+                          type="button"
+                          className="button secondary compact"
+                          disabled={triageBusy === incident.id}
+                          onClick={() =>
+                            void updateIncident(incident, {
+                              acknowledged: !incident.acknowledgedAt,
+                            })
+                          }
+                        >
+                          {incident.acknowledgedAt ? 'Unacknowledge' : 'Acknowledge'}
+                        </button>
+                        {incident.acknowledgedAt ? (
+                          <span className="ht-incident-ack">Acknowledged</span>
+                        ) : null}
+                      </div>
+                      <div className="ht-incident-note">
+                        <input
+                          value={noteDrafts[incident.id] ?? incident.resolutionNote ?? ''}
+                          onChange={(event) =>
+                            setNoteDrafts((current) => ({
+                              ...current,
+                              [incident.id]: event.target.value,
+                            }))
+                          }
+                          placeholder="Add an operator note"
+                          aria-label={`Note for ${incident.resourceName}`}
+                          maxLength={2_000}
+                        />
+                        <button
+                          type="button"
+                          className="button quiet compact"
+                          disabled={triageBusy === incident.id}
+                          onClick={() =>
+                            void updateIncident(incident, {
+                              note:
+                                (noteDrafts[incident.id] ?? incident.resolutionNote ?? '').trim() ||
+                                null,
+                            })
+                          }
+                        >
+                          Save note
+                        </button>
+                      </div>
+                    </div>
+                    {incident.resolutionNote ? (
+                      <p className="ht-incident-note-readonly">{incident.resolutionNote}</p>
+                    ) : null}
                   </article>
                 ))}
               </div>

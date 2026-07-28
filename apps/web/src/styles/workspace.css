@@ -581,6 +581,63 @@ html[data-theme] .ht-shell .ht-operation-list article {
   padding-inline: 0;
 }
 
+.ht-operation-filter select {
+  min-height: 32px;
+  padding: 0 28px 0 10px;
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+.ht-operation-list article.acknowledged {
+  border-left: 2px solid var(--ht-green-dim);
+  padding-left: 12px;
+}
+
+.ht-incident-triage {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr);
+  gap: 10px;
+  grid-column: 1 / -1;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ht-hairline);
+}
+
+.ht-incident-note {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ht-incident-note input {
+  min-width: 0;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 9px;
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.ht-incident-ack {
+  color: var(--ht-green);
+  font-size: 10px;
+}
+
+.ht-incident-note-readonly {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ht-muted);
+  font-size: 11px;
+  font-style: italic;
+}
+
 html[data-theme] .ht-shell .ht-integration-table-head,
 html[data-theme] .ht-shell .ht-integration-table > button {
   background: transparent;

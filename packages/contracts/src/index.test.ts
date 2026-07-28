@@ -4,6 +4,7 @@ import {
   createEndpointInputSchema,
   destinationPreflightInputSchema,
   evidenceExportQuerySchema,
+  incidentTriageInputSchema,
   syntheticEventInputSchema,
 } from './index.js';
 
@@ -107,6 +108,22 @@ describe('syntheticEventInputSchema', () => {
   it('requires explicit confirmation before contacting a real destination', () => {
     expect(syntheticEventInputSchema.safeParse({ confirm: true }).success).toBe(true);
     expect(syntheticEventInputSchema.safeParse({ confirm: false }).success).toBe(false);
+  });
+});
+
+describe('incidentTriageInputSchema', () => {
+  it('accepts acknowledgement and bounded operator notes', () => {
+    expect(
+      incidentTriageInputSchema.parse({
+        acknowledged: true,
+        note: 'Investigating provider timeout.',
+      }),
+    ).toEqual({ acknowledged: true, note: 'Investigating provider timeout.' });
+  });
+
+  it('rejects an empty triage patch and oversized notes', () => {
+    expect(incidentTriageInputSchema.safeParse({}).success).toBe(false);
+    expect(incidentTriageInputSchema.safeParse({ note: 'x'.repeat(2_001) }).success).toBe(false);
   });
 });
 

@@ -179,6 +179,9 @@ export interface Incident {
   cause: string;
   summary: string;
   evidence: unknown;
+  acknowledgedAt?: string | null;
+  acknowledgedByUserId?: string | null;
+  resolutionNote?: string | null;
   openedAt: string;
   recoveredAt: string | null;
   resourceName?: string;
@@ -341,6 +344,7 @@ export interface OperationalAlert {
 export interface OperationsResponse {
   summary: {
     openIncidents: number;
+    unacknowledgedOpenIncidents: number;
     recovered24h: number;
     unresolvedDeadLetters: number;
     protectedRecoveries24h: number;

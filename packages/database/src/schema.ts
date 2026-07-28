@@ -338,6 +338,11 @@ export const incidents = pgTable(
     cause: varchar('cause', { length: 32 }).notNull(),
     summary: text('summary').notNull(),
     evidence: jsonb('evidence').notNull().default({}),
+    acknowledgedAt: timestamp('acknowledged_at', { withTimezone: true }),
+    acknowledgedByUserId: uuid('acknowledged_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    resolutionNote: text('resolution_note'),
     openedAt: timestamp('opened_at', { withTimezone: true }).notNull().defaultNow(),
     recoveredAt: timestamp('recovered_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -346,6 +351,7 @@ export const incidents = pgTable(
   (table) => [
     index('incidents_resource_id_idx').on(table.resourceId),
     index('incidents_status_idx').on(table.status),
+    index('incidents_acknowledged_at_idx').on(table.acknowledgedAt),
   ],
 );
 
