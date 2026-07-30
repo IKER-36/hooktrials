@@ -74,6 +74,29 @@ export const es: Record<string, string> = {
   'Monitor catalogue': 'Catálogo de monitores',
   'Expected result': 'Resultado esperado',
   'Run your first trial': 'Ejecuta tu primera prueba',
+  'Turn a new account into useful evidence': 'Convierte una cuenta nueva en evidencia útil',
+  'Complete the path in any order. HookTrials only marks a step when the workspace has evidence for it.':
+    'Completa el recorrido en cualquier orden. HookTrials solo marca un paso cuando el espacio de trabajo tiene evidencia.',
+  'Create a safe Trial endpoint': 'Crea un endpoint Trial seguro',
+  'Start with synthetic traffic and controlled failures.':
+    'Empieza con tráfico sintético y fallos controlados.',
+  'Observe your first delivery': 'Observa tu primera entrega',
+  'Run the guided demo or send the generated curl request.':
+    'Ejecuta la demo guiada o envía la petición curl generada.',
+  'Connect a real webhook route': 'Conecta una ruta webhook real',
+  'Use Webhook Hub when a provider should reach your backend.':
+    'Usa Webhook Hub cuando un proveedor deba llegar a tu backend.',
+  'Monitor one dependency': 'Monitoriza una dependencia',
+  'Check availability, latency and response expectations.':
+    'Comprueba disponibilidad, latencia y las respuestas esperadas.',
+  'Review operational evidence': 'Revisa la evidencia operativa',
+  'Use Operations to inspect incidents, recovery and delivery state.':
+    'Usa Operaciones para inspeccionar incidentes, recuperaciones y entregas.',
+  Proven: 'Validado',
+  'Recommended next step': 'Siguiente paso recomendado',
+  'Activation path complete': 'Recorrido de activación completado',
+  'Keep the baseline and repeat it after meaningful integration changes.':
+    'Conserva la línea base y repítela después de cambios importantes en tus integraciones.',
   'Watch the retries unfold here, live.': 'Observa aquí los reintentos en directo.',
   'Send the test manually with curl': 'Envía la prueba manualmente con curl',
   'Waiting for the first delivery.': 'Esperando la primera entrega.',
@@ -151,6 +174,8 @@ export const es: Record<string, string> = {
   'DEMO DATA': 'DATOS DEMO',
   synthetic: 'sintéticas',
   'Open Webhook Hub': 'Abrir el concentrador de webhooks',
+  'Open Control Center': 'Abrir el Centro de control',
+  'Add a monitor': 'Añadir un monitor',
   'Open failure scenarios': 'Abrir escenarios de fallo',
   'Inspect monitoring': 'Inspeccionar monitorización',
   'Demo resources removed. Your other endpoints and monitors were not touched.':

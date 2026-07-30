@@ -25,6 +25,20 @@ webhook traffic and monitor HTTP or ICMP dependencies from one dashboard.
 Use synthetic payloads for demonstrations. Captured request bodies are encrypted, but unnecessary
 personal or production data should never be sent to a test installation.
 
+## The first five minutes
+
+After creating the first Trial endpoint, the Control Center shows an activation path that follows
+the evidence HookTrials can actually observe. Complete it in any order:
+
+1. Run the guided demo or send the generated `curl` request and open the first event timeline.
+2. Create a real route in **Webhook Hub** when a provider should reach your backend.
+3. Add one monitor for an API, route or webhook destination.
+4. Review **Operations** for incidents, recoveries, dead letters and alert evidence.
+
+The path is informational and never creates resources automatically. A step becomes **Proven** only
+when the corresponding workspace evidence exists, so it doubles as a quick hand-off checklist for a
+new team member.
+
 ## Connect a real destination
 
 Open an endpoint and select **Configure route**. Add the HTTPS destination, optional authentication

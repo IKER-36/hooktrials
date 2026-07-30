@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AttemptSequence, OutcomeBadge } from '../../components/app/AttemptSequence';
+import { ActivationChecklist } from '../../components/app/ActivationChecklist';
 import { ControlCenterSummary } from '../../components/app/ControlCenterSummary';
 import { EventInspector } from '../../components/app/EventInspector';
 import { GuidedDemo } from '../../components/app/GuidedDemo';
@@ -170,6 +171,7 @@ export function OverviewPage() {
       </header>
 
       <ControlCenterSummary />
+      <ActivationChecklist endpoints={endpoints} />
 
       <section className="ht-endpoint-card" aria-label="Active endpoint">
         <div className="ht-endpoint-state">

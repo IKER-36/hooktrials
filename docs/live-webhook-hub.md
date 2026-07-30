@@ -141,6 +141,11 @@ reverse proxy. Explicit private CIDR access is available only in self-hosted mod
 - document the HookTrials URL as part of the integration inventory;
 - retain the previous provider destination for rollback.
 
+The Webhook Hub activation path in Control Center mirrors this checklist at account level. Use it
+to confirm that a Trial has produced evidence, that the real route is connected, that at least one
+dependency is monitored and that Operations has been reviewed before moving a provider out of
+staging.
+
 Do not place authentication middleware in front of `/i/*`; providers cannot complete an interactive
 login. The ingestion URL itself is a high-entropy secret. If it is exposed, rotate it from an
 authenticated client with `POST /v1/endpoints/:id/rotate` and body `{"confirm":true}`; the previous

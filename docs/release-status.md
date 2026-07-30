@@ -1,6 +1,34 @@
 # Current release status
 
-Updated: 28 July 2026.
+Updated: 30 July 2026.
+
+## Release `v0.16.1` — Activation path and delivery diagnostics
+
+This patch makes the first useful HookTrials session easier to complete and leaves clearer evidence
+when account email delivery is tested.
+
+### Added
+
+- A Control Center activation path now guides new workspaces from a safe Trial to a real Webhook Hub
+  route, a dependency monitor and operational evidence.
+- Each activation step links directly to the screen where it can be completed, and shows when the
+  workspace has already proven it.
+- The first-use guide is available in English and Spanish through the existing language switcher.
+
+### Improved
+
+- The activation path uses observed workspace state instead of a static progress counter, so it stays
+  useful after a user returns later.
+- Maileroo delivery diagnostics now record a bounded provider status and reference identifier without
+  exposing recipients, API keys, links or long tokens in application logs.
+- The public package version is aligned with the current release line.
+
+### Fixed
+
+- Temporarily unavailable supporting APIs no longer block the rest of the Control Center; the guide
+  remains informational while the existing modules continue to work.
+
+No database migration or route behaviour change is required for this patch.
 
 ## Release `v0.16.0` — Account security and recovery
 

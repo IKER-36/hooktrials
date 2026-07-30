@@ -5,6 +5,35 @@ import type { RenderedEmail } from './templates.js';
 type Recipient = { address: string; display_name?: string };
 
 export function createMailer(config: RuntimeConfig, logger: ReturnType<typeof createLogger>) {
+  function providerReference(response: Response, body: string): string | undefined {
+    const headerReference =
+      response.headers.get('x-request-id') ??
+      response.headers.get('x-message-id') ??
+      response.headers.get('x-maileroo-id');
+    if (headerReference) return headerReference.slice(0, 120);
+    try {
+      const parsed = JSON.parse(body) as Record<string, unknown>;
+      const candidate = parsed.id ?? parsed.message_id ?? parsed.reference_id;
+      return typeof candidate === 'string' ? candidate.slice(0, 120) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function safeError(error: unknown): string {
+    return error instanceof Error ? error.message.slice(0, 240) : 'unknown delivery error';
+  }
+
+  function safeProviderMessage(body: string): string | undefined {
+    const sanitized = body
+      .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[redacted email]')
+      .replace(/https?:\/\/\S+/gi, '[redacted url]')
+      .replace(/[A-Za-z0-9_-]{32,}/g, '[redacted token]')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return sanitized ? sanitized.slice(0, 240) : undefined;
+  }
+
   async function send(input: {
     to: Recipient;
     email: RenderedEmail;
@@ -37,13 +66,27 @@ export function createMailer(config: RuntimeConfig, logger: ReturnType<typeof cr
         }),
         signal: controller.signal,
       });
+      const responseBody = await response.text();
+      const reference = providerReference(response, responseBody);
       if (!response.ok) {
-        logger.warn({ statusCode: response.status, tag: input.tag }, 'Maileroo rejected email');
+        logger.warn(
+          {
+            statusCode: response.status,
+            tag: input.tag,
+            reference,
+            providerMessage: safeProviderMessage(responseBody),
+          },
+          'Maileroo rejected email',
+        );
         return false;
       }
+      logger.info(
+        { statusCode: response.status, tag: input.tag, reference },
+        'Maileroo accepted email',
+      );
       return true;
     } catch (error) {
-      logger.warn({ error, tag: input.tag }, 'Maileroo email delivery failed');
+      logger.warn({ error: safeError(error), tag: input.tag }, 'Maileroo email delivery failed');
       return false;
     } finally {
       clearTimeout(timeout);

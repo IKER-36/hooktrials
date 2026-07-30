@@ -93,6 +93,161 @@ html[data-theme] .ht-shell.sidebar-collapsed .ht-nav-group > p {
   background: var(--ht-amber);
 }
 
+/* First-use activation: evidence-led rows keep the next action visible
+   without adding another dense card to the control center. */
+.ht-activation {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--ht-hairline-bright);
+  border-bottom: 1px solid var(--ht-hairline-bright);
+}
+
+.ht-activation-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0 18px;
+}
+
+.ht-activation-head h2 {
+  margin: 0;
+  font-size: clamp(19px, 2vw, 26px);
+  letter-spacing: -0.03em;
+}
+
+.ht-activation-head .ht-muted-line {
+  max-width: 700px;
+  margin: 8px 0 0;
+}
+
+.ht-activation-progress {
+  flex: 0 0 auto;
+  color: var(--ht-green);
+  font: 700 18px/1 var(--ht-mono);
+}
+
+.ht-activation-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--ht-hairline);
+}
+
+.ht-activation-list li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 68px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+.ht-activation-index {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  color: var(--ht-muted);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 50%;
+  font: 700 11px/1 var(--ht-mono);
+}
+
+.ht-activation-index svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ht-activation-list li.complete .ht-activation-index {
+  color: var(--ht-green);
+  border-color: color-mix(in srgb, var(--ht-green) 55%, var(--ht-hairline));
+  background: color-mix(in srgb, var(--ht-green) 10%, transparent);
+}
+
+.ht-activation-list li > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ht-activation-list strong {
+  color: var(--ht-ink);
+  font-size: 13px;
+}
+
+.ht-activation-list li > div span {
+  color: var(--ht-muted);
+  font-size: 12px;
+}
+
+.ht-activation-list .button {
+  white-space: nowrap;
+}
+
+.ht-activation-list .button svg,
+.ht-activation > footer svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ht-activation-done {
+  color: var(--ht-green);
+  font: 700 10px/1 var(--ht-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ht-activation > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  color: var(--ht-muted);
+  font-size: 12px;
+}
+
+.ht-activation > footer > span:first-child {
+  color: var(--ht-amber);
+  font-weight: 700;
+}
+
+.ht-activation > footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ht-green);
+  font-weight: 700;
+}
+
+.ht-activation > footer.complete > span:first-child {
+  color: var(--ht-green);
+}
+
+@media (max-width: 680px) {
+  .ht-activation-head {
+    gap: 12px;
+  }
+
+  .ht-activation-list li {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .ht-activation-list li .button,
+  .ht-activation-done {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .ht-activation > footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 /* Open page rhythm */
 html[data-theme] .ht-shell .ht-page {
   gap: 24px;
