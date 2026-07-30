@@ -104,6 +104,37 @@ export const es: Record<string, string> = {
   'Custom policy': 'Política personalizada',
   'The profile is a starting point. Retry-After from your destination is respected and capped by the maximum delay.':
     'El perfil es un punto de partida. Se respeta Retry-After del destino y se limita por el retraso máximo.',
+  AUTOMATION: 'AUTOMATIZACIÓN',
+  'API keys': 'Claves API',
+  'Run safe synthetic checks and export redacted evidence from CI without a browser session.':
+    'Ejecuta comprobaciones sintéticas seguras y exporta evidencia redactada desde CI sin una sesión de navegador.',
+  'NEW CREDENTIAL': 'NUEVA CREDENCIAL',
+  'Create an API key': 'Crear una clave API',
+  Scopes: 'Permisos',
+  'Export redacted evidence': 'Exportar evidencia redactada',
+  'Run a synthetic endpoint check': 'Ejecutar una comprobación sintética',
+  'Create key': 'Crear clave',
+  'The secret is shown once. Copy it before leaving this page.':
+    'El secreto se muestra una sola vez. Cópialo antes de salir de esta página.',
+  'Designed for automation': 'Diseñadas para automatización',
+  'Keys are shown once, stored as hashes and can be revoked independently.':
+    'Las claves se muestran una vez, se guardan como hashes y se pueden revocar por separado.',
+  'Keep them in your CI secret store. Never commit a key or paste it into logs.':
+    'Guárdalas en el almacén de secretos de CI. Nunca subas una clave ni la pegues en logs.',
+  'COPY NOW': 'COPIA AHORA',
+  'Your new secret': 'Tu nuevo secreto',
+  'This value will not be shown again.': 'Este valor no volverá a mostrarse.',
+  'Copy secret': 'Copiar secreto',
+  CREDENTIALS: 'CREDENCIALES',
+  'Active and revoked keys': 'Claves activas y revocadas',
+  'No API keys yet. Create one for your first CI workflow.':
+    'Aún no hay claves API. Crea una para tu primer flujo de CI.',
+  revoked: 'revocada',
+  'never revoked': 'activa',
+  Revoke: 'Revocar',
+  api_key_not_found: 'Esa clave API ya no existe o ya fue revocada.',
+  api_key_required: 'Esta acción requiere una clave API.',
+  api_key_scope_required: 'La clave API no tiene permisos suficientes.',
   'Watch the retries unfold here, live.': 'Observa aquí los reintentos en directo.',
   'Send the test manually with curl': 'Envía la prueba manualmente con curl',
   'Waiting for the first delivery.': 'Esperando la primera entrega.',

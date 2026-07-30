@@ -11,6 +11,7 @@ import { ScenariosPage } from './pages/app/ScenariosPage';
 import { DemoPage } from './pages/app/DemoPage';
 import { DocsPage } from './pages/app/DocsPage';
 import { LiveWebhooksPage } from './pages/app/LiveWebhooksPage';
+import { ApiKeysPage } from './pages/app/ApiKeysPage';
 import { useAuth } from './context/AuthContext';
 import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/EmailActionPage';
 
@@ -41,6 +42,7 @@ export function App() {
         <Route path="operations" element={<OperationsPage />} />
         <Route path="demo" element={<DemoPage />} />
         <Route path="docs" element={<DocsPage />} />
+        <Route path="api-keys" element={<ApiKeysPage />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />

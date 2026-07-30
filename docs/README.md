@@ -27,6 +27,7 @@ This directory contains documentation intended to be published with the source c
 | [Guided demo](guided-demo.md)                   | Templates and complete retry demonstration    |
 | [Guided Demo](demo-lab.md)                      | Complete product control-loop demonstration   |
 | [CLI and CI](cli-and-ci.md)                     | Terminal and GitHub Action reliability gates  |
+| [API keys and automation](api-keys.md)          | Scoped CI runs and redacted evidence export   |
 | [Competition demo](competition-demo.md)         | Reproducible three-minute judging script      |
 | [Failure scenarios](scenario-studio.md)         | Custom response-sequence authoring            |
 | [Deployment](deployment.md)                     | Production deployment with Docker Compose     |

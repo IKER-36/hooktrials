@@ -25,6 +25,12 @@ export const authTokenInputSchema = z.object({
   token: z.string().min(32).max(256),
 });
 
+export const apiKeyScopeSchema = z.enum(['read', 'write']);
+export const apiKeyInputSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  scopes: z.array(apiKeyScopeSchema).min(1).max(2).default(['read']),
+});
+
 export const resetPasswordInputSchema = z.object({
   token: z.string().min(32).max(256),
   password: z.string().min(12).max(128),
@@ -282,6 +288,7 @@ export const updateStatusPageInputSchema = statusPageBaseSchema
 
 export type RegisterInput = z.infer<typeof registerInputSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;
+export type ApiKeyInput = z.infer<typeof apiKeyInputSchema>;
 export type CreateEndpointInput = z.infer<typeof createEndpointInputSchema>;
 export type UpdateEndpointInput = z.infer<typeof updateEndpointInputSchema>;
 export type DeliveryActionInput = z.infer<typeof deliveryActionInputSchema>;

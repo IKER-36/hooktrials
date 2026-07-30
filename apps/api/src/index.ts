@@ -2,7 +2,7 @@ import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-import { createHmac } from 'node:crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import { readRuntimeConfig } from '@hooktrials/config';
 import {
   createEndpointInputSchema,
@@ -25,6 +25,7 @@ import {
   updateMonitorInputSchema,
   updateStatusPageInputSchema,
   updateEndpointInputSchema,
+  apiKeyInputSchema,
 } from '@hooktrials/contracts';
 import { decryptValue, encryptValue, sha256 } from '@hooktrials/crypto';
 import {
@@ -32,6 +33,7 @@ import {
   authTokens,
   alertChannels,
   alertDeliveries,
+  apiKeys,
   createDatabase,
   destinationDeliveries,
   endpoints,
@@ -70,7 +72,12 @@ import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import { Redis } from 'ioredis';
 import { nanoid } from 'nanoid';
 import { ZodError } from 'zod';
-import { clearSession, createSession, getAuthenticatedUser, setSessionCookie } from './auth.js';
+import {
+  clearSession,
+  createSession,
+  getAuthenticatedPrincipal,
+  setSessionCookie,
+} from './auth.js';
 import { hashAuthToken, issueAuthToken } from './email/tokens.js';
 import {
   passwordChangedEmail,
@@ -168,16 +175,38 @@ app.addHook('onRequest', async (request, reply) => {
 });
 
 async function requireUser(request: FastifyRequest, reply: FastifyReply) {
-  const user = await getAuthenticatedUser(database.db, request);
-  if (!user) {
+  const principal = await getAuthenticatedPrincipal(database.db, request);
+  if (!principal || principal.authType !== 'session') {
     await reply.code(401).send({ error: 'authentication_required' });
     return null;
   }
+  const user = principal.user;
   if (config.AUTH_EMAIL_VERIFICATION_REQUIRED && !user.emailVerified) {
     await reply.code(403).send({ error: 'email_not_verified' });
     return null;
   }
   return user;
+}
+
+async function requireApiKey(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  scope: 'read' | 'write',
+) {
+  const principal = await getAuthenticatedPrincipal(database.db, request);
+  if (!principal || principal.authType !== 'api_key') {
+    await reply.code(401).send({ error: 'api_key_required' });
+    return null;
+  }
+  if (!principal.scopes.includes(scope)) {
+    await reply.code(403).send({ error: 'api_key_scope_required', scope });
+    return null;
+  }
+  if (config.AUTH_EMAIL_VERIFICATION_REQUIRED && !principal.user.emailVerified) {
+    await reply.code(403).send({ error: 'email_not_verified' });
+    return null;
+  }
+  return principal.user;
 }
 
 function publicUser(user: {
@@ -731,6 +760,68 @@ app.get('/v1/me', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   return { user };
+});
+
+app.get('/v1/api-keys', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const items = await database.db
+    .select({
+      id: apiKeys.id,
+      name: apiKeys.name,
+      keyPrefix: apiKeys.keyPrefix,
+      scopes: apiKeys.scopes,
+      lastUsedAt: apiKeys.lastUsedAt,
+      revokedAt: apiKeys.revokedAt,
+      createdAt: apiKeys.createdAt,
+    })
+    .from(apiKeys)
+    .where(eq(apiKeys.userId, user.id))
+    .orderBy(desc(apiKeys.createdAt));
+  return { apiKeys: items };
+});
+
+app.post('/v1/api-keys', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const input = apiKeyInputSchema.parse(request.body);
+  const scopes = [...new Set(input.scopes)];
+  const secret = `htk_${randomBytes(32).toString('base64url')}`;
+  const created = (
+    await database.db
+      .insert(apiKeys)
+      .values({
+        userId: user.id,
+        name: input.name,
+        keyHash: sha256(secret),
+        keyPrefix: secret.slice(0, 16),
+        scopes,
+      })
+      .returning({
+        id: apiKeys.id,
+        name: apiKeys.name,
+        keyPrefix: apiKeys.keyPrefix,
+        scopes: apiKeys.scopes,
+        createdAt: apiKeys.createdAt,
+      })
+  )[0];
+  if (!created) throw new Error('API key creation returned no record');
+  return reply.code(201).send({ apiKey: created, secret });
+});
+
+app.delete('/v1/api-keys/:id', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const revoked = (
+    await database.db
+      .update(apiKeys)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(apiKeys.id, id), eq(apiKeys.userId, user.id), isNull(apiKeys.revokedAt)))
+      .returning({ id: apiKeys.id })
+  )[0];
+  if (!revoked) return reply.code(404).send({ error: 'api_key_not_found' });
+  return reply.code(204).send();
 });
 
 app.patch('/v1/me/onboarding', async (request, reply) => {
@@ -2194,28 +2285,42 @@ app.get('/v1/endpoints', async (request, reply) => {
   };
 });
 
-app.post('/v1/endpoints/:id/test-event', async (request, reply) => {
-  const user = await requireUser(request, reply);
-  if (!user) return;
-  const { id } = request.params as { id: string };
-  syntheticEventInputSchema.parse(request.body);
+type SyntheticEventResult =
+  | {
+      accepted: boolean;
+      eventId: string | null;
+      correlationKey: string;
+      mode: string;
+      statusCode: number;
+      latencyMs: number;
+      destinationTriggered: true;
+    }
+  | {
+      error:
+        | 'endpoint_not_found'
+        | 'endpoint_inactive'
+        | 'live_route_required'
+        | 'ingest_token_unavailable';
+      status: 404 | 409;
+    };
 
+async function triggerSyntheticEvent(userId: string, id: string): Promise<SyntheticEventResult> {
   const owned = (
     await database.db
       .select({ endpoint: endpoints, metadata: integrationResources.metadata })
       .from(endpoints)
       .leftJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
-      .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+      .where(and(eq(endpoints.id, id), eq(endpoints.userId, userId)))
       .limit(1)
   )[0];
-  if (!owned) return reply.code(404).send({ error: 'endpoint_not_found' });
-  if (!owned.endpoint.active) return reply.code(409).send({ error: 'endpoint_inactive' });
+  if (!owned) return { error: 'endpoint_not_found', status: 404 };
+  if (!owned.endpoint.active) return { error: 'endpoint_inactive', status: 409 };
   if (owned.endpoint.mode === 'trial' || !owned.endpoint.encryptedDestinationUrl) {
-    return reply.code(409).send({ error: 'live_route_required' });
+    return { error: 'live_route_required', status: 409 };
   }
 
   const token = decryptToken(owned.endpoint.encryptedToken);
-  if (!token) return reply.code(409).send({ error: 'ingest_token_unavailable' });
+  if (!token) return { error: 'ingest_token_unavailable', status: 409 };
   const metadata = owned.metadata as { provider?: unknown } | null;
   const provider = [
     'generic',
@@ -2311,6 +2416,27 @@ app.post('/v1/endpoints/:id/test-event', async (request, reply) => {
     latencyMs: response.latencyMs,
     destinationTriggered: true,
   };
+}
+
+function sendSyntheticEventResult(reply: FastifyReply, result: SyntheticEventResult) {
+  if ('error' in result) return reply.code(result.status).send({ error: result.error });
+  return result;
+}
+
+app.post('/v1/endpoints/:id/test-event', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  syntheticEventInputSchema.parse(request.body);
+  const { id } = request.params as { id: string };
+  return sendSyntheticEventResult(reply, await triggerSyntheticEvent(user.id, id));
+});
+
+app.post('/v1/automation/endpoints/:id/test-event', async (request, reply) => {
+  const user = await requireApiKey(request, reply, 'write');
+  if (!user) return;
+  syntheticEventInputSchema.parse(request.body);
+  const { id } = request.params as { id: string };
+  return sendSyntheticEventResult(reply, await triggerSyntheticEvent(user.id, id));
 });
 
 app.get('/v1/demo/active', async (request, reply) => {
@@ -3545,6 +3671,25 @@ app.get('/v1/events/:id', async (request, reply) => {
 
 app.get('/v1/events/:id/export', async (request, reply) => {
   const user = await requireUser(request, reply);
+  if (!user) return;
+  const { id } = request.params as { id: string };
+  const { format } = evidenceExportQuerySchema.parse(request.query);
+  const owned = (
+    await database.db
+      .select({ id: events.id })
+      .from(events)
+      .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
+      .where(and(eq(events.id, id), eq(endpoints.userId, user.id)))
+      .limit(1)
+  )[0];
+  if (!owned) return reply.code(404).send({ error: 'event_not_found' });
+  const evidence = await loadRedactedEvidence(id);
+  if (!evidence) return reply.code(404).send({ error: 'event_not_found' });
+  return sendEvidenceExport(reply, evidence, id, format);
+});
+
+app.get('/v1/automation/events/:id/export', async (request, reply) => {
+  const user = await requireApiKey(request, reply, 'read');
   if (!user) return;
   const { id } = request.params as { id: string };
   const { format } = evidenceExportQuerySchema.parse(request.query);

@@ -14,15 +14,15 @@ ghcr.io/<owner>/<repo>-web:<version>
 ghcr.io/<owner>/<repo>-server:<version>
 ```
 
-The current tagged release is `v0.16.0`. Self-hosted Compose intentionally builds the checked-out
+The current tagged release is `v0.18.0`. Self-hosted Compose intentionally builds the checked-out
 source so local modifications remain auditable. Managed deployments pin immutable registry or
 preloaded images without changing persisted database/Redis volumes.
 
 ## Versioning
 
 HookTrials follows conservative semantic versioning. Normal fixes, UI polish, accessibility work,
-documentation and backwards-compatible improvements use the next patch number (`v0.15.1`,
-`v0.15.2`, and so on). A minor release such as `v0.16.0` is reserved for a substantial new,
+documentation and backwards-compatible improvements use the next patch number (`v0.18.1`,
+`v0.18.2`, and so on). A minor release such as `v0.19.0` is reserved for a substantial new,
 user-visible capability or a coordinated feature set. Breaking compatibility changes require a
 separate major-version decision.
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   alertChannelInputSchema,
+  apiKeyInputSchema,
   createEndpointInputSchema,
   destinationPreflightInputSchema,
   evidenceExportQuerySchema,
@@ -38,6 +39,17 @@ describe('alert channel input', () => {
         scopes: [],
       }),
     ).toThrow();
+  });
+});
+
+describe('apiKeyInputSchema', () => {
+  it('defaults to least-privilege read access', () => {
+    expect(apiKeyInputSchema.parse({ name: 'ci-read' })).toMatchObject({ scopes: ['read'] });
+  });
+
+  it('rejects empty or unknown scopes', () => {
+    expect(apiKeyInputSchema.safeParse({ name: 'ci', scopes: [] }).success).toBe(false);
+    expect(apiKeyInputSchema.safeParse({ name: 'ci', scopes: ['admin'] }).success).toBe(false);
   });
 });
 

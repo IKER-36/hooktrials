@@ -2,6 +2,38 @@
 
 Updated: 30 July 2026.
 
+## Release `v0.18.0` — CI automation and scoped API keys
+
+This release connects HookTrials to repeatable engineering workflows without weakening the
+redaction and account-isolation boundaries.
+
+### Added
+
+- **Resources → API keys** creates account-scoped credentials with separate `read` and `write`
+  permissions.
+- The new `hooktrials-run` CLI command triggers a synthetic check against an existing Observe or
+  Protect route and can save its redacted evidence in the same run.
+- The new `hooktrials-evidence` CLI command downloads JSON or Markdown evidence for an existing
+  event, ready for CI artifacts or change records.
+- API keys are shown only once, then displayed by prefix; each key can be revoked independently.
+
+### Improved
+
+- CI automation uses short, explicit API paths instead of browser sessions or broad dashboard
+  access.
+- Evidence exports continue to share the same payload-free redaction boundary as the dashboard and
+  public links.
+- The API keys screen explains least-privilege scopes, rotation and secret-store usage in English
+  and Spanish.
+
+### Fixed
+
+- Revoked or under-scoped keys now fail closed before an automation action is executed.
+- Synthetic CI checks now return a stable event identifier that can be exported immediately.
+
+Existing installations apply the database change during the normal update process. Create a key in
+**Resources → API keys** after upgrading; no existing session or route needs to be recreated.
+
 ## Release `v0.17.0` — Delivery identity and retry control
 
 This release strengthens Protect and Observe routes with a destination contract designed for real

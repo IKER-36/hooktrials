@@ -1,11 +1,13 @@
 {
   "name": "@hooktrials/cli",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Run deterministic webhook reliability trials from a terminal or CI.",
   "license": "AGPL-3.0-only",
   "type": "module",
   "bin": {
-    "hooktrials-trial": "dist/index.js"
+    "hooktrials-trial": "dist/index.js",
+    "hooktrials-run": "dist/run.js",
+    "hooktrials-evidence": "dist/evidence.js"
   },
   "exports": {
     ".": {

@@ -56,6 +56,15 @@ export interface AccountLimits {
   endpointUsage?: number;
   dailyEvents: number;
 }
+export interface ApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  scopes: string[];
+  lastUsedAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+}
 export interface SetupState {
   deploymentMode: 'cloud' | 'selfhost';
   registrationOpen: boolean;

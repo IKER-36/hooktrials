@@ -58,6 +58,7 @@ export const authTokenPurposeEnum = pgEnum('auth_token_purpose', [
   'email_verification',
   'password_reset',
 ]);
+export const apiKeyScopeEnum = pgEnum('api_key_scope', ['read', 'write']);
 
 export const users = pgTable(
   'users',
@@ -110,6 +111,28 @@ export const authTokens = pgTable(
     uniqueIndex('auth_tokens_token_hash_unique').on(table.tokenHash),
     index('auth_tokens_user_purpose_idx').on(table.userId, table.purpose),
     index('auth_tokens_expiry_idx').on(table.expiresAt),
+  ],
+);
+
+export const apiKeys = pgTable(
+  'api_keys',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 80 }).notNull(),
+    keyHash: varchar('key_hash', { length: 64 }).notNull(),
+    keyPrefix: varchar('key_prefix', { length: 24 }).notNull(),
+    scopes: jsonb('scopes').notNull().default(['read']),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('api_keys_key_hash_unique').on(table.keyHash),
+    index('api_keys_user_id_idx').on(table.userId),
+    index('api_keys_active_idx').on(table.revokedAt),
   ],
 );
 

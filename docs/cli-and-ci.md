@@ -25,7 +25,7 @@ Add the endpoint as an Actions secret named `HOOKTRIALS_ENDPOINT_URL`; never com
 token. Copy `examples/github-action.yml` into your own workflow or call the published action:
 
 ```yaml
-- uses: IKER-36/hooktrials@v0.16.0
+- uses: IKER-36/hooktrials@v0.18.0
   with:
     config: examples/payment-webhook.trial.yml
     endpoint: ${{ secrets.HOOKTRIALS_ENDPOINT_URL }}
@@ -48,13 +48,20 @@ standard artifact/test-report action used by your organization.
 The CLI deliberately does not create endpoints or modify dashboard configuration. It only sends
 the declared synthetic requests to the URL you provide.
 
+## Scoped CI automation
+
+For pipelines that should run an existing Observe or Protect route and retain evidence, create a
+scoped API key in **Resources → API keys**. Use a write key for the synthetic run and a separate read
+key for evidence export. The complete command reference and rotation guidance lives in
+[API keys and automation](api-keys.md).
+
 ## Self-host update CLI
 
 The root `./hooktrials` CLI also manages safe self-hosted upgrades:
 
 ```bash
 git fetch --tags origin
-./hooktrials update --release v0.16.0
+./hooktrials update --release v0.18.0
 ./hooktrials doctor --external
 ```
 

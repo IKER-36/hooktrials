@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import {
   Activity,
+  KeyRound,
   BellRing,
   FlaskConical,
   Gauge,
@@ -290,7 +291,10 @@ export function AppLayout() {
     {
       id: 'resources',
       label: 'Resources',
-      items: [{ to: '/app/docs', label: 'Documentation', icon: BookOpen }],
+      items: [
+        { to: '/app/docs', label: 'Documentation', icon: BookOpen },
+        { to: '/app/api-keys', label: 'API keys', icon: KeyRound },
+      ],
     },
   ];
   const navigationItems = navigation.flatMap((group) =>
