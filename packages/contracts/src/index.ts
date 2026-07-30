@@ -31,6 +31,17 @@ export const apiKeyInputSchema = z.object({
   scopes: z.array(apiKeyScopeSchema).min(1).max(2).default(['read']),
 });
 
+export const auditQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+  entityType: z.string().trim().min(1).max(40).optional(),
+  before: z.string().datetime().optional(),
+});
+
+export const reliabilityQuerySchema = z.object({
+  windowDays: z.coerce.number().int().min(1).max(30).default(7),
+  target: z.coerce.number().min(90).max(100).default(99.9),
+});
+
 export const resetPasswordInputSchema = z.object({
   token: z.string().min(32).max(256),
   password: z.string().min(12).max(128),

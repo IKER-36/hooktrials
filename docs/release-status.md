@@ -2,6 +2,34 @@
 
 Updated: 30 July 2026.
 
+## Release `v0.19.0` — Reliability evidence and audit history
+
+This release makes recurring operation easier to explain and hand over.
+
+### Added
+
+- **SLO & reliability** reports availability, check volume, average latency, p95 latency and
+  incidents for a selectable 24-hour, 7-day or 30-day evidence window.
+- Each monitor now has its own objective row, so teams can spot a dependency that is below its
+  target without opening every monitor individually.
+- **Audit history** provides a chronological, account-scoped record of route, monitor, incident,
+  recovery, alert and API-key actions.
+
+### Improved
+
+- Reliability screens show the target and sample size alongside each percentage, avoiding scores
+  that cannot be explained.
+- Audit entries identify whether an action came from the dashboard or a scoped automation key.
+- Empty states direct users to collect monitor evidence before interpreting an objective.
+
+### Privacy
+
+- Audit records deliberately exclude request bodies, webhook payloads, destination URLs,
+  authorization headers and credential values.
+
+Existing routes, evidence exports and API keys continue to work without reconfiguration. The normal
+update process applies the additive data change.
+
 ## Release `v0.18.1` — Reliable update assets
 
 This patch keeps the CI automation and scoped API keys from `v0.18.0` while making the update

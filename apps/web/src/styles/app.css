@@ -117,6 +117,20 @@
 .ht-operation-summary strong {
   font-size: 20px;
 }
+.ht-operation-summary small {
+  color: var(--ht-muted);
+  font-size: 10px;
+}
+.ht-status-good {
+  color: var(--ht-green);
+}
+.ht-status-bad {
+  color: var(--ht-red);
+}
+.ht-operation-panel > header > svg,
+.ht-page-head-actions > svg {
+  color: var(--ht-green);
+}
 .ht-control-center > footer {
   display: flex;
   align-items: center;

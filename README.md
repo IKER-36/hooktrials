@@ -1,7 +1,7 @@
 # HookTrials
 
 [![Hosted on CubePath](https://img.shields.io/badge/Hosted%20on-CubePath-22c55e?style=flat-square)](https://cubepath.com/)
-[![Release](https://img.shields.io/badge/release-v0.18.1-6366f1?style=flat-square)](docs/release-status.md)
+[![Release](https://img.shields.io/badge/release-v0.19.0-6366f1?style=flat-square)](docs/release-status.md)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-334155?style=flat-square)](LICENSE)
 
 Open-source integration reliability control plane. HookTrials tests failure behavior, safely
@@ -9,7 +9,7 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.18.1** (30 July 2026). The managed sandbox is available at
+Current public release: **v0.19.0** (30 July 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
 
 ## Run locally
@@ -29,7 +29,7 @@ then closes. Self-hosted mode has no endpoint or daily-event quota by default.
 ./hooktrials status
 ./hooktrials logs
 ./hooktrials backup
-./hooktrials update --release v0.18.1
+./hooktrials update --release v0.19.0
 ```
 
 Updates back up PostgreSQL, rebuild the selected checkout and wait for migrations and health checks.
@@ -92,6 +92,8 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Terminal CLI and reusable GitHub Action for deterministic reliability trials in CI.
 - Scoped API keys and CI commands for running synthetic route checks and downloading redacted
   evidence without storing browser sessions.
+- SLO/reliability views built from recorded monitor checks, with explicit windows and targets.
+- Redacted audit history for route, monitor, incident, recovery and automation actions.
 
 ## One-click full product demo
 
@@ -129,7 +131,7 @@ conclusion or hides a grading formula.
 
 ### See the product, not a mock-up
 
-The current `v0.18.1` interface keeps real delivery work in **Product** and deterministic
+The current `v0.19.0` interface keeps real delivery work in **Product** and deterministic
 experiments in **Lab**. These captures come from the deployed Cloud application; the same dashboard
 is included in the self-hosted distribution.
 

@@ -7,6 +7,7 @@ import { readRuntimeConfig } from '@hooktrials/config';
 import {
   createEndpointInputSchema,
   alertChannelInputSchema,
+  auditQuerySchema,
   authTokenInputSchema,
   destinationPreflightInputSchema,
   deliveryActionInputSchema,
@@ -26,6 +27,7 @@ import {
   updateStatusPageInputSchema,
   updateEndpointInputSchema,
   apiKeyInputSchema,
+  reliabilityQuerySchema,
 } from '@hooktrials/contracts';
 import { decryptValue, encryptValue, sha256 } from '@hooktrials/crypto';
 import {
@@ -34,6 +36,7 @@ import {
   alertChannels,
   alertDeliveries,
   apiKeys,
+  auditEvents,
   createDatabase,
   destinationDeliveries,
   endpoints,
@@ -67,7 +70,7 @@ import {
 import { builtInScenarios } from '@hooktrials/scenario-engine';
 import argon2 from 'argon2';
 import { Queue } from 'bullmq';
-import { and, asc, count, desc, eq, gt, gte, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import { Redis } from 'ioredis';
 import { nanoid } from 'nanoid';
@@ -171,6 +174,34 @@ app.addHook('onRequest', async (request, reply) => {
   const origin = request.headers.origin;
   if (origin && !allowedOrigins.has(origin)) {
     return reply.code(403).send({ error: 'origin_not_allowed' });
+  }
+});
+
+const uuidSegment = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+app.addHook('onResponse', async (request, reply) => {
+  const path = request.url.split('?')[0] ?? request.url;
+  if (!path.startsWith('/v1/') || !['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    return;
+  }
+  if (path.startsWith('/v1/auth/')) return;
+  try {
+    const principal = await getAuthenticatedPrincipal(database.db, request);
+    if (!principal) return;
+    const segments = path.split('/').filter(Boolean);
+    const entityType = (segments[1] ?? 'request').slice(0, 40);
+    const entityId = segments.find((segment) => uuidSegment.test(segment)) ?? null;
+    await database.db.insert(auditEvents).values({
+      userId: principal.user.id,
+      actorType: principal.authType,
+      action: `${request.method.toLowerCase()} ${path}`.slice(0, 80),
+      entityType,
+      entityId,
+      statusCode: reply.statusCode,
+      metadata: { source: principal.authType },
+    });
+  } catch (error) {
+    request.log.warn({ error }, 'Audit event could not be recorded');
   }
 });
 
@@ -760,6 +791,127 @@ app.get('/v1/me', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   return { user };
+});
+
+app.get('/v1/audit-events', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const query = auditQuerySchema.parse(request.query);
+  const filters = [eq(auditEvents.userId, user.id)];
+  if (query.entityType) filters.push(eq(auditEvents.entityType, query.entityType));
+  if (query.before) filters.push(lt(auditEvents.createdAt, new Date(query.before)));
+  const rows = await database.db
+    .select()
+    .from(auditEvents)
+    .where(and(...filters))
+    .orderBy(desc(auditEvents.createdAt))
+    .limit(query.limit);
+  return {
+    events: rows.map((row) => ({
+      ...row,
+      metadata: row.metadata ?? {},
+    })),
+    hasMore: rows.length === query.limit,
+  };
+});
+
+app.get('/v1/reliability/summary', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const query = reliabilityQuerySchema.parse(request.query);
+  const since = new Date(Date.now() - query.windowDays * 24 * 60 * 60 * 1_000);
+  const monitorRows = await database.db
+    .select({
+      monitor: monitors,
+      resourceName: integrationResources.name,
+      resourceType: integrationResources.type,
+      environment: integrationResources.environment,
+    })
+    .from(monitors)
+    .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
+    .where(eq(integrationResources.userId, user.id));
+  const monitorIds = monitorRows.map((row) => row.monitor.id);
+  const checks =
+    monitorIds.length === 0
+      ? []
+      : await database.db
+          .select()
+          .from(monitorChecks)
+          .where(
+            and(inArray(monitorChecks.monitorId, monitorIds), gte(monitorChecks.startedAt, since)),
+          )
+          .orderBy(desc(monitorChecks.startedAt))
+          .limit(20_000);
+  const resourceIds = monitorRows.map((row) => row.monitor.resourceId);
+  const incidentRows =
+    resourceIds.length === 0
+      ? []
+      : await database.db
+          .select({ resourceId: incidents.resourceId, status: incidents.status })
+          .from(incidents)
+          .where(and(inArray(incidents.resourceId, resourceIds), gte(incidents.openedAt, since)));
+
+  function metricsFor(monitorId: string) {
+    const items = checks.filter((check) => check.monitorId === monitorId);
+    const latency = items
+      .map((check) => check.latencyMs)
+      .filter((value): value is number => value !== null);
+    const healthy = items.filter((check) => check.outcome === 'healthy').length;
+    const availability = items.length === 0 ? null : (healthy / items.length) * 100;
+    return {
+      checks: items.length,
+      healthy,
+      availability,
+      averageLatencyMs:
+        latency.length === 0
+          ? null
+          : Math.round(latency.reduce((total, value) => total + value, 0) / latency.length),
+      p95LatencyMs: percentile(latency, 0.95),
+      incidents: incidentRows.filter(
+        (incident) =>
+          incident.resourceId ===
+          monitorRows.find((row) => row.monitor.id === monitorId)?.monitor.resourceId,
+      ).length,
+    };
+  }
+
+  const monitorSummaries = monitorRows.map((row) => ({
+    id: row.monitor.id,
+    name: row.resourceName,
+    resourceType: row.resourceType,
+    environment: row.environment,
+    protocol: row.monitor.protocol,
+    state: row.monitor.state,
+    target: query.target,
+    metrics: metricsFor(row.monitor.id),
+  }));
+  const aggregateLatency = checks
+    .map((check) => check.latencyMs)
+    .filter((value): value is number => value !== null);
+  const aggregateHealthy = checks.filter((check) => check.outcome === 'healthy').length;
+  const aggregateAvailability =
+    checks.length === 0 ? null : (aggregateHealthy / checks.length) * 100;
+  return {
+    windowDays: query.windowDays,
+    windowStartedAt: since.toISOString(),
+    target: query.target,
+    aggregate: {
+      monitors: monitorRows.length,
+      checks: checks.length,
+      healthy: aggregateHealthy,
+      availability: aggregateAvailability,
+      averageLatencyMs:
+        aggregateLatency.length === 0
+          ? null
+          : Math.round(
+              aggregateLatency.reduce((total, value) => total + value, 0) / aggregateLatency.length,
+            ),
+      p95LatencyMs: percentile(aggregateLatency, 0.95),
+      incidents: incidentRows.length,
+      onTarget: aggregateAvailability === null || aggregateAvailability >= query.target,
+    },
+    monitors: monitorSummaries,
+  };
 });
 
 app.get('/v1/api-keys', async (request, reply) => {

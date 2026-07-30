@@ -113,6 +113,13 @@
       "when": 1785411878337,
       "tag": "0015_brief_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1785416016351,
+      "tag": "0016_free_ego",
+      "breakpoints": true
     }
   ]
 }

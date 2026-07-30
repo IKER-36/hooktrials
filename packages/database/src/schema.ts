@@ -59,6 +59,7 @@ export const authTokenPurposeEnum = pgEnum('auth_token_purpose', [
   'password_reset',
 ]);
 export const apiKeyScopeEnum = pgEnum('api_key_scope', ['read', 'write']);
+export const auditActorTypeEnum = pgEnum('audit_actor_type', ['session', 'api_key']);
 
 export const users = pgTable(
   'users',
@@ -133,6 +134,27 @@ export const apiKeys = pgTable(
     uniqueIndex('api_keys_key_hash_unique').on(table.keyHash),
     index('api_keys_user_id_idx').on(table.userId),
     index('api_keys_active_idx').on(table.revokedAt),
+  ],
+);
+
+export const auditEvents = pgTable(
+  'audit_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    actorType: auditActorTypeEnum('actor_type').notNull().default('session'),
+    action: varchar('action', { length: 80 }).notNull(),
+    entityType: varchar('entity_type', { length: 40 }).notNull(),
+    entityId: uuid('entity_id'),
+    statusCode: integer('status_code'),
+    metadata: jsonb('metadata').notNull().default({}),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('audit_events_user_created_idx').on(table.userId, table.createdAt),
+    index('audit_events_entity_idx').on(table.entityType, table.entityId),
   ],
 );
 

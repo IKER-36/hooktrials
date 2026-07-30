@@ -12,6 +12,8 @@ import { DemoPage } from './pages/app/DemoPage';
 import { DocsPage } from './pages/app/DocsPage';
 import { LiveWebhooksPage } from './pages/app/LiveWebhooksPage';
 import { ApiKeysPage } from './pages/app/ApiKeysPage';
+import { AuditPage } from './pages/app/AuditPage';
+import { ReliabilityPage } from './pages/app/ReliabilityPage';
 import { useAuth } from './context/AuthContext';
 import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/EmailActionPage';
 
@@ -39,10 +41,12 @@ export function App() {
         <Route path="endpoints" element={<EndpointsPage />} />
         <Route path="scenarios" element={<ScenariosPage />} />
         <Route path="monitor" element={<MonitorPage />} />
+        <Route path="reliability" element={<ReliabilityPage />} />
         <Route path="operations" element={<OperationsPage />} />
         <Route path="demo" element={<DemoPage />} />
         <Route path="docs" element={<DocsPage />} />
         <Route path="api-keys" element={<ApiKeysPage />} />
+        <Route path="audit" element={<AuditPage />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />

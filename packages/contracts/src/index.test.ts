@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   alertChannelInputSchema,
+  auditQuerySchema,
   apiKeyInputSchema,
   createEndpointInputSchema,
   destinationPreflightInputSchema,
   evidenceExportQuerySchema,
   incidentTriageInputSchema,
+  reliabilityQuerySchema,
   syntheticEventInputSchema,
   updateEndpointInputSchema,
 } from './index.js';
@@ -160,5 +162,17 @@ describe('evidenceExportQuerySchema', () => {
 
   it('rejects unsupported export formats', () => {
     expect(evidenceExportQuerySchema.safeParse({ format: 'html' }).success).toBe(false);
+  });
+});
+
+describe('operational evidence queries', () => {
+  it('bounds audit history and defaults the reliability window', () => {
+    expect(auditQuerySchema.parse({})).toMatchObject({ limit: 100 });
+    expect(reliabilityQuerySchema.parse({})).toMatchObject({ windowDays: 7, target: 99.9 });
+  });
+
+  it('rejects unbounded reliability requests', () => {
+    expect(reliabilityQuerySchema.safeParse({ windowDays: 31 }).success).toBe(false);
+    expect(auditQuerySchema.safeParse({ limit: 201 }).success).toBe(false);
   });
 });

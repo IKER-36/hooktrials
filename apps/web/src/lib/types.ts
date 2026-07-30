@@ -365,3 +365,47 @@ export interface OperationsResponse {
   deadLetters: OperationalDeadLetter[];
   alerts: OperationalAlert[];
 }
+
+export interface AuditEvent {
+  id: string;
+  actorType: 'session' | 'api_key';
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  statusCode: number | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface ReliabilitySummary {
+  windowDays: number;
+  windowStartedAt: string;
+  target: number;
+  aggregate: {
+    monitors: number;
+    checks: number;
+    healthy: number;
+    availability: number | null;
+    averageLatencyMs: number | null;
+    p95LatencyMs: number | null;
+    incidents: number;
+    onTarget: boolean;
+  };
+  monitors: Array<{
+    id: string;
+    name: string;
+    resourceType: string;
+    environment: string;
+    protocol: string;
+    state: MonitorState;
+    target: number;
+    metrics: {
+      checks: number;
+      healthy: number;
+      availability: number | null;
+      averageLatencyMs: number | null;
+      p95LatencyMs: number | null;
+      incidents: number;
+    };
+  }>;
+}
