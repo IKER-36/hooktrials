@@ -21,6 +21,7 @@ destination of that route.
 - native Stripe and GitHub signature verification;
 - method, header and JSON-path contracts before forwarding;
 - destination status, latency, response size and failure classification;
+- stable event and delivery identity headers for downstream idempotency;
 - a single event journey from provider to HookTrials, validation, destination and provider response;
 - incidents, recovery evidence, alerting and manual dead-letter operations;
 - encrypted payloads, captured request headers, destinations, destination headers and signing

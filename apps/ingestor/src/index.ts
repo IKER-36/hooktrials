@@ -62,7 +62,7 @@ await app.register(cors, {
     'x-github-event',
     'x-hub-signature-256',
   ],
-  exposedHeaders: ['x-hooktrials-event-id', 'retry-after'],
+  exposedHeaders: ['x-hooktrials-event-id', 'x-hooktrials-delivery-id', 'retry-after'],
   origin(origin, callback) {
     callback(null, !origin || allowedOrigins.has(origin));
   },
@@ -107,6 +107,7 @@ function decryptContract(value: string | null): WebhookContract | null {
 function destinationHeaders(
   inbound: Record<string, string | string[] | undefined>,
   encrypted: string | null,
+  deliveryContext?: { eventId: string; deliveryId: string; attempt: number },
 ) {
   const blocked = new Set([
     'connection',
@@ -137,6 +138,13 @@ function destinationHeaders(
   ) as Record<string, string>;
   const custom = decryptText(encrypted);
   if (custom) Object.assign(headers, JSON.parse(custom) as Record<string, string>);
+  if (deliveryContext) {
+    // These stable HookTrials headers let downstream consumers implement
+    // idempotency without trusting provider-specific delivery identifiers.
+    headers['x-hooktrials-event-id'] = deliveryContext.eventId;
+    headers['x-hooktrials-delivery-id'] = deliveryContext.deliveryId;
+    headers['x-hooktrials-delivery-attempt'] = String(deliveryContext.attempt);
+  }
   return headers;
 }
 
@@ -440,6 +448,7 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
       return reply
         .code(202)
         .header('x-hooktrials-event-id', event.id)
+        .header('x-hooktrials-delivery-id', delivery.id)
         .send({
           accepted: true,
           eventId: event.id,
@@ -458,7 +467,11 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
           config.DEPLOYMENT_MODE === 'selfhost' && endpoint.allowPrivateNetworks,
         allowedPrivateCidrs: endpoint.allowedPrivateCidrs as string[],
         method: request.method as 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-        headers: destinationHeaders(request.headers, endpoint.encryptedDestinationHeaders),
+        headers: destinationHeaders(request.headers, endpoint.encryptedDestinationHeaders, {
+          eventId: event.id,
+          deliveryId: delivery.id,
+          attempt: 1,
+        }),
         body,
         timeoutMs: endpoint.destinationTimeoutMs,
         maxResponseBytes: 65_536,
@@ -507,7 +520,11 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
         const value = result.headers[name];
         if (value) reply.header(name, value);
       }
-      return reply.code(result.statusCode).send(result.body);
+      return reply
+        .code(result.statusCode)
+        .header('x-hooktrials-event-id', event.id)
+        .header('x-hooktrials-delivery-id', delivery.id)
+        .send(result.body);
     } catch (error) {
       const failure =
         error instanceof NetworkPolicyError
@@ -541,10 +558,14 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
         'hooktrials:endpoint:' + endpoint.endpointId,
         JSON.stringify({ eventId: event.id, attemptId, sequence, statusCode }),
       );
-      return reply.code(statusCode).send({
-        error: 'destination_delivery_failed',
-        category: failure.category,
-      });
+      return reply
+        .code(statusCode)
+        .header('x-hooktrials-event-id', event.id)
+        .header('x-hooktrials-delivery-id', delivery.id)
+        .send({
+          error: 'destination_delivery_failed',
+          category: failure.category,
+        });
     }
   }
 

@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { readableError } from '../../lib/api';
 import type { Endpoint } from '../../lib/types';
+import { useI18n } from '../../i18n/I18nContext';
 
 const PROVIDER_PRESETS = [
   {
@@ -65,9 +66,31 @@ const PROVIDER_PRESETS = [
   },
 ] as const;
 
+const RETRY_PROFILES = {
+  fast: { maxAttempts: 3, baseDelayMs: 1_000, maxDelayMs: 30_000 },
+  balanced: { maxAttempts: 5, baseDelayMs: 2_000, maxDelayMs: 300_000 },
+  patient: { maxAttempts: 8, baseDelayMs: 5_000, maxDelayMs: 3_600_000 },
+} as const;
+type RetryProfile = keyof typeof RETRY_PROFILES | 'custom';
+
+function retryProfileFor(
+  maxAttempts: number,
+  baseDelayMs: number,
+  maxDelayMs: number,
+): RetryProfile {
+  const match = Object.entries(RETRY_PROFILES).find(
+    ([, profile]) =>
+      profile.maxAttempts === maxAttempts &&
+      profile.baseDelayMs === baseDelayMs &&
+      profile.maxDelayMs === maxDelayMs,
+  );
+  return (match?.[0] as RetryProfile | undefined) ?? 'custom';
+}
+
 export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
   const { setup } = useAuth();
   const { updateEndpoint } = useDashboard();
+  const { t } = useI18n();
   const [mode, setMode] = useState(endpoint.mode);
   const [environment, setEnvironment] = useState(endpoint.environment);
   const [destinationUrl, setDestinationUrl] = useState('');
@@ -79,6 +102,13 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
   );
   const [retryMaxDelayMs, setRetryMaxDelayMs] = useState(
     String(endpoint.retryMaxDelayMs ?? 300_000),
+  );
+  const [retryProfile, setRetryProfile] = useState<RetryProfile>(() =>
+    retryProfileFor(
+      endpoint.retryMaxAttempts ?? 5,
+      endpoint.retryBaseDelayMs ?? 2_000,
+      endpoint.retryMaxDelayMs ?? 300_000,
+    ),
   );
   const [deliveryPaused, setDeliveryPaused] = useState(endpoint.deliveryPaused ?? false);
   const [contractMethod, setContractMethod] = useState('');
@@ -122,6 +152,13 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
     setRetryMaxAttempts(String(endpoint.retryMaxAttempts ?? 5));
     setRetryBaseDelayMs(String(endpoint.retryBaseDelayMs ?? 2_000));
     setRetryMaxDelayMs(String(endpoint.retryMaxDelayMs ?? 300_000));
+    setRetryProfile(
+      retryProfileFor(
+        endpoint.retryMaxAttempts ?? 5,
+        endpoint.retryBaseDelayMs ?? 2_000,
+        endpoint.retryMaxDelayMs ?? 300_000,
+      ),
+    );
     setDeliveryPaused(endpoint.deliveryPaused ?? false);
     setSignatureProvider(endpoint.signatureProvider ?? 'none');
     setSignatureTolerance(String(endpoint.signatureToleranceSeconds ?? 300));
@@ -130,6 +167,15 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
     setAllowPrivate(endpoint.allowPrivateNetworks ?? false);
     setPrivateCidrs((endpoint.allowedPrivateCidrs ?? []).join(', '));
   }, [endpoint]);
+
+  function applyRetryProfile(profile: RetryProfile) {
+    setRetryProfile(profile);
+    if (profile === 'custom') return;
+    const values = RETRY_PROFILES[profile];
+    setRetryMaxAttempts(String(values.maxAttempts));
+    setRetryBaseDelayMs(String(values.baseDelayMs));
+    setRetryMaxDelayMs(String(values.maxDelayMs));
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -276,6 +322,23 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
           </label>
           {mode === 'protect' ? (
             <>
+              <label className="ht-field ht-field-wide">
+                {t('Retry profile')}
+                <select
+                  value={retryProfile}
+                  onChange={(event) => applyRetryProfile(event.target.value as RetryProfile)}
+                >
+                  <option value="fast">{t('Fast recovery · 3 attempts')}</option>
+                  <option value="balanced">{t('Balanced · 5 attempts')}</option>
+                  <option value="patient">{t('Patient recovery · 8 attempts')}</option>
+                  <option value="custom">{t('Custom policy')}</option>
+                </select>
+                <small>
+                  {t(
+                    'The profile is a starting point. Retry-After from your destination is respected and capped by the maximum delay.',
+                  )}
+                </small>
+              </label>
               <label className="ht-field">
                 Maximum attempts
                 <input
@@ -283,7 +346,10 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
                   min="1"
                   max="8"
                   value={retryMaxAttempts}
-                  onChange={(event) => setRetryMaxAttempts(event.target.value)}
+                  onChange={(event) => {
+                    setRetryProfile('custom');
+                    setRetryMaxAttempts(event.target.value);
+                  }}
                 />
               </label>
               <label className="ht-field">
@@ -294,7 +360,10 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
                   max="300000"
                   step="1000"
                   value={retryBaseDelayMs}
-                  onChange={(event) => setRetryBaseDelayMs(event.target.value)}
+                  onChange={(event) => {
+                    setRetryProfile('custom');
+                    setRetryBaseDelayMs(event.target.value);
+                  }}
                 />
               </label>
               <label className="ht-field">
@@ -305,7 +374,10 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
                   max="3600000"
                   step="1000"
                   value={retryMaxDelayMs}
-                  onChange={(event) => setRetryMaxDelayMs(event.target.value)}
+                  onChange={(event) => {
+                    setRetryProfile('custom');
+                    setRetryMaxDelayMs(event.target.value);
+                  }}
                 />
               </label>
               <label className="ht-field ht-delivery-pause-field">

@@ -2,6 +2,36 @@
 
 Updated: 30 July 2026.
 
+## Release `v0.17.0` — Delivery identity and retry control
+
+This release strengthens Protect and Observe routes with a destination contract designed for real
+recovery workflows.
+
+### Added
+
+- Destinations receive stable `x-hooktrials-event-id`, `x-hooktrials-delivery-id` and
+  `x-hooktrials-delivery-attempt` headers so they can implement idempotency and correlate retries.
+- Route Control includes Fast, Balanced, Patient and Custom retry profiles with clear attempt and
+  backoff bounds.
+- The event inspector and delivery history continue to distinguish duplicate provider attempts from
+  new retry or replay deliveries.
+
+### Improved
+
+- Retry profiles respect a destination's `Retry-After` response while enforcing the configured
+  maximum delay.
+- System delivery identity headers cannot be overwritten by custom destination headers.
+- Protect documentation now explains how to build a safe idempotency key and how retry/replay IDs
+  relate to one event.
+
+### Fixed
+
+- Downstream services no longer need to infer duplicate events from provider-specific headers.
+- Observe responses expose the HookTrials event and delivery identifiers for trace correlation.
+
+Existing routes keep their current retry values. Choose a profile only when you want to change the
+policy; no migration is required.
+
 ## Release `v0.16.1` — Activation path and delivery diagnostics
 
 This patch makes the first useful HookTrials session easier to complete and leaves clearer evidence

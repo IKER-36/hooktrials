@@ -190,6 +190,7 @@ function forwardingHeaders(
   encryptedValue: string | null,
   fallbackValue: unknown,
   encryptedCustom: string | null,
+  deliveryContext: { eventId: string; deliveryId: string; attempt: number },
 ): Record<string, string> {
   const blocked = new Set([
     'connection',
@@ -225,7 +226,15 @@ function forwardingHeaders(
       })
       .map(([key, headerValue]) => [key, headerValue as string]),
   );
-  return { ...headers, ...parseHeaders(encryptedCustom) };
+  return {
+    ...headers,
+    ...parseHeaders(encryptedCustom),
+    // Custom headers cannot override the delivery identity used for
+    // idempotency and audit correlation downstream.
+    'x-hooktrials-event-id': deliveryContext.eventId,
+    'x-hooktrials-delivery-id': deliveryContext.deliveryId,
+    'x-hooktrials-delivery-attempt': String(deliveryContext.attempt),
+  };
 }
 
 const destinationLocks = new Map<string, Promise<void>>();
@@ -353,6 +362,7 @@ async function performDestinationDelivery(deliveryId: string) {
           row.attempt.encryptedHeaders,
           row.attempt.headers,
           row.endpoint.encryptedDestinationHeaders,
+          { eventId: row.delivery.eventId, deliveryId, attempt: attemptNumber },
         ),
         body: decryptValue(row.attempt.encryptedBody, config.PAYLOAD_ENCRYPTION_KEY),
         timeoutMs: row.endpoint.destinationTimeoutMs,

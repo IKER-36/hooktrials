@@ -97,6 +97,13 @@ export const es: Record<string, string> = {
   'Activation path complete': 'Recorrido de activación completado',
   'Keep the baseline and repeat it after meaningful integration changes.':
     'Conserva la línea base y repítela después de cambios importantes en tus integraciones.',
+  'Retry profile': 'Perfil de reintentos',
+  'Fast recovery · 3 attempts': 'Recuperación rápida · 3 intentos',
+  'Balanced · 5 attempts': 'Equilibrado · 5 intentos',
+  'Patient recovery · 8 attempts': 'Recuperación paciente · 8 intentos',
+  'Custom policy': 'Política personalizada',
+  'The profile is a starting point. Retry-After from your destination is respected and capped by the maximum delay.':
+    'El perfil es un punto de partida. Se respeta Retry-After del destino y se limita por el retraso máximo.',
   'Watch the retries unfold here, live.': 'Observa aquí los reintentos en directo.',
   'Send the test manually with curl': 'Envía la prueba manualmente con curl',
   'Waiting for the first delivery.': 'Esperando la primera entrega.',
