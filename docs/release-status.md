@@ -2,23 +2,20 @@
 
 Updated: 30 July 2026.
 
-## Release `v0.18.1` — Reliable release images
+## Release `v0.18.1` — Reliable update assets
 
-This patch keeps the CI automation and scoped API keys from `v0.18.0` while making release images
-more consistent to build and consume.
+This patch keeps the CI automation and scoped API keys from `v0.18.0` while making the update
+package more consistent for new and existing installations.
 
 ### Improved
 
-- Release images now use a deterministic AMD64 build target for the managed deployment path.
-- Image builds have an explicit time limit, so a stalled publish reports a clear failure instead of
-  remaining open indefinitely.
-- Fresh installations receive the same tested server and dashboard images that back the current
-  product release.
+- New installations and upgrades receive the same tested server and dashboard release assets.
+- Release metadata stays aligned across the dashboard, CLI and self-hosting documentation.
+- Update packaging now reports progress more clearly when a supporting asset is delayed.
 
 ### Fixed
 
-- Prevented dependency-installation hangs caused by emulated multi-architecture builds during image
-  publication.
+- Fixed a case where a delayed release asset could leave an update waiting indefinitely.
 - Kept the application source, self-hosted commands and API contracts unchanged.
 
 Existing users do not need to change routes, accounts or API keys. Update normally when the new
