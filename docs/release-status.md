@@ -2,6 +2,28 @@
 
 Updated: 30 July 2026.
 
+## Release `v0.18.1` — Reliable release images
+
+This patch keeps the CI automation and scoped API keys from `v0.18.0` while making release images
+more consistent to build and consume.
+
+### Improved
+
+- Release images now use a deterministic AMD64 build target for the managed deployment path.
+- Image builds have an explicit time limit, so a stalled publish reports a clear failure instead of
+  remaining open indefinitely.
+- Fresh installations receive the same tested server and dashboard images that back the current
+  product release.
+
+### Fixed
+
+- Prevented dependency-installation hangs caused by emulated multi-architecture builds during image
+  publication.
+- Kept the application source, self-hosted commands and API contracts unchanged.
+
+Existing users do not need to change routes, accounts or API keys. Update normally when the new
+release is available.
+
 ## Release `v0.18.0` — CI automation and scoped API keys
 
 This release connects HookTrials to repeatable engineering workflows without weakening the
