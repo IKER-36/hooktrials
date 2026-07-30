@@ -60,6 +60,7 @@ export const authTokenPurposeEnum = pgEnum('auth_token_purpose', [
 ]);
 export const apiKeyScopeEnum = pgEnum('api_key_scope', ['read', 'write']);
 export const auditActorTypeEnum = pgEnum('audit_actor_type', ['session', 'api_key']);
+export const workspaceRoleEnum = pgEnum('workspace_role', ['owner', 'admin', 'operator', 'viewer']);
 
 export const users = pgTable(
   'users',
@@ -75,6 +76,65 @@ export const users = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex('users_email_unique').on(table.email)],
+);
+
+export const workspaces = pgTable(
+  'workspaces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ownerUserId: uuid('owner_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 80 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex('workspaces_owner_user_unique').on(table.ownerUserId)],
+);
+
+export const workspaceMembers = pgTable(
+  'workspace_members',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: workspaceRoleEnum('role').notNull().default('viewer'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('workspace_members_workspace_user_unique').on(table.workspaceId, table.userId),
+    index('workspace_members_user_idx').on(table.userId),
+    index('workspace_members_workspace_idx').on(table.workspaceId),
+  ],
+);
+
+export const workspaceInvites = pgTable(
+  'workspace_invites',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    email: varchar('email', { length: 254 }).notNull(),
+    role: workspaceRoleEnum('role').notNull().default('viewer'),
+    tokenHash: varchar('token_hash', { length: 64 }).notNull(),
+    invitedByUserId: uuid('invited_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('workspace_invites_token_hash_unique').on(table.tokenHash),
+    index('workspace_invites_workspace_idx').on(table.workspaceId),
+    index('workspace_invites_email_idx').on(table.email),
+  ],
 );
 
 export const sessions = pgTable(
@@ -412,6 +472,9 @@ export const incidents = pgTable(
     acknowledgedByUserId: uuid('acknowledged_by_user_id').references(() => users.id, {
       onDelete: 'set null',
     }),
+    assigneeUserId: uuid('assignee_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     resolutionNote: text('resolution_note'),
     openedAt: timestamp('opened_at', { withTimezone: true }).notNull().defaultNow(),
     recoveredAt: timestamp('recovered_at', { withTimezone: true }),
@@ -422,6 +485,7 @@ export const incidents = pgTable(
     index('incidents_resource_id_idx').on(table.resourceId),
     index('incidents_status_idx').on(table.status),
     index('incidents_acknowledged_at_idx').on(table.acknowledgedAt),
+    index('incidents_assignee_user_id_idx').on(table.assigneeUserId),
   ],
 );
 

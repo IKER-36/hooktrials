@@ -1135,3 +1135,75 @@ html[data-theme] .ht-shell .ht-integration-table > button:nth-of-type(even) {
     white-space: nowrap;
   }
 }
+
+.ht-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.ht-panel {
+  border: 1px solid var(--ht-hairline, #26332d);
+  background: var(--ht-panel, #101915);
+  padding: 1.25rem;
+}
+.ht-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+.ht-section-heading,
+.ht-list-row,
+.ht-inline-actions,
+.ht-copy-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.ht-list-row {
+  border-top: 1px solid var(--ht-hairline, #26332d);
+  padding: 0.75rem 0;
+}
+.ht-list-row div:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+.ht-list-row small {
+  color: var(--ht-muted, #91a39a);
+}
+.ht-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ht-accent, #42dd86);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.ht-copy-block {
+  border: 1px solid var(--ht-hairline, #26332d);
+  padding: 0.6rem;
+  overflow: auto;
+}
+.ht-copy-block code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ht-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--ht-hairline, #26332d);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+.ht-status-chip.healthy {
+  color: var(--ht-accent, #42dd86);
+}
+@media (max-width: 780px) {
+  .ht-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

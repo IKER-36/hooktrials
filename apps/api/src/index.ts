@@ -28,6 +28,9 @@ import {
   updateEndpointInputSchema,
   apiKeyInputSchema,
   reliabilityQuerySchema,
+  workspaceInviteAcceptSchema,
+  workspaceInviteInputSchema,
+  workspaceRoleUpdateSchema,
 } from '@hooktrials/contracts';
 import { decryptValue, encryptValue, sha256 } from '@hooktrials/crypto';
 import {
@@ -51,6 +54,9 @@ import {
   statusPageMonitors,
   statusPages,
   users,
+  workspaceInvites,
+  workspaceMembers,
+  workspaces,
 } from '@hooktrials/database';
 import { createLogger, redactHeaders } from '@hooktrials/logger';
 import {
@@ -179,6 +185,62 @@ app.addHook('onRequest', async (request, reply) => {
 
 const uuidSegment = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+type WorkspaceRole = 'owner' | 'admin' | 'operator' | 'viewer';
+type SessionUser = Pick<
+  typeof users.$inferSelect,
+  'id' | 'email' | 'displayName' | 'role' | 'emailVerified' | 'onboardingCompletedAt'
+>;
+type WorkspaceAwareUser = SessionUser & {
+  workspaceId: string;
+  workspaceOwnerId: string;
+  workspaceUserIds: string[];
+  workspaceRole: WorkspaceRole;
+};
+
+async function attachWorkspaceContext(user: SessionUser) {
+  const membership = (
+    await database.db
+      .select({
+        workspaceId: workspaceMembers.workspaceId,
+        ownerUserId: workspaces.ownerUserId,
+        role: workspaceMembers.role,
+      })
+      .from(workspaceMembers)
+      .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
+      .where(eq(workspaceMembers.userId, user.id))
+      // A newly accepted invite becomes the active workspace for the session.
+      // This keeps the first release simple while allowing a user to retain an
+      // empty personal workspace for later workspace switching.
+      .orderBy(desc(workspaceMembers.createdAt))
+      .limit(1)
+  )[0];
+  if (!membership) return null;
+  const members = await database.db
+    .select({ userId: workspaceMembers.userId })
+    .from(workspaceMembers)
+    .where(eq(workspaceMembers.workspaceId, membership.workspaceId));
+  return {
+    ...user,
+    workspaceId: membership.workspaceId,
+    workspaceOwnerId: membership.ownerUserId,
+    workspaceUserIds: [...new Set(members.map((member) => member.userId))],
+    workspaceRole: membership.role,
+  } satisfies WorkspaceAwareUser;
+}
+
+function operatorMutationAllowed(path: string) {
+  return (
+    /^\/v1\/(incidents|deliveries)\//.test(path) ||
+    /^\/v1\/monitors\/[^/]+\/(pause|resume)$/.test(path) ||
+    /^\/v1\/automation\//.test(path) ||
+    /^\/v1\/endpoints\/[^/]+\/test-event$/.test(path) ||
+    /^\/v1\/alert-channel\/test$/.test(path) ||
+    /^\/v1\/events\/[^/]+\/(share)$/.test(path) ||
+    /^\/v1\/me\/onboarding$/.test(path) ||
+    /^\/v1\/workspace\/invites\/accept$/.test(path)
+  );
+}
+
 app.addHook('onResponse', async (request, reply) => {
   const path = request.url.split('?')[0] ?? request.url;
   if (!path.startsWith('/v1/') || !['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
@@ -216,7 +278,31 @@ async function requireUser(request: FastifyRequest, reply: FastifyReply) {
     await reply.code(403).send({ error: 'email_not_verified' });
     return null;
   }
-  return user;
+  const scopedUser = await attachWorkspaceContext(user);
+  if (!scopedUser) {
+    await reply.code(403).send({ error: 'workspace_membership_required' });
+    return null;
+  }
+  const path = request.url.split('?')[0] ?? request.url;
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    if (scopedUser.workspaceRole === 'viewer' && !operatorMutationAllowed(path)) {
+      await reply.code(403).send({ error: 'workspace_read_only' });
+      return null;
+    }
+    if (scopedUser.workspaceRole === 'operator' && !operatorMutationAllowed(path)) {
+      await reply.code(403).send({ error: 'workspace_role_required', role: 'admin' });
+      return null;
+    }
+  }
+  return scopedUser;
+}
+
+async function requireWorkspaceAdmin(user: WorkspaceAwareUser, reply: FastifyReply) {
+  if (!['owner', 'admin'].includes(user.workspaceRole)) {
+    await reply.code(403).send({ error: 'workspace_role_required', role: 'admin' });
+    return false;
+  }
+  return true;
 }
 
 async function requireApiKey(
@@ -598,7 +684,24 @@ app.post(
             emailVerified: users.emailVerified,
             onboardingCompletedAt: users.onboardingCompletedAt,
           });
-        return created[0] ?? null;
+        const createdUser = created[0] ?? null;
+        if (!createdUser) return null;
+        const workspace = (
+          await tx
+            .insert(workspaces)
+            .values({
+              ownerUserId: createdUser.id,
+              name: `${input.displayName.trim()}'s workspace`.slice(0, 80),
+            })
+            .returning({ id: workspaces.id })
+        )[0];
+        if (!workspace) throw new Error('Workspace creation returned no record');
+        await tx.insert(workspaceMembers).values({
+          workspaceId: workspace.id,
+          userId: createdUser.id,
+          role: 'owner',
+        });
+        return createdUser;
       })
       .catch((error: unknown) => {
         if (error instanceof Error && error.message === 'registration_closed')
@@ -793,11 +896,192 @@ app.get('/v1/me', async (request, reply) => {
   return { user };
 });
 
+app.get('/v1/workspace', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const [workspace, memberRows, inviteRows] = await Promise.all([
+    database.db
+      .select({ id: workspaces.id, name: workspaces.name, ownerUserId: workspaces.ownerUserId })
+      .from(workspaces)
+      .where(eq(workspaces.id, user.workspaceId))
+      .limit(1),
+    database.db
+      .select({
+        userId: workspaceMembers.userId,
+        email: users.email,
+        displayName: users.displayName,
+        role: workspaceMembers.role,
+        createdAt: workspaceMembers.createdAt,
+      })
+      .from(workspaceMembers)
+      .innerJoin(users, eq(workspaceMembers.userId, users.id))
+      .where(eq(workspaceMembers.workspaceId, user.workspaceId))
+      .orderBy(asc(workspaceMembers.createdAt)),
+    ['owner', 'admin'].includes(user.workspaceRole)
+      ? database.db
+          .select({
+            id: workspaceInvites.id,
+            email: workspaceInvites.email,
+            role: workspaceInvites.role,
+            expiresAt: workspaceInvites.expiresAt,
+            createdAt: workspaceInvites.createdAt,
+          })
+          .from(workspaceInvites)
+          .where(
+            and(
+              eq(workspaceInvites.workspaceId, user.workspaceId),
+              isNull(workspaceInvites.acceptedAt),
+              gt(workspaceInvites.expiresAt, new Date()),
+            ),
+          )
+          .orderBy(desc(workspaceInvites.createdAt))
+      : Promise.resolve([]),
+  ]);
+  return {
+    workspace: workspace[0] ?? null,
+    currentRole: user.workspaceRole,
+    members: memberRows,
+    invites: inviteRows,
+  };
+});
+
+app.post('/v1/workspace/invites', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  if (!(await requireWorkspaceAdmin(user, reply))) return;
+  const input = workspaceInviteInputSchema.parse(request.body);
+  const email = input.email.trim().toLowerCase();
+  const existing = await database.db
+    .select({ userId: workspaceMembers.userId })
+    .from(workspaceMembers)
+    .innerJoin(users, eq(workspaceMembers.userId, users.id))
+    .where(and(eq(workspaceMembers.workspaceId, user.workspaceId), eq(users.email, email)))
+    .limit(1);
+  if (existing[0]) return reply.code(409).send({ error: 'workspace_member_exists' });
+  const secret = randomBytes(32).toString('base64url');
+  const created = (
+    await database.db
+      .insert(workspaceInvites)
+      .values({
+        workspaceId: user.workspaceId,
+        email,
+        role: input.role,
+        tokenHash: sha256(secret),
+        invitedByUserId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1_000),
+      })
+      .returning({
+        id: workspaceInvites.id,
+        email: workspaceInvites.email,
+        role: workspaceInvites.role,
+        expiresAt: workspaceInvites.expiresAt,
+        createdAt: workspaceInvites.createdAt,
+      })
+  )[0];
+  if (!created) throw new Error('Workspace invite creation returned no record');
+  return reply.code(201).send({ invite: created, token: secret });
+});
+
+app.post('/v1/workspace/invites/accept', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const { token } = workspaceInviteAcceptSchema.parse(request.body);
+  const invite = (
+    await database.db
+      .select({
+        invite: workspaceInvites,
+        workspaceName: workspaces.name,
+      })
+      .from(workspaceInvites)
+      .innerJoin(workspaces, eq(workspaceInvites.workspaceId, workspaces.id))
+      .where(
+        and(
+          eq(workspaceInvites.tokenHash, sha256(token)),
+          isNull(workspaceInvites.acceptedAt),
+          gt(workspaceInvites.expiresAt, new Date()),
+        ),
+      )
+      .limit(1)
+  )[0];
+  if (!invite || invite.invite.email !== user.email) {
+    return reply.code(400).send({ error: 'workspace_invite_invalid' });
+  }
+  await database.db.transaction(async (tx) => {
+    await tx
+      .update(workspaceInvites)
+      .set({ acceptedAt: new Date() })
+      .where(eq(workspaceInvites.id, invite.invite.id));
+    await tx
+      .insert(workspaceMembers)
+      .values({
+        workspaceId: invite.invite.workspaceId,
+        userId: user.id,
+        role: invite.invite.role,
+      })
+      .onConflictDoUpdate({
+        target: [workspaceMembers.workspaceId, workspaceMembers.userId],
+        set: { role: invite.invite.role, updatedAt: new Date() },
+      });
+  });
+  return {
+    accepted: true,
+    workspace: { id: invite.invite.workspaceId, name: invite.workspaceName },
+  };
+});
+
+app.patch('/v1/workspace/members/:userId', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  if (!(await requireWorkspaceAdmin(user, reply))) return;
+  const { userId } = request.params as { userId: string };
+  const input = workspaceRoleUpdateSchema.parse(request.body);
+  const target = (
+    await database.db
+      .select({ role: workspaceMembers.role })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, user.workspaceId),
+          eq(workspaceMembers.userId, userId),
+        ),
+      )
+      .limit(1)
+  )[0];
+  if (!target || target.role === 'owner')
+    return reply.code(404).send({ error: 'workspace_member_not_found' });
+  await database.db
+    .update(workspaceMembers)
+    .set({ role: input.role, updatedAt: new Date() })
+    .where(
+      and(eq(workspaceMembers.workspaceId, user.workspaceId), eq(workspaceMembers.userId, userId)),
+    );
+  return { updated: true, userId, role: input.role };
+});
+
+app.delete('/v1/workspace/members/:userId', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  if (!(await requireWorkspaceAdmin(user, reply))) return;
+  const { userId } = request.params as { userId: string };
+  const removed = await database.db
+    .delete(workspaceMembers)
+    .where(
+      and(
+        eq(workspaceMembers.workspaceId, user.workspaceId),
+        eq(workspaceMembers.userId, userId),
+        sql`${workspaceMembers.role} <> 'owner'::workspace_role`,
+      ),
+    )
+    .returning({ userId: workspaceMembers.userId });
+  if (!removed[0]) return reply.code(404).send({ error: 'workspace_member_not_found' });
+  return reply.code(204).send();
+});
+
 app.get('/v1/audit-events', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   const query = auditQuerySchema.parse(request.query);
-  const filters = [eq(auditEvents.userId, user.id)];
+  const filters = [inArray(auditEvents.userId, user.workspaceUserIds)];
   if (query.entityType) filters.push(eq(auditEvents.entityType, query.entityType));
   if (query.before) filters.push(lt(auditEvents.createdAt, new Date(query.before)));
   const rows = await database.db
@@ -829,7 +1113,7 @@ app.get('/v1/reliability/summary', async (request, reply) => {
     })
     .from(monitors)
     .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-    .where(eq(integrationResources.userId, user.id));
+    .where(inArray(integrationResources.userId, user.workspaceUserIds));
   const monitorIds = monitorRows.map((row) => row.monitor.id);
   const checks =
     monitorIds.length === 0
@@ -928,7 +1212,7 @@ app.get('/v1/api-keys', async (request, reply) => {
       createdAt: apiKeys.createdAt,
     })
     .from(apiKeys)
-    .where(eq(apiKeys.userId, user.id))
+    .where(inArray(apiKeys.userId, user.workspaceUserIds))
     .orderBy(desc(apiKeys.createdAt));
   return { apiKeys: items };
 });
@@ -943,7 +1227,7 @@ app.post('/v1/api-keys', async (request, reply) => {
     await database.db
       .insert(apiKeys)
       .values({
-        userId: user.id,
+        userId: user.workspaceOwnerId,
         name: input.name,
         keyHash: sha256(secret),
         keyPrefix: secret.slice(0, 16),
@@ -969,7 +1253,13 @@ app.delete('/v1/api-keys/:id', async (request, reply) => {
     await database.db
       .update(apiKeys)
       .set({ revokedAt: new Date() })
-      .where(and(eq(apiKeys.id, id), eq(apiKeys.userId, user.id), isNull(apiKeys.revokedAt)))
+      .where(
+        and(
+          eq(apiKeys.id, id),
+          inArray(apiKeys.userId, user.workspaceUserIds),
+          isNull(apiKeys.revokedAt),
+        ),
+      )
       .returning({ id: apiKeys.id })
   )[0];
   if (!revoked) return reply.code(404).send({ error: 'api_key_not_found' });
@@ -999,7 +1289,7 @@ app.get('/v1/scenarios', async (request, reply) => {
       builtIn: scenarios.builtIn,
     })
     .from(scenarios)
-    .where(or(eq(scenarios.builtIn, true), eq(scenarios.userId, user.id)))
+    .where(or(eq(scenarios.builtIn, true), inArray(scenarios.userId, user.workspaceUserIds)))
     .orderBy(desc(scenarios.builtIn), scenarios.name);
   return { scenarios: items };
 });
@@ -1151,13 +1441,13 @@ app.get('/v1/status/:token', async (request, reply) => {
   };
 });
 
-async function assertOwnedMonitors(userId: string, monitorIds: string[]) {
+async function assertOwnedMonitors(userIds: string[], monitorIds: string[]) {
   const uniqueIds = [...new Set(monitorIds)];
   const owned = await database.db
     .select({ id: monitors.id })
     .from(monitors)
     .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-    .where(and(eq(integrationResources.userId, userId), inArray(monitors.id, uniqueIds)));
+    .where(and(inArray(integrationResources.userId, userIds), inArray(monitors.id, uniqueIds)));
   if (owned.length !== uniqueIds.length) {
     throw new NetworkPolicyError('blocked', 'A status page can only include your own monitors');
   }
@@ -1170,7 +1460,7 @@ app.get('/v1/status-pages', async (request, reply) => {
   const pages = await database.db
     .select()
     .from(statusPages)
-    .where(eq(statusPages.userId, user.id))
+    .where(inArray(statusPages.userId, user.workspaceUserIds))
     .orderBy(desc(statusPages.updatedAt));
   const memberships =
     pages.length === 0
@@ -1210,11 +1500,11 @@ app.post('/v1/status-pages', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   const input = statusPageInputSchema.parse(request.body);
-  const monitorIds = await assertOwnedMonitors(user.id, input.monitorIds);
+  const monitorIds = await assertOwnedMonitors(user.workspaceUserIds, input.monitorIds);
   const existing = await database.db
     .select({ value: count() })
     .from(statusPages)
-    .where(eq(statusPages.userId, user.id));
+    .where(inArray(statusPages.userId, user.workspaceUserIds));
   if ((existing[0]?.value ?? 0) >= 10) {
     return reply.code(403).send({ error: 'status_page_limit_reached' });
   }
@@ -1224,7 +1514,7 @@ app.post('/v1/status-pages', async (request, reply) => {
       await tx
         .insert(statusPages)
         .values({
-          userId: user.id,
+          userId: user.workspaceOwnerId,
           name: input.name,
           headline: input.headline,
           description: input.description,
@@ -1258,12 +1548,12 @@ app.put('/v1/status-pages/:id', async (request, reply) => {
     await database.db
       .select({ id: statusPages.id })
       .from(statusPages)
-      .where(and(eq(statusPages.id, id), eq(statusPages.userId, user.id)))
+      .where(and(eq(statusPages.id, id), inArray(statusPages.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'status_page_not_found' });
   const monitorIds = input.monitorIds
-    ? await assertOwnedMonitors(user.id, input.monitorIds)
+    ? await assertOwnedMonitors(user.workspaceUserIds, input.monitorIds)
     : undefined;
   await database.db.transaction(async (tx) => {
     await tx
@@ -1303,7 +1593,7 @@ app.post('/v1/status-pages/:id/rotate', async (request, reply) => {
       enabled: true,
       updatedAt: new Date(),
     })
-    .where(and(eq(statusPages.id, id), eq(statusPages.userId, user.id)))
+    .where(and(eq(statusPages.id, id), inArray(statusPages.userId, user.workspaceUserIds)))
     .returning({ id: statusPages.id });
   if (!updated[0]) return reply.code(404).send({ error: 'status_page_not_found' });
   return { shareUrl: `${config.APP_ORIGIN.replace(/\/$/, '')}/status/${token}` };
@@ -1315,7 +1605,7 @@ app.delete('/v1/status-pages/:id', async (request, reply) => {
   const { id } = request.params as { id: string };
   const removed = await database.db
     .delete(statusPages)
-    .where(and(eq(statusPages.id, id), eq(statusPages.userId, user.id)))
+    .where(and(eq(statusPages.id, id), inArray(statusPages.userId, user.workspaceUserIds)))
     .returning({ id: statusPages.id });
   if (!removed[0]) return reply.code(404).send({ error: 'status_page_not_found' });
   return reply.code(204).send();
@@ -1328,7 +1618,7 @@ app.post('/v1/scenarios', async (request, reply) => {
   const definition = { name: input.name, steps: input.steps, repeatLastStep: input.repeatLastStep };
   const created = await database.db
     .insert(scenarios)
-    .values({ userId: user.id, name: input.name, definition })
+    .values({ userId: user.workspaceOwnerId, name: input.name, definition })
     .returning({
       id: scenarios.id,
       name: scenarios.name,
@@ -1347,7 +1637,13 @@ app.put('/v1/scenarios/:id', async (request, reply) => {
   const updated = await database.db
     .update(scenarios)
     .set({ name: input.name, definition, updatedAt: new Date() })
-    .where(and(eq(scenarios.id, id), eq(scenarios.userId, user.id), eq(scenarios.builtIn, false)))
+    .where(
+      and(
+        eq(scenarios.id, id),
+        inArray(scenarios.userId, user.workspaceUserIds),
+        eq(scenarios.builtIn, false),
+      ),
+    )
     .returning({
       id: scenarios.id,
       name: scenarios.name,
@@ -1365,11 +1661,17 @@ app.delete('/v1/scenarios/:id', async (request, reply) => {
   const usage = await database.db
     .select({ value: count() })
     .from(endpoints)
-    .where(and(eq(endpoints.userId, user.id), eq(endpoints.scenarioId, id)));
+    .where(and(inArray(endpoints.userId, user.workspaceUserIds), eq(endpoints.scenarioId, id)));
   if ((usage[0]?.value ?? 0) > 0) return reply.code(409).send({ error: 'scenario_in_use' });
   const removed = await database.db
     .delete(scenarios)
-    .where(and(eq(scenarios.id, id), eq(scenarios.userId, user.id), eq(scenarios.builtIn, false)))
+    .where(
+      and(
+        eq(scenarios.id, id),
+        inArray(scenarios.userId, user.workspaceUserIds),
+        eq(scenarios.builtIn, false),
+      ),
+    )
     .returning({ id: scenarios.id });
   if (!removed[0]) return reply.code(404).send({ error: 'scenario_not_found' });
   return reply.code(204).send();
@@ -1382,7 +1684,7 @@ app.get('/v1/monitors', async (request, reply) => {
     .select({ resource: integrationResources, monitor: monitors })
     .from(integrationResources)
     .innerJoin(monitors, eq(monitors.resourceId, integrationResources.id))
-    .where(eq(integrationResources.userId, user.id))
+    .where(inArray(integrationResources.userId, user.workspaceUserIds))
     .orderBy(integrationResources.name);
   if (rows.length === 0) return { monitors: [] };
 
@@ -1472,7 +1774,7 @@ app.post(
       .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
       .where(
         and(
-          eq(integrationResources.userId, user.id),
+          inArray(integrationResources.userId, user.workspaceUserIds),
           sql`not coalesce(${integrationResources.metadata} ? 'demoRunId', false)`,
         ),
       );
@@ -1487,7 +1789,7 @@ app.post(
         await tx
           .insert(integrationResources)
           .values({
-            userId: user.id,
+            userId: user.workspaceOwnerId,
             type: input.resourceType,
             name: input.name,
             environment: input.environment,
@@ -1532,7 +1834,7 @@ app.get('/v1/monitors/:id', async (request, reply) => {
       .select({ monitor: monitors, resource: integrationResources })
       .from(monitors)
       .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .where(and(eq(monitors.id, id), inArray(integrationResources.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
@@ -1592,7 +1894,7 @@ app.put('/v1/monitors/:id', async (request, reply) => {
       .select({ monitor: monitors, resource: integrationResources })
       .from(monitors)
       .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .where(and(eq(monitors.id, id), inArray(integrationResources.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
@@ -1664,7 +1966,7 @@ app.post('/v1/monitors/:id/status-page', async (request, reply) => {
       .select({ id: monitors.id })
       .from(monitors)
       .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .where(and(eq(monitors.id, id), inArray(integrationResources.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
@@ -1692,7 +1994,7 @@ app.delete('/v1/monitors/:id/status-page', async (request, reply) => {
       .select({ id: monitors.id })
       .from(monitors)
       .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .where(and(eq(monitors.id, id), inArray(integrationResources.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
@@ -1720,7 +2022,9 @@ app.post(
         })
         .from(monitors)
         .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-        .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+        .where(
+          and(eq(monitors.id, id), inArray(integrationResources.userId, user.workspaceUserIds)),
+        )
         .limit(1)
     )[0];
     if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
@@ -1754,7 +2058,7 @@ app.post('/v1/monitors/:id/pause', async (request, reply) => {
       .select({ resourceId: integrationResources.id })
       .from(monitors)
       .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .where(and(eq(monitors.id, id), inArray(integrationResources.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
@@ -1780,7 +2084,7 @@ app.post('/v1/monitors/:id/resume', async (request, reply) => {
       .select({ resourceId: integrationResources.id })
       .from(monitors)
       .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .where(and(eq(monitors.id, id), inArray(integrationResources.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
@@ -1806,7 +2110,7 @@ app.delete('/v1/monitors/:id', async (request, reply) => {
       .select({ resourceId: integrationResources.id })
       .from(monitors)
       .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-      .where(and(eq(monitors.id, id), eq(integrationResources.userId, user.id)))
+      .where(and(eq(monitors.id, id), inArray(integrationResources.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'monitor_not_found' });
@@ -1827,7 +2131,7 @@ app.get('/v1/incidents', async (request, reply) => {
     })
     .from(incidents)
     .innerJoin(integrationResources, eq(incidents.resourceId, integrationResources.id))
-    .where(eq(integrationResources.userId, user.id))
+    .where(inArray(integrationResources.userId, user.workspaceUserIds))
     .orderBy(desc(incidents.openedAt))
     .limit(100);
   return {
@@ -1849,12 +2153,28 @@ app.patch('/v1/incidents/:id', async (request, reply) => {
       .select({ incident: incidents, resourceName: integrationResources.name })
       .from(incidents)
       .innerJoin(integrationResources, eq(incidents.resourceId, integrationResources.id))
-      .where(and(eq(incidents.id, id), eq(integrationResources.userId, user.id)))
+      .where(and(eq(incidents.id, id), inArray(integrationResources.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'incident_not_found' });
 
   const values: Partial<typeof incidents.$inferInsert> = { updatedAt: new Date() };
+  if (patch.assigneeUserId !== undefined) {
+    if (patch.assigneeUserId !== null) {
+      const assignee = await database.db
+        .select({ userId: workspaceMembers.userId })
+        .from(workspaceMembers)
+        .where(
+          and(
+            eq(workspaceMembers.workspaceId, user.workspaceId),
+            eq(workspaceMembers.userId, patch.assigneeUserId),
+          ),
+        )
+        .limit(1);
+      if (!assignee[0]) return reply.code(400).send({ error: 'incident_assignee_not_member' });
+    }
+    values.assigneeUserId = patch.assigneeUserId;
+  }
   if (patch.acknowledged !== undefined) {
     values.acknowledgedAt = patch.acknowledged ? new Date() : null;
     values.acknowledgedByUserId = patch.acknowledged ? user.id : null;
@@ -1888,7 +2208,7 @@ app.get('/v1/operations', async (request, reply) => {
       })
       .from(incidents)
       .innerJoin(integrationResources, eq(incidents.resourceId, integrationResources.id))
-      .where(eq(integrationResources.userId, user.id))
+      .where(inArray(integrationResources.userId, user.workspaceUserIds))
       .orderBy(desc(incidents.openedAt))
       .limit(100),
     database.db
@@ -1909,7 +2229,7 @@ app.get('/v1/operations', async (request, reply) => {
       )
       .where(
         and(
-          eq(integrationResources.userId, user.id),
+          inArray(integrationResources.userId, user.workspaceUserIds),
           eq(destinationDeliveries.state, 'dead_letter'),
         ),
       )
@@ -1924,7 +2244,7 @@ app.get('/v1/operations', async (request, reply) => {
       )
       .where(
         and(
-          eq(integrationResources.userId, user.id),
+          inArray(integrationResources.userId, user.workspaceUserIds),
           eq(destinationDeliveries.state, 'succeeded'),
           inArray(destinationDeliveries.kind, ['retry', 'replay']),
           gte(destinationDeliveries.completedAt, since24h),
@@ -2017,7 +2337,10 @@ app.get('/v1/integrations', async (request, reply) => {
     .from(integrationResources)
     .innerJoin(endpoints, eq(endpoints.resourceId, integrationResources.id))
     .where(
-      and(eq(integrationResources.userId, user.id), eq(integrationResources.type, 'webhook_route')),
+      and(
+        inArray(integrationResources.userId, user.workspaceUserIds),
+        eq(integrationResources.type, 'webhook_route'),
+      ),
     )
     .orderBy(integrationResources.name);
 
@@ -2125,7 +2448,11 @@ app.get('/v1/alert-channel', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   const channel = (
-    await database.db.select().from(alertChannels).where(eq(alertChannels.userId, user.id)).limit(1)
+    await database.db
+      .select()
+      .from(alertChannels)
+      .where(eq(alertChannels.userId, user.workspaceOwnerId))
+      .limit(1)
   )[0];
   if (!channel) return { channel: null };
   const recent = await database.db
@@ -2155,7 +2482,11 @@ app.put('/v1/alert-channel', async (request, reply) => {
   if (!user) return;
   const input = alertChannelInputSchema.parse(request.body);
   const existing = (
-    await database.db.select().from(alertChannels).where(eq(alertChannels.userId, user.id)).limit(1)
+    await database.db
+      .select()
+      .from(alertChannels)
+      .where(eq(alertChannels.userId, user.workspaceOwnerId))
+      .limit(1)
   )[0];
   if (!input.url && !existing) {
     return reply.code(400).send({ error: 'alert_channel_url_required' });
@@ -2165,7 +2496,7 @@ app.put('/v1/alert-channel', async (request, reply) => {
     decryptValue(existing!.encryptedUrl, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8');
   await validateTarget(url, monitorNetworkOptions(input));
   const value = {
-    userId: user.id,
+    userId: user.workspaceOwnerId,
     encryptedUrl: input.url
       ? encryptValue(url, config.PAYLOAD_ENCRYPTION_KEY)
       : existing!.encryptedUrl,
@@ -2205,7 +2536,11 @@ app.post('/v1/alert-channel/test', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   const channel = (
-    await database.db.select().from(alertChannels).where(eq(alertChannels.userId, user.id)).limit(1)
+    await database.db
+      .select()
+      .from(alertChannels)
+      .where(eq(alertChannels.userId, user.workspaceOwnerId))
+      .limit(1)
   )[0];
   if (!channel) return reply.code(404).send({ error: 'alert_channel_not_configured' });
   const url = decryptValue(channel.encryptedUrl, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8');
@@ -2236,7 +2571,7 @@ app.post('/v1/alert-channel/test', async (request, reply) => {
 app.delete('/v1/alert-channel', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
-  await database.db.delete(alertChannels).where(eq(alertChannels.userId, user.id));
+  await database.db.delete(alertChannels).where(eq(alertChannels.userId, user.workspaceOwnerId));
   return reply.code(204).send();
 });
 
@@ -2398,7 +2733,7 @@ app.get('/v1/endpoints', async (request, reply) => {
     .from(endpoints)
     .leftJoin(scenarios, eq(endpoints.scenarioId, scenarios.id))
     .leftJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
-    .where(eq(endpoints.userId, user.id))
+    .where(inArray(endpoints.userId, user.workspaceUserIds))
     .orderBy(desc(endpoints.createdAt));
 
   return {
@@ -2456,13 +2791,13 @@ type SyntheticEventResult =
       status: 404 | 409;
     };
 
-async function triggerSyntheticEvent(userId: string, id: string): Promise<SyntheticEventResult> {
+async function triggerSyntheticEvent(userIds: string[], id: string): Promise<SyntheticEventResult> {
   const owned = (
     await database.db
       .select({ endpoint: endpoints, metadata: integrationResources.metadata })
       .from(endpoints)
       .leftJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
-      .where(and(eq(endpoints.id, id), eq(endpoints.userId, userId)))
+      .where(and(eq(endpoints.id, id), inArray(endpoints.userId, userIds)))
       .limit(1)
   )[0];
   if (!owned) return { error: 'endpoint_not_found', status: 404 };
@@ -2580,7 +2915,7 @@ app.post('/v1/endpoints/:id/test-event', async (request, reply) => {
   if (!user) return;
   syntheticEventInputSchema.parse(request.body);
   const { id } = request.params as { id: string };
-  return sendSyntheticEventResult(reply, await triggerSyntheticEvent(user.id, id));
+  return sendSyntheticEventResult(reply, await triggerSyntheticEvent(user.workspaceUserIds, id));
 });
 
 app.post('/v1/automation/endpoints/:id/test-event', async (request, reply) => {
@@ -2588,7 +2923,7 @@ app.post('/v1/automation/endpoints/:id/test-event', async (request, reply) => {
   if (!user) return;
   syntheticEventInputSchema.parse(request.body);
   const { id } = request.params as { id: string };
-  return sendSyntheticEventResult(reply, await triggerSyntheticEvent(user.id, id));
+  return sendSyntheticEventResult(reply, await triggerSyntheticEvent([user.id], id));
 });
 
 app.get('/v1/demo/active', async (request, reply) => {
@@ -2599,7 +2934,7 @@ app.get('/v1/demo/active', async (request, reply) => {
     .from(integrationResources)
     .where(
       and(
-        eq(integrationResources.userId, user.id),
+        inArray(integrationResources.userId, user.workspaceUserIds),
         sql`${integrationResources.metadata} ? 'demoRunId'`,
       ),
     )
@@ -2629,19 +2964,19 @@ app.get('/v1/demo/active', async (request, reply) => {
 app.post('/v1/demo/setup', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
-  const demoLock = await acquireDemoMutationLock(redis, user.id);
+  const demoLock = await acquireDemoMutationLock(redis, user.workspaceOwnerId);
   if (!demoLock) {
     return reply.code(409).send({ error: 'demo_operation_in_progress' });
   }
   try {
-    const userId = user.id;
+    const userId = user.workspaceOwnerId;
     const activeDemo = (
       await database.db
         .select({ metadata: integrationResources.metadata })
         .from(integrationResources)
         .where(
           and(
-            eq(integrationResources.userId, user.id),
+            inArray(integrationResources.userId, user.workspaceUserIds),
             sql`${integrationResources.metadata} ? 'demoRunId'`,
           ),
         )
@@ -3061,7 +3396,7 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
   if (!user) return;
   deliveryActionInputSchema.parse(request.body);
   const { runId } = request.params as { runId: string };
-  const demoLock = await acquireDemoMutationLock(redis, user.id);
+  const demoLock = await acquireDemoMutationLock(redis, user.workspaceOwnerId);
   if (!demoLock) {
     return reply.code(409).send({ error: 'demo_operation_in_progress' });
   }
@@ -3071,7 +3406,7 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
       .from(integrationResources)
       .where(
         and(
-          eq(integrationResources.userId, user.id),
+          inArray(integrationResources.userId, user.workspaceUserIds),
           sql`${integrationResources.metadata} ->> 'demoRunId' = ${runId}`,
         ),
       );
@@ -3098,16 +3433,26 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
       if (statusPageIds.length > 0) {
         await tx
           .delete(statusPages)
-          .where(and(eq(statusPages.userId, user.id), inArray(statusPages.id, statusPageIds)));
+          .where(
+            and(
+              eq(statusPages.userId, user.workspaceOwnerId),
+              inArray(statusPages.id, statusPageIds),
+            ),
+          );
       }
       await tx
         .delete(endpoints)
-        .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
+        .where(
+          and(
+            eq(endpoints.userId, user.workspaceOwnerId),
+            inArray(endpoints.resourceId, resourceIds),
+          ),
+        );
       await tx
         .delete(integrationResources)
         .where(
           and(
-            eq(integrationResources.userId, user.id),
+            eq(integrationResources.userId, user.workspaceOwnerId),
             inArray(integrationResources.id, resourceIds),
           ),
         );
@@ -3116,7 +3461,7 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
           .delete(scenarios)
           .where(
             and(
-              eq(scenarios.userId, user.id),
+              eq(scenarios.userId, user.workspaceOwnerId),
               eq(scenarios.builtIn, false),
               inArray(scenarios.id, scenarioIds),
             ),
@@ -3126,7 +3471,10 @@ app.post('/v1/demo/:runId/cleanup', async (request, reply) => {
         await tx
           .delete(alertChannels)
           .where(
-            and(eq(alertChannels.userId, user.id), inArray(alertChannels.id, alertChannelIds)),
+            and(
+              eq(alertChannels.userId, user.workspaceOwnerId),
+              inArray(alertChannels.id, alertChannelIds),
+            ),
           );
       }
     });
@@ -3159,7 +3507,7 @@ app.post('/v1/demo/reset', async (request, reply) => {
       .from(integrationResources)
       .where(
         and(
-          eq(integrationResources.userId, user.id),
+          inArray(integrationResources.userId, user.workspaceUserIds),
           sql`${integrationResources.metadata} ? 'demoRunId'`,
         ),
       );
@@ -3182,16 +3530,26 @@ app.post('/v1/demo/reset', async (request, reply) => {
       if (statusPageIds.length > 0) {
         await tx
           .delete(statusPages)
-          .where(and(eq(statusPages.userId, user.id), inArray(statusPages.id, statusPageIds)));
+          .where(
+            and(
+              eq(statusPages.userId, user.workspaceOwnerId),
+              inArray(statusPages.id, statusPageIds),
+            ),
+          );
       }
       await tx
         .delete(endpoints)
-        .where(and(eq(endpoints.userId, user.id), inArray(endpoints.resourceId, resourceIds)));
+        .where(
+          and(
+            eq(endpoints.userId, user.workspaceOwnerId),
+            inArray(endpoints.resourceId, resourceIds),
+          ),
+        );
       await tx
         .delete(integrationResources)
         .where(
           and(
-            eq(integrationResources.userId, user.id),
+            eq(integrationResources.userId, user.workspaceOwnerId),
             inArray(integrationResources.id, resourceIds),
           ),
         );
@@ -3200,7 +3558,7 @@ app.post('/v1/demo/reset', async (request, reply) => {
           .delete(scenarios)
           .where(
             and(
-              eq(scenarios.userId, user.id),
+              eq(scenarios.userId, user.workspaceOwnerId),
               eq(scenarios.builtIn, false),
               inArray(scenarios.id, scenarioIds),
             ),
@@ -3210,7 +3568,10 @@ app.post('/v1/demo/reset', async (request, reply) => {
         await tx
           .delete(alertChannels)
           .where(
-            and(eq(alertChannels.userId, user.id), inArray(alertChannels.id, alertChannelIds)),
+            and(
+              eq(alertChannels.userId, user.workspaceOwnerId),
+              inArray(alertChannels.id, alertChannelIds),
+            ),
           );
       }
     });
@@ -3240,7 +3601,7 @@ app.post('/v1/endpoints', async (request, reply) => {
     .leftJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
     .where(
       and(
-        eq(endpoints.userId, user.id),
+        inArray(endpoints.userId, user.workspaceUserIds),
         sql`not coalesce(${integrationResources.metadata} ? 'demoRunId', false)`,
       ),
     );
@@ -3255,7 +3616,7 @@ app.post('/v1/endpoints', async (request, reply) => {
     .where(
       and(
         eq(scenarios.id, scenarioId),
-        or(eq(scenarios.builtIn, true), eq(scenarios.userId, user.id)),
+        or(eq(scenarios.builtIn, true), inArray(scenarios.userId, user.workspaceUserIds)),
       ),
     )
     .limit(1);
@@ -3274,7 +3635,7 @@ app.post('/v1/endpoints', async (request, reply) => {
       await tx
         .insert(integrationResources)
         .values({
-          userId: user.id,
+          userId: user.workspaceOwnerId,
           type: 'webhook_route',
           name: input.name,
           environment: input.environment,
@@ -3287,7 +3648,7 @@ app.post('/v1/endpoints', async (request, reply) => {
       await tx
         .insert(endpoints)
         .values({
-          userId: user.id,
+          userId: user.workspaceOwnerId,
           resourceId: resource.id,
           scenarioId,
           name: input.name,
@@ -3380,7 +3741,7 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
     await database.db
       .select()
       .from(endpoints)
-      .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+      .where(and(eq(endpoints.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!current) return reply.code(404).send({ error: 'endpoint_not_found' });
@@ -3392,7 +3753,7 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
       .where(
         and(
           eq(scenarios.id, input.scenarioId),
-          or(eq(scenarios.builtIn, true), eq(scenarios.userId, user.id)),
+          or(eq(scenarios.builtIn, true), inArray(scenarios.userId, user.workspaceUserIds)),
         ),
       )
       .limit(1);
@@ -3500,7 +3861,7 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
       await tx
         .update(endpoints)
         .set(endpointUpdate)
-        .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+        .where(and(eq(endpoints.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
         .returning({
           id: endpoints.id,
           resourceId: endpoints.resourceId,
@@ -3555,7 +3916,7 @@ app.post('/v1/endpoints/:id/rotate', async (request, reply) => {
       publicTokenPrefix: publicToken.slice(0, 12),
       encryptedToken: encryptValue(publicToken, config.PAYLOAD_ENCRYPTION_KEY),
     })
-    .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+    .where(and(eq(endpoints.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
     .returning({
       id: endpoints.id,
       name: endpoints.name,
@@ -3581,7 +3942,7 @@ app.delete('/v1/endpoints/:id', async (request, reply) => {
     const row = (
       await tx
         .delete(endpoints)
-        .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+        .where(and(eq(endpoints.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
         .returning({ id: endpoints.id, resourceId: endpoints.resourceId })
     )[0];
     if (row?.resourceId) {
@@ -3722,7 +4083,7 @@ app.get('/v1/endpoints/:id/events', async (request, reply) => {
   const owned = await database.db
     .select({ id: endpoints.id })
     .from(endpoints)
-    .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+    .where(and(eq(endpoints.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
     .limit(1);
   if (!owned[0]) return reply.code(404).send({ error: 'endpoint_not_found' });
 
@@ -3772,7 +4133,7 @@ app.get('/v1/events/:id', async (request, reply) => {
     })
     .from(events)
     .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
-    .where(and(eq(events.id, id), eq(endpoints.userId, user.id)))
+    .where(and(eq(events.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
     .limit(1);
   const event = owned[0];
   if (!event) return reply.code(404).send({ error: 'event_not_found' });
@@ -3831,7 +4192,7 @@ app.get('/v1/events/:id/export', async (request, reply) => {
       .select({ id: events.id })
       .from(events)
       .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
-      .where(and(eq(events.id, id), eq(endpoints.userId, user.id)))
+      .where(and(eq(events.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'event_not_found' });
@@ -3869,7 +4230,7 @@ app.post('/v1/events/:id/share', async (request, reply) => {
       .select({ id: events.id })
       .from(events)
       .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
-      .where(and(eq(events.id, id), eq(endpoints.userId, user.id)))
+      .where(and(eq(events.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'event_not_found' });
@@ -3894,7 +4255,7 @@ app.delete('/v1/events/:id/share', async (request, reply) => {
       .select({ id: events.id })
       .from(events)
       .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
-      .where(and(eq(events.id, id), eq(endpoints.userId, user.id)))
+      .where(and(eq(events.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
       .limit(1)
   )[0];
   if (!owned) return reply.code(404).send({ error: 'event_not_found' });
@@ -3920,14 +4281,18 @@ app.get('/v1/public/evidence/:token', async (request, reply) => {
   return { evidence };
 });
 
-async function createManualDelivery(deliveryId: string, userId: string, kind: 'retry' | 'replay') {
+async function createManualDelivery(
+  deliveryId: string,
+  userIds: string[],
+  kind: 'retry' | 'replay',
+) {
   const owned = (
     await database.db
       .select({ delivery: destinationDeliveries, endpointUserId: endpoints.userId })
       .from(destinationDeliveries)
       .innerJoin(events, eq(destinationDeliveries.eventId, events.id))
       .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
-      .where(and(eq(destinationDeliveries.id, deliveryId), eq(endpoints.userId, userId)))
+      .where(and(eq(destinationDeliveries.id, deliveryId), inArray(endpoints.userId, userIds)))
       .limit(1)
   )[0];
   if (!owned) return { error: 'delivery_not_found' as const };
@@ -3961,7 +4326,7 @@ async function createManualDelivery(deliveryId: string, userId: string, kind: 'r
         sequence: Number(sequenceRows[0]?.value ?? 0) + 1,
         kind,
         state: 'queued',
-        requestedByUserId: userId,
+        requestedByUserId: userIds[0]!,
         replayOfDeliveryId: deliveryId,
         auditMetadata: {
           action: kind,
@@ -3987,7 +4352,7 @@ for (const kind of ['retry', 'replay'] as const) {
     if (!user) return;
     deliveryActionInputSchema.parse(request.body);
     const { id } = request.params as { id: string };
-    const result = await createManualDelivery(id, user.id, kind);
+    const result = await createManualDelivery(id, user.workspaceUserIds, kind);
     if ('error' in result) {
       return reply
         .code(result.error === 'delivery_not_found' ? 404 : 409)
@@ -4004,7 +4369,7 @@ app.get('/v1/endpoints/:id/stream', async (request, reply) => {
   const owned = await database.db
     .select({ id: endpoints.id })
     .from(endpoints)
-    .where(and(eq(endpoints.id, id), eq(endpoints.userId, user.id)))
+    .where(and(eq(endpoints.id, id), inArray(endpoints.userId, user.workspaceUserIds)))
     .limit(1);
   if (!owned[0]) return reply.code(404).send({ error: 'endpoint_not_found' });
 

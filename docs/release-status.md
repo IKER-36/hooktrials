@@ -2,6 +2,35 @@
 
 Updated: 30 July 2026.
 
+## Release `v0.20.0` — Shared workspaces and incident ownership
+
+This release adds a practical collaboration layer for teams operating the same integrations.
+
+### Added
+
+- **Team workspace** groups routes, monitors, scenarios, status pages, operations and audit history
+  under a shared view.
+- **Owner, admin, operator and viewer roles** provide explicit boundaries for configuration,
+  recovery and read-only access.
+- **Time-limited invitations** let administrators add a teammate with a chosen role and review
+  pending invitations from the workspace screen.
+- **Incident assignment** makes the current owner of operational work visible and editable from
+  Operations.
+
+### Improved
+
+- Existing accounts are migrated into personal workspaces without changing their routes, monitor
+  history, API keys or evidence links.
+- Shared resource queries include workspace members while secrets and payloads remain outside the
+  workspace view.
+- Workspace and incident changes continue to produce redacted audit entries.
+
+### Upgrade note
+
+The update applies additive workspace and incident-assignment migrations. No manual data move is
+required. See [Workspaces and roles](workspaces-and-roles.md) for the invitation and permissions
+workflow.
+
 ## Release `v0.19.0` — Reliability evidence and audit history
 
 This release makes recurring operation easier to explain and hand over.

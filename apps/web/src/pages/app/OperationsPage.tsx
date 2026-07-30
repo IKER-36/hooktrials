@@ -6,13 +6,20 @@ import { ProductState } from '../../components/ui/ProductState';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { shortDate, timeAgo } from '../../lib/format';
-import type { Incident, OperationalDeadLetter, OperationsResponse } from '../../lib/types';
+import type {
+  Incident,
+  OperationalDeadLetter,
+  OperationsResponse,
+  WorkspaceMember,
+  WorkspaceResponse,
+} from '../../lib/types';
 
 type DeliveryAction = { delivery: OperationalDeadLetter; kind: 'retry' | 'replay' };
 
 export function OperationsPage() {
   const { selectEndpoint } = useDashboard();
   const [data, setData] = useState<OperationsResponse | null>(null);
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showResolved, setShowResolved] = useState(false);
@@ -25,8 +32,12 @@ export function OperationsPage() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const response = await apiRequest<OperationsResponse>('/v1/operations');
+    const [response, workspace] = await Promise.all([
+      apiRequest<OperationsResponse>('/v1/operations'),
+      apiRequest<WorkspaceResponse>('/v1/workspace'),
+    ]);
     setData(response);
+    setMembers(workspace.members);
     setError('');
   }, []);
 
@@ -78,7 +89,7 @@ export function OperationsPage() {
 
   async function updateIncident(
     incident: Incident,
-    patch: { acknowledged?: boolean; note?: string | null },
+    patch: { acknowledged?: boolean; note?: string | null; assigneeUserId?: string | null },
   ) {
     setTriageBusy(incident.id);
     setError('');
@@ -240,6 +251,25 @@ export function OperationsPage() {
                     </small>
                     <div className="ht-incident-triage">
                       <div className="ht-operation-actions">
+                        <label>
+                          <span className="sr-only">Assignee</span>
+                          <select
+                            value={incident.assigneeUserId ?? ''}
+                            disabled={triageBusy === incident.id}
+                            onChange={(event) =>
+                              void updateIncident(incident, {
+                                assigneeUserId: event.target.value || null,
+                              })
+                            }
+                          >
+                            <option value="">Unassigned</option>
+                            {members.map((member) => (
+                              <option key={member.userId} value={member.userId}>
+                                {member.displayName}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                         <button
                           type="button"
                           className="button secondary compact"

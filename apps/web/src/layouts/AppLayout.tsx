@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
   Radar,
   RadioTower,
+  Users,
   Sun,
   type LucideIcon,
 } from 'lucide-react';
@@ -297,6 +298,7 @@ export function AppLayout() {
         { to: '/app/docs', label: 'Documentation', icon: BookOpen },
         { to: '/app/api-keys', label: 'API keys', icon: KeyRound },
         { to: '/app/audit', label: 'Audit history', icon: ClipboardList },
+        { to: '/app/workspace', label: 'Team workspace', icon: Users },
       ],
     },
   ];

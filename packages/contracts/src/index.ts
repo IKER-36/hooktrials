@@ -42,6 +42,18 @@ export const reliabilityQuerySchema = z.object({
   target: z.coerce.number().min(90).max(100).default(99.9),
 });
 
+export const workspaceMemberRoleSchema = z.enum(['admin', 'operator', 'viewer']);
+export const workspaceInviteInputSchema = z.object({
+  email: z.string().email().max(254),
+  role: workspaceMemberRoleSchema.default('viewer'),
+});
+export const workspaceRoleUpdateSchema = z.object({
+  role: workspaceMemberRoleSchema,
+});
+export const workspaceInviteAcceptSchema = z.object({
+  token: z.string().min(32).max(256),
+});
+
 export const resetPasswordInputSchema = z.object({
   token: z.string().min(32).max(256),
   password: z.string().min(12).max(128),
@@ -159,10 +171,17 @@ export const incidentTriageInputSchema = z
   .object({
     acknowledged: z.boolean().optional(),
     note: z.string().trim().min(1).max(2_000).nullable().optional(),
+    assigneeUserId: z.string().uuid().nullable().optional(),
   })
-  .refine((value) => value.acknowledged !== undefined || value.note !== undefined, {
-    message: 'At least one triage field is required',
-  });
+  .refine(
+    (value) =>
+      value.acknowledged !== undefined ||
+      value.note !== undefined ||
+      value.assigneeUserId !== undefined,
+    {
+      message: 'At least one triage field is required',
+    },
+  );
 
 export const syntheticEventInputSchema = z.object({
   confirm: z.literal(true),

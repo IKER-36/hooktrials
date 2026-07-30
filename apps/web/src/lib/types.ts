@@ -193,11 +193,37 @@ export interface Incident {
   evidence: unknown;
   acknowledgedAt?: string | null;
   acknowledgedByUserId?: string | null;
+  assigneeUserId?: string | null;
   resolutionNote?: string | null;
   openedAt: string;
   recoveredAt: string | null;
   resourceName?: string;
   resourceType?: string;
+}
+
+export type WorkspaceRole = 'owner' | 'admin' | 'operator' | 'viewer';
+
+export interface WorkspaceMember {
+  userId: string;
+  email: string;
+  displayName: string;
+  role: WorkspaceRole;
+  createdAt: string;
+}
+
+export interface WorkspaceInvite {
+  id: string;
+  email: string;
+  role: Exclude<WorkspaceRole, 'owner'>;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface WorkspaceResponse {
+  workspace: { id: string; name: string; ownerUserId: string } | null;
+  currentRole: WorkspaceRole;
+  members: WorkspaceMember[];
+  invites: WorkspaceInvite[];
 }
 
 export interface MonitorMetrics {

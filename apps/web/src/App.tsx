@@ -14,6 +14,7 @@ import { LiveWebhooksPage } from './pages/app/LiveWebhooksPage';
 import { ApiKeysPage } from './pages/app/ApiKeysPage';
 import { AuditPage } from './pages/app/AuditPage';
 import { ReliabilityPage } from './pages/app/ReliabilityPage';
+import { WorkspacePage } from './pages/app/WorkspacePage';
 import { useAuth } from './context/AuthContext';
 import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/EmailActionPage';
 
@@ -47,6 +48,7 @@ export function App() {
         <Route path="docs" element={<DocsPage />} />
         <Route path="api-keys" element={<ApiKeysPage />} />
         <Route path="audit" element={<AuditPage />} />
+        <Route path="workspace" element={<WorkspacePage />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />

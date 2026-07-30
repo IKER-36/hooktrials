@@ -8,8 +8,11 @@ import {
   evidenceExportQuerySchema,
   incidentTriageInputSchema,
   reliabilityQuerySchema,
+  workspaceInviteAcceptSchema,
+  workspaceInviteInputSchema,
   syntheticEventInputSchema,
   updateEndpointInputSchema,
+  workspaceRoleUpdateSchema,
 } from './index.js';
 
 describe('alert channel input', () => {
@@ -148,6 +151,16 @@ describe('incidentTriageInputSchema', () => {
     ).toEqual({ acknowledged: true, note: 'Investigating provider timeout.' });
   });
 
+  it('accepts assigning and unassigning a workspace member', () => {
+    const userId = '00000000-0000-4000-8000-000000000001';
+    expect(incidentTriageInputSchema.parse({ assigneeUserId: userId })).toEqual({
+      assigneeUserId: userId,
+    });
+    expect(incidentTriageInputSchema.parse({ assigneeUserId: null })).toEqual({
+      assigneeUserId: null,
+    });
+  });
+
   it('rejects an empty triage patch and oversized notes', () => {
     expect(incidentTriageInputSchema.safeParse({}).success).toBe(false);
     expect(incidentTriageInputSchema.safeParse({ note: 'x'.repeat(2_001) }).success).toBe(false);
@@ -174,5 +187,20 @@ describe('operational evidence queries', () => {
   it('rejects unbounded reliability requests', () => {
     expect(reliabilityQuerySchema.safeParse({ windowDays: 31 }).success).toBe(false);
     expect(auditQuerySchema.safeParse({ limit: 201 }).success).toBe(false);
+  });
+});
+
+describe('workspace controls', () => {
+  it('accepts bounded member roles and normalizes invite defaults', () => {
+    expect(workspaceInviteInputSchema.parse({ email: 'ops@example.com' })).toEqual({
+      email: 'ops@example.com',
+      role: 'viewer',
+    });
+    expect(workspaceRoleUpdateSchema.parse({ role: 'operator' }).role).toBe('operator');
+  });
+
+  it('rejects owner escalation and malformed invite tokens', () => {
+    expect(workspaceRoleUpdateSchema.safeParse({ role: 'owner' }).success).toBe(false);
+    expect(workspaceInviteAcceptSchema.safeParse({ token: 'short' }).success).toBe(false);
   });
 });
