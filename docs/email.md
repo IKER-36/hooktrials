@@ -6,8 +6,8 @@ committed to Git.
 
 ## Messages
 
-- Email verification after registration, plus a verification reminder when an unverified cloud
-  account attempts to log in.
+- Email verification after registration, plus a verification reminder when a new unverified account
+  attempts to log in.
 - Welcome message after verification.
 - Password reset link with a short, single-use expiry.
 - Password-changed confirmation after a successful reset.
@@ -34,9 +34,10 @@ for these account emails.
    AUTH_PASSWORD_RESET_TTL_MINUTES=60
    ```
 
-The cloud Compose file already passes these values to the API, with verification required by
-default. Self-host installations keep email optional unless the operator supplies the variables.
-With no Maileroo key, self-hosted registration and login continue to work without email checks.
+Cloud enables verification for new registrations while existing accounts remain usable through the
+compatibility flag stored on each user. Self-host installations keep email optional unless the
+operator supplies the variables. With no Maileroo key, self-hosted registration and login continue
+to work without email checks.
 
 ## Security behaviour
 
@@ -45,6 +46,8 @@ With no Maileroo key, self-hosted registration and login continue to work withou
 - Password reset requests return the same response whether an email exists, avoiding account
   enumeration.
 - Password changes invalidate all existing sessions.
+- Email changes remain pending until the new address confirms its single-use link.
+- Existing accounts created before verification was enabled are not blocked by the new policy.
 - Maileroo failures are logged as delivery failures without logging recipient secrets or token URLs.
 
 ## Verification checklist

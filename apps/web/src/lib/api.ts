@@ -45,6 +45,8 @@ export function readableError(error: unknown): string {
     registration_closed: 'Registration is closed on this installation.',
     invalid_credentials: 'Email or password is incorrect.',
     email_not_verified: 'Verify your email before logging in. We sent you a fresh link.',
+    current_password_invalid: 'The current password is incorrect.',
+    email_same_as_current: 'Enter a different email address.',
     email_verification_invalid: 'That verification link is invalid or has expired.',
     password_reset_invalid: 'That password reset link is invalid or has expired.',
     authentication_required: 'Your session has expired. Log in again to continue.',

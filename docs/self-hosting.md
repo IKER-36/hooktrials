@@ -74,7 +74,7 @@ Update to a tagged release:
 ```bash
 git status --short                 # keep local changes out of production
 git fetch --tags origin
-./hooktrials update --release v0.20.0
+./hooktrials update --release v0.21.0
 ./hooktrials doctor --external     # omit --external for local-only mode
 ```
 

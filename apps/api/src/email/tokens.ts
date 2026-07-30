@@ -4,7 +4,7 @@ import { authTokens } from '@hooktrials/database';
 import type { createDatabase } from '@hooktrials/database';
 
 type Database = ReturnType<typeof createDatabase>['db'];
-export type AuthTokenPurpose = 'email_verification' | 'password_reset';
+export type AuthTokenPurpose = 'email_verification' | 'email_change' | 'password_reset';
 
 export function hashAuthToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');

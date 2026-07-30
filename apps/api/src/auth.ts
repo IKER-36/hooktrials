@@ -17,6 +17,9 @@ export interface AuthenticatedPrincipal {
     displayName: string;
     role: string;
     emailVerified: boolean;
+    emailVerificationRequired: boolean;
+    pendingEmail: string | null;
+    avatarUrl: string | null;
     onboardingCompletedAt: Date | null;
   };
   authType: 'session' | 'api_key';
@@ -66,6 +69,9 @@ async function getSessionPrincipal(db: Database, request: FastifyRequest) {
       displayName: users.displayName,
       role: users.role,
       emailVerified: users.emailVerified,
+      emailVerificationRequired: users.emailVerificationRequired,
+      pendingEmail: users.pendingEmail,
+      avatarUrl: users.avatarUrl,
       onboardingCompletedAt: users.onboardingCompletedAt,
     })
     .from(sessions)
@@ -94,6 +100,9 @@ async function getApiKeyPrincipal(db: Database, request: FastifyRequest) {
         displayName: users.displayName,
         role: users.role,
         emailVerified: users.emailVerified,
+        emailVerificationRequired: users.emailVerificationRequired,
+        pendingEmail: users.pendingEmail,
+        avatarUrl: users.avatarUrl,
         onboardingCompletedAt: users.onboardingCompletedAt,
       },
       scopes: apiKeys.scopes,

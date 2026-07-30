@@ -4,6 +4,9 @@ export interface User {
   displayName: string;
   role?: string;
   emailVerified?: boolean;
+  emailVerificationRequired?: boolean;
+  pendingEmail?: string | null;
+  avatarUrl?: string | null;
   onboardingCompletedAt?: string | null;
 }
 export interface ScenarioStep {

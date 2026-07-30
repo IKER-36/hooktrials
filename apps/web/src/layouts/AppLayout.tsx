@@ -311,7 +311,10 @@ export function AppLayout() {
   );
   const isCurrent = (item: { to: string; end?: boolean }) =>
     item.end ? location.pathname === item.to : location.pathname.startsWith(item.to);
-  const activeModule = navigationItems.find(isCurrent) ?? navigationItems[0]!;
+  const activeModule =
+    location.pathname === '/app/settings'
+      ? { area: 'resources' as const, areaLabel: 'Account', label: 'Account settings' }
+      : (navigationItems.find(isCurrent) ?? navigationItems[0]!);
   const secondaryGroups = navigation.filter((group) => group.id !== 'product');
   const secondaryActive = secondaryGroups.some((group) => group.items.some(isCurrent));
 
@@ -426,9 +429,13 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="ht-sidebar-foot">
-          <div className="ht-sidebar-profile">
+          <NavLink className="ht-sidebar-profile" to="/app/settings" title="Account settings">
             <span className="ht-account-avatar" aria-hidden="true">
-              {user.displayName.slice(0, 1).toUpperCase()}
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" referrerPolicy="no-referrer" />
+              ) : (
+                user.displayName.slice(0, 1).toUpperCase()
+              )}
             </span>
             <div className="ht-account">
               <span>{user.displayName}</span>
@@ -441,7 +448,7 @@ export function AppLayout() {
                 setup?.externalAccess ? 'External webhooks ready' : 'Local-only endpoints'
               }
             />
-          </div>
+          </NavLink>
           <div className="ht-sidebar-tools">
             <LanguageSwitcher compact />
             <button

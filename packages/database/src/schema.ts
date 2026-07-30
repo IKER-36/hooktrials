@@ -56,6 +56,7 @@ export const alertEventEnum = pgEnum('alert_event', ['opened', 'recovered']);
 export const alertStateEnum = pgEnum('alert_state', ['pending', 'sent', 'failed']);
 export const authTokenPurposeEnum = pgEnum('auth_token_purpose', [
   'email_verification',
+  'email_change',
   'password_reset',
 ]);
 export const apiKeyScopeEnum = pgEnum('api_key_scope', ['read', 'write']);
@@ -71,6 +72,9 @@ export const users = pgTable(
     displayName: varchar('display_name', { length: 80 }).notNull(),
     role: userRoleEnum('role').notNull().default('user'),
     emailVerified: boolean('email_verified').notNull().default(false),
+    emailVerificationRequired: boolean('email_verification_required').notNull().default(false),
+    pendingEmail: varchar('pending_email', { length: 254 }),
+    avatarUrl: varchar('avatar_url', { length: 512 }),
     onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

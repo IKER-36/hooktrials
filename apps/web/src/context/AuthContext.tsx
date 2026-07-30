@@ -14,6 +14,7 @@ interface AuthContextValue {
   ): Promise<{ requiresVerification: boolean }>;
   logout(): Promise<void>;
   completeOnboarding(): Promise<void>;
+  updateUser(user: User): void;
   /** Drops the local session state without calling the API (e.g. after a 401). */
   clearSession(): void;
 }
@@ -87,6 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser((current) =>
           current ? { ...current, onboardingCompletedAt: response.onboardingCompletedAt } : current,
         );
+      },
+      updateUser(nextUser) {
+        setUser(nextUser);
       },
       clearSession() {
         setUser(null);

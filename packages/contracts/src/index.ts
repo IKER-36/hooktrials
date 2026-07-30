@@ -59,6 +59,29 @@ export const resetPasswordInputSchema = z.object({
   password: z.string().min(12).max(128),
 });
 
+export const accountProfileInputSchema = z
+  .object({
+    displayName: z.string().trim().min(2).max(80).optional(),
+    avatarUrl: z
+      .string()
+      .url()
+      .max(512)
+      .refine((value) => value.startsWith('https://'), 'Profile photos must use HTTPS')
+      .nullable()
+      .optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'At least one field is required');
+
+export const accountPasswordInputSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(12).max(128),
+});
+
+export const accountEmailInputSchema = z.object({
+  email: z.string().email().max(254),
+  currentPassword: z.string().min(1).max(128),
+});
+
 export const onboardingInputSchema = z.object({
   completed: z.literal(true),
 });

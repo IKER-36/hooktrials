@@ -15,6 +15,7 @@ import { ApiKeysPage } from './pages/app/ApiKeysPage';
 import { AuditPage } from './pages/app/AuditPage';
 import { ReliabilityPage } from './pages/app/ReliabilityPage';
 import { WorkspacePage } from './pages/app/WorkspacePage';
+import { AccountSettingsPage } from './pages/app/AccountSettingsPage';
 import { useAuth } from './context/AuthContext';
 import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/EmailActionPage';
 
@@ -49,6 +50,7 @@ export function App() {
         <Route path="api-keys" element={<ApiKeysPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
+        <Route path="settings" element={<AccountSettingsPage />} />
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />

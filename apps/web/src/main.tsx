@@ -11,6 +11,7 @@ import './styles/modern.css';
 import './styles/theme.css';
 import './styles/refined.css';
 import './styles/workspace.css';
+import './styles/account.css';
 // Loaded last: the button contract must win over every earlier layer.
 import './styles/buttons.css';
 

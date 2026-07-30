@@ -7,6 +7,9 @@ import { readRuntimeConfig } from '@hooktrials/config';
 import {
   createEndpointInputSchema,
   alertChannelInputSchema,
+  accountEmailInputSchema,
+  accountPasswordInputSchema,
+  accountProfileInputSchema,
   auditQuerySchema,
   authTokenInputSchema,
   destinationPreflightInputSchema,
@@ -188,7 +191,15 @@ const uuidSegment = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}
 type WorkspaceRole = 'owner' | 'admin' | 'operator' | 'viewer';
 type SessionUser = Pick<
   typeof users.$inferSelect,
-  'id' | 'email' | 'displayName' | 'role' | 'emailVerified' | 'onboardingCompletedAt'
+  | 'id'
+  | 'email'
+  | 'displayName'
+  | 'role'
+  | 'emailVerified'
+  | 'emailVerificationRequired'
+  | 'pendingEmail'
+  | 'avatarUrl'
+  | 'onboardingCompletedAt'
 >;
 type WorkspaceAwareUser = SessionUser & {
   workspaceId: string;
@@ -274,7 +285,7 @@ async function requireUser(request: FastifyRequest, reply: FastifyReply) {
     return null;
   }
   const user = principal.user;
-  if (config.AUTH_EMAIL_VERIFICATION_REQUIRED && !user.emailVerified) {
+  if (user.emailVerificationRequired && !user.emailVerified) {
     await reply.code(403).send({ error: 'email_not_verified' });
     return null;
   }
@@ -319,7 +330,7 @@ async function requireApiKey(
     await reply.code(403).send({ error: 'api_key_scope_required', scope });
     return null;
   }
-  if (config.AUTH_EMAIL_VERIFICATION_REQUIRED && !principal.user.emailVerified) {
+  if (principal.user.emailVerificationRequired && !principal.user.emailVerified) {
     await reply.code(403).send({ error: 'email_not_verified' });
     return null;
   }
@@ -333,6 +344,9 @@ function publicUser(user: {
   role: string;
   onboardingCompletedAt: Date | null;
   emailVerified?: boolean;
+  emailVerificationRequired?: boolean;
+  pendingEmail?: string | null;
+  avatarUrl?: string | null;
 }) {
   return {
     id: user.id,
@@ -341,20 +355,28 @@ function publicUser(user: {
     role: user.role,
     onboardingCompletedAt: user.onboardingCompletedAt,
     emailVerified: user.emailVerified ?? false,
+    emailVerificationRequired: user.emailVerificationRequired ?? false,
+    pendingEmail: user.pendingEmail ?? null,
+    avatarUrl: user.avatarUrl ?? null,
   };
 }
 
-async function sendVerificationMessage(user: { id: string; email: string; displayName: string }) {
+async function sendVerificationMessage(
+  user: { id: string; email: string; displayName: string },
+  options: { email?: string; purpose?: 'email_verification' | 'email_change'; tag?: string } = {},
+) {
+  const targetEmail = options.email ?? user.email;
+  const purpose = options.purpose ?? 'email_verification';
   const token = await issueAuthToken(
     database.db,
     user.id,
-    'email_verification',
+    purpose,
     new Date(Date.now() + config.AUTH_EMAIL_VERIFICATION_TTL_HOURS * 60 * 60 * 1_000),
   );
   const verifyUrl = `${config.APP_ORIGIN.replace(/\/$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
   return mailer.send({
-    to: { address: user.email, display_name: user.displayName },
-    tag: 'email-verification',
+    to: { address: targetEmail, display_name: user.displayName },
+    tag: options.tag ?? 'email-verification',
     email: verificationEmail({
       name: user.displayName,
       verifyUrl,
@@ -675,6 +697,7 @@ app.post(
             displayName: input.displayName,
             passwordHash,
             role: config.REGISTRATION_MODE === 'first-user' && firstUser ? 'admin' : 'user',
+            emailVerificationRequired: config.AUTH_EMAIL_VERIFICATION_REQUIRED,
           })
           .returning({
             id: users.id,
@@ -682,6 +705,9 @@ app.post(
             displayName: users.displayName,
             role: users.role,
             emailVerified: users.emailVerified,
+            emailVerificationRequired: users.emailVerificationRequired,
+            pendingEmail: users.pendingEmail,
+            avatarUrl: users.avatarUrl,
             onboardingCompletedAt: users.onboardingCompletedAt,
           });
         const createdUser = created[0] ?? null;
@@ -713,7 +739,7 @@ app.post(
     if (!user) return reply.code(409).send({ error: 'email_already_registered' });
     if (!user) throw new Error('User creation returned no record');
 
-    const emailVerificationRequired = config.AUTH_EMAIL_VERIFICATION_REQUIRED;
+    const emailVerificationRequired = user.emailVerificationRequired;
     const emailVerificationEnabled = emailVerificationRequired || Boolean(config.MAILEROO_API_KEY);
     const emailVerificationSent = emailVerificationEnabled
       ? await sendVerificationMessage(user)
@@ -748,7 +774,7 @@ app.post(
       return reply.code(401).send({ error: 'invalid_credentials' });
     }
 
-    if (config.AUTH_EMAIL_VERIFICATION_REQUIRED && !user.emailVerified) {
+    if (user.emailVerificationRequired && !user.emailVerified) {
       await sendVerificationMessage(user);
       return reply.code(403).send({ error: 'email_not_verified' });
     }
@@ -772,7 +798,7 @@ app.post(
     if (
       user &&
       !user.emailVerified &&
-      (config.AUTH_EMAIL_VERIFICATION_REQUIRED || config.MAILEROO_API_KEY)
+      (user.emailVerificationRequired || config.MAILEROO_API_KEY)
     ) {
       await sendVerificationMessage(user);
     }
@@ -792,13 +818,17 @@ app.post(
         email: users.email,
         displayName: users.displayName,
         emailVerified: users.emailVerified,
+        emailVerificationRequired: users.emailVerificationRequired,
+        pendingEmail: users.pendingEmail,
+        avatarUrl: users.avatarUrl,
+        purpose: authTokens.purpose,
       })
       .from(authTokens)
       .innerJoin(users, eq(authTokens.userId, users.id))
       .where(
         and(
           eq(authTokens.tokenHash, hashAuthToken(token)),
-          eq(authTokens.purpose, 'email_verification'),
+          inArray(authTokens.purpose, ['email_verification', 'email_change']),
           isNull(authTokens.usedAt),
           gt(authTokens.expiresAt, new Date()),
         ),
@@ -806,16 +836,29 @@ app.post(
       .limit(1);
     const record = result[0];
     if (!record) return reply.code(400).send({ error: 'email_verification_invalid' });
+    if (record.purpose === 'email_change') {
+      if (!record.pendingEmail)
+        return reply.code(400).send({ error: 'email_verification_invalid' });
+      const existing = await database.db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, record.pendingEmail))
+        .limit(1);
+      if (existing[0] && existing[0].id !== record.userId) {
+        return reply.code(409).send({ error: 'email_already_registered' });
+      }
+    }
 
     const now = new Date();
     await database.db.transaction(async (tx) => {
       await tx.update(authTokens).set({ usedAt: now }).where(eq(authTokens.id, record.tokenId));
-      await tx
-        .update(users)
-        .set({ emailVerified: true, updatedAt: now })
-        .where(eq(users.id, record.userId));
+      const emailUpdate =
+        record.purpose === 'email_change' && record.pendingEmail
+          ? { email: record.pendingEmail, pendingEmail: null, emailVerified: true, updatedAt: now }
+          : { emailVerified: true, updatedAt: now };
+      await tx.update(users).set(emailUpdate).where(eq(users.id, record.userId));
     });
-    if (!record.emailVerified) {
+    if (!record.emailVerified && record.purpose === 'email_verification') {
       await mailer.send({
         to: { address: record.email, display_name: record.displayName },
         tag: 'welcome',
@@ -895,6 +938,127 @@ app.get('/v1/me', async (request, reply) => {
   if (!user) return;
   return { user };
 });
+
+app.patch('/v1/me/profile', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const input = accountProfileInputSchema.parse(request.body);
+  const updatedAt = new Date();
+  const values = {
+    updatedAt,
+    ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+    ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
+  };
+  const updated = (
+    await database.db.update(users).set(values).where(eq(users.id, user.id)).returning({
+      id: users.id,
+      email: users.email,
+      displayName: users.displayName,
+      role: users.role,
+      emailVerified: users.emailVerified,
+      emailVerificationRequired: users.emailVerificationRequired,
+      pendingEmail: users.pendingEmail,
+      avatarUrl: users.avatarUrl,
+      onboardingCompletedAt: users.onboardingCompletedAt,
+    })
+  )[0];
+  if (!updated) return reply.code(404).send({ error: 'user_not_found' });
+  return { user: publicUser(updated) };
+});
+
+app.post(
+  '/v1/me/email',
+  { config: { rateLimit: { max: 5, timeWindow: '1 hour' } } },
+  async (request, reply) => {
+    const user = await requireUser(request, reply);
+    if (!user) return;
+    const input = accountEmailInputSchema.parse(request.body);
+    const passwordRecord = (
+      await database.db
+        .select({ passwordHash: users.passwordHash })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1)
+    )[0];
+    if (
+      !passwordRecord?.passwordHash ||
+      !(await argon2.verify(passwordRecord.passwordHash, input.currentPassword))
+    ) {
+      return reply.code(401).send({ error: 'current_password_invalid' });
+    }
+    const email = input.email.trim().toLowerCase();
+    if (email === user.email) return reply.code(400).send({ error: 'email_same_as_current' });
+    const existing = await database.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    if (existing[0] && existing[0].id !== user.id) {
+      return reply.code(409).send({ error: 'email_already_registered' });
+    }
+    const updated = (
+      await database.db
+        .update(users)
+        .set({ pendingEmail: email, updatedAt: new Date() })
+        .where(eq(users.id, user.id))
+        .returning({
+          id: users.id,
+          email: users.email,
+          displayName: users.displayName,
+          role: users.role,
+          emailVerified: users.emailVerified,
+          emailVerificationRequired: users.emailVerificationRequired,
+          pendingEmail: users.pendingEmail,
+          avatarUrl: users.avatarUrl,
+          onboardingCompletedAt: users.onboardingCompletedAt,
+        })
+    )[0];
+    if (!updated) return reply.code(404).send({ error: 'user_not_found' });
+    const emailVerificationSent = await sendVerificationMessage(updated, {
+      email,
+      purpose: 'email_change',
+      tag: 'email-change',
+    });
+    return { user: publicUser(updated), emailVerificationSent };
+  },
+);
+
+app.post(
+  '/v1/me/password',
+  { config: { rateLimit: { max: 5, timeWindow: '1 hour' } } },
+  async (request, reply) => {
+    const user = await requireUser(request, reply);
+    if (!user) return;
+    const input = accountPasswordInputSchema.parse(request.body);
+    const passwordRecord = (
+      await database.db
+        .select({ passwordHash: users.passwordHash })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1)
+    )[0];
+    if (
+      !passwordRecord?.passwordHash ||
+      !(await argon2.verify(passwordRecord.passwordHash, input.currentPassword))
+    ) {
+      return reply.code(401).send({ error: 'current_password_invalid' });
+    }
+    const passwordHash = await argon2.hash(input.newPassword, { type: argon2.argon2id });
+    await database.db
+      .update(users)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.id, user.id));
+    await database.db.delete(sessions).where(eq(sessions.userId, user.id));
+    const session = await createSession(database.db, user.id);
+    setSessionCookie(reply, session.token, session.expiresAt, config.COOKIE_SECURE);
+    await mailer.send({
+      to: { address: user.email, display_name: user.displayName },
+      tag: 'password-changed',
+      email: passwordChangedEmail({ name: user.displayName, origin: config.APP_ORIGIN }),
+    });
+    return { changed: true };
+  },
+);
 
 app.get('/v1/workspace', async (request, reply) => {
   const user = await requireUser(request, reply);

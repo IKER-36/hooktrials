@@ -2,6 +2,29 @@
 
 Updated: 30 July 2026.
 
+## Release `v0.21.0` — Account security and settings
+
+This release adds account-level security controls while preserving access for existing users.
+
+### Added
+
+- New registrations can require a single-use email verification link before dashboard access.
+- Existing accounts are marked as legacy-compatible during migration and remain usable.
+- Account settings now manage the display name, HTTPS profile image, email-change confirmation and
+  password rotation.
+- API-key management is linked directly from account settings.
+
+### Improved
+
+- Email changes are staged until the new address is confirmed.
+- Password changes invalidate other sessions and trigger a security notification.
+- Account tokens remain hashed, short-lived and single-use.
+
+### Upgrade note
+
+The migration is additive. Existing workspaces, routes, monitors, API keys and evidence remain intact.
+See [v0.21.0 release notes](releases/v0.21.0.md).
+
 ## Release `v0.20.0` — Shared workspaces and incident ownership
 
 This release adds a practical collaboration layer for teams operating the same integrations.
