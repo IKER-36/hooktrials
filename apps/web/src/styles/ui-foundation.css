@@ -1,0 +1,452 @@
+/*
+ * Dashboard visual foundation.
+ *
+ * The sidebar has its own deliberately preserved system. Everything here is
+ * scoped to .ht-main so product content can share one calm, non-glass surface
+ * language without changing navigation.
+ */
+
+.ht-shell {
+  background-image: none;
+}
+
+/* Auth uses the same restrained visual language as the workspace. The
+ * previous pitch used a green/blue text gradient and decorative rings; the
+ * message is stronger when typography and spacing carry the emphasis. */
+.ht-auth-aside::after {
+  display: none;
+}
+
+.ht-auth-pitch h1 span {
+  color: var(--ht-green);
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: initial;
+}
+
+.ht-auth-eyebrow,
+.ht-auth-sequence,
+.ht-cubepath-mini {
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline-bright);
+}
+
+.ht-main {
+  min-width: 0;
+  background: var(--ht-bg);
+}
+
+.ht-main .ht-page {
+  max-width: 1440px;
+  gap: 24px;
+}
+
+.ht-main .ht-page-head {
+  min-height: 104px;
+  align-items: flex-end;
+  padding: 26px 0 18px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+.ht-main .ht-page-head h1 {
+  margin: 0;
+  color: var(--ht-ink);
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.055em;
+}
+
+.ht-main .ht-page-head .ht-kicker {
+  margin: 0 0 10px;
+}
+
+.ht-main .ht-page-head .ht-muted-line {
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: var(--ht-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.ht-main .ht-page-head-actions {
+  gap: 8px;
+  align-items: center;
+}
+
+.ht-main .ht-page-head > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ht-main .ht-page-head > svg,
+.ht-main .ht-page-head-actions > svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--ht-green);
+}
+
+/* Every large content surface is solid, bordered and quiet. */
+.ht-main
+  :where(
+    .ht-control-center,
+    .ht-operation-panel,
+    .ht-monitor-create,
+    .ht-monitor-list,
+    .ht-monitor-detail,
+    .ht-studio-library,
+    .ht-studio-editor,
+    .ht-endpoint-card,
+    .ht-template-section,
+    .ht-create-card,
+    .ht-endpoint-list,
+    .ht-events,
+    .ht-demo-rail,
+    .ht-demo-console,
+    .ht-route-config,
+    .ht-alert-panel,
+    .ht-webhook-journey,
+    .ht-onboarding,
+    .ht-guided-demo,
+    .ht-score-card,
+    .ht-inspector,
+    .ht-share-evidence,
+    .ht-integration-table,
+    .ht-readiness,
+    .ht-operation-summary,
+    .ht-monitor-summary,
+    .ht-status-share,
+    .ht-status-pages,
+    .ht-docs-nav,
+    .ht-docs-article,
+    .ht-api-key-create,
+    .ht-api-key-guide,
+    .ht-api-key-secret,
+    .ht-api-key-list
+  ) {
+  background: var(--ht-surface-1);
+  background-image: none;
+  border-color: var(--ht-hairline-bright);
+  box-shadow: none;
+}
+
+.ht-main
+  :where(
+    .ht-template-card,
+    .ht-scenario-option,
+    .ht-inspector-meta div,
+    .ht-contract-evidence,
+    .ht-body-viewer,
+    .ht-headers,
+    .ht-attempt,
+    .ht-report-card,
+    .ht-readiness-grid article,
+    .ht-replay-impact span,
+    .ht-status-share-url,
+    .ht-demo-links a
+  ) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  background-image: none;
+  border-color: var(--ht-hairline);
+  box-shadow: none;
+}
+
+.ht-main :where(.ht-template-card:hover:not(:disabled), .ht-scenario-option:hover) {
+  background: var(--ht-surface-hover);
+  border-color: var(--ht-hairline-bright);
+  box-shadow: none;
+  transform: none;
+}
+
+.ht-main :where(.ht-template-card.selected, .ht-scenario-option.selected) {
+  background: color-mix(in srgb, var(--ht-green) 10%, var(--ht-surface-2));
+  border-color: color-mix(in srgb, var(--ht-green) 50%, var(--ht-hairline));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ht-green) 12%, transparent);
+}
+
+.ht-main :where(.ht-monitor-state.degraded, .ht-readiness-level.starting, .ht-demo-message) {
+  color: var(--ht-amber);
+  background: var(--ht-warning-bg);
+}
+
+.ht-main :where(.ht-monitor-state.down, .ht-readiness-grid article:not(.passed) > span) {
+  color: var(--ht-red);
+  background: var(--ht-danger-bg);
+}
+
+.ht-main :where(.ht-monitor-state.healthy, .ht-readiness-level.production_ready) {
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+}
+
+.ht-main :where(.ht-demo-rail article[data-state='running']) {
+  background: var(--ht-warning-bg);
+}
+
+.ht-main :where(.ht-demo-rail article[data-state='passed'], .ht-demo-links a) {
+  background: var(--ht-positive-bg);
+}
+
+.ht-main :where(.ht-demo-rail article[data-state='failed']) {
+  background: var(--ht-danger-bg);
+}
+
+.ht-main .ht-replay > header > span {
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+}
+
+.ht-main .ht-replay.failed > header > span {
+  color: var(--ht-red);
+  background: var(--ht-danger-bg);
+}
+
+.ht-main .ht-replay.protected > header > span {
+  color: var(--ht-amber);
+  background: var(--ht-warning-bg);
+}
+
+/* Legacy replay/readiness blocks used light gradients before the shared
+ * surface system existed. Keep the semantic state colour, but use the same
+ * solid material as the rest of the dashboard. */
+.ht-main :where(.ht-replay, .ht-replay.failed, .ht-replay.protected) {
+  background: var(--ht-surface-1);
+  background-image: none;
+  box-shadow: none;
+}
+
+.ht-main .ht-replay {
+  border-color: color-mix(in srgb, var(--ht-green) 34%, var(--ht-hairline));
+}
+
+.ht-main .ht-replay.failed {
+  border-color: color-mix(in srgb, var(--ht-red) 42%, var(--ht-hairline));
+}
+
+.ht-main .ht-replay.protected {
+  border-color: color-mix(in srgb, var(--ht-amber) 42%, var(--ht-hairline));
+}
+
+.ht-main :where(.ht-evidence-timeline > div, .ht-readiness-checks > footer.complete) {
+  background: var(--ht-surface-2);
+  background-image: none;
+  color: var(--ht-ink);
+}
+
+.ht-main .ht-skeleton {
+  background: var(--ht-surface-2);
+  background-image: none;
+}
+
+/* Surface hierarchy: rows and metrics sit inside the parent, not in floating
+ * white cards. */
+.ht-main
+  :where(
+    .ht-control-metrics,
+    .ht-operation-summary,
+    .ht-monitor-summary,
+    .ht-monitor-metrics,
+    .ht-demo-proof,
+    .ht-events-facts
+  ) {
+  background: var(--ht-surface-1);
+  border-color: var(--ht-hairline-bright);
+  box-shadow: none;
+}
+
+.ht-main
+  :where(
+    .ht-control-metrics article,
+    .ht-operation-summary article,
+    .ht-monitor-summary article,
+    .ht-monitor-metrics article,
+    .ht-demo-proof div
+  ) {
+  background: transparent;
+  border-color: var(--ht-hairline);
+  box-shadow: none;
+}
+
+.ht-main
+  :where(
+    .ht-template-grid button,
+    .ht-endpoint-item,
+    .ht-monitor-list > button,
+    .ht-operation-list article,
+    .ht-step-card,
+    .ht-check-list article,
+    .ht-readiness-checks article,
+    .ht-monitor-history article,
+    .ht-monitor-incident,
+    .ht-status-history article,
+    .ht-status-incidents article
+  ) {
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline);
+  box-shadow: none;
+}
+
+.ht-main
+  :where(
+    .ht-template-grid button:hover,
+    .ht-endpoint-item:hover,
+    .ht-monitor-list > button:hover,
+    .ht-step-card:hover
+  ) {
+  background: var(--ht-surface-hover);
+  border-color: var(--ht-hairline-bright);
+}
+
+/* Inputs use the same material in both themes. */
+.ht-main
+  :where(
+    .ht-field input,
+    .ht-field select,
+    .ht-field textarea,
+    .ht-switcher select,
+    .ht-studio-editor input,
+    .ht-studio-editor select,
+    .ht-studio-editor textarea,
+    .ht-docs-search input
+  ) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-sm);
+  box-shadow: none;
+}
+
+.ht-main
+  :where(
+    .ht-field input:focus,
+    .ht-field select:focus,
+    .ht-field textarea:focus,
+    .ht-switcher select:focus,
+    .ht-studio-editor input:focus,
+    .ht-studio-editor select:focus,
+    .ht-studio-editor textarea:focus,
+    .ht-docs-search input:focus
+  ) {
+  background: var(--ht-surface-1);
+  border-color: var(--ht-green-dim);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ht-green) 14%, transparent);
+}
+
+.ht-main .ht-field {
+  color: var(--ht-muted);
+}
+
+.ht-main .ht-field > small,
+.ht-main .ht-field small {
+  color: var(--ht-faint);
+}
+
+/* Status labels share the same compact footprint. */
+.ht-main :where(.ht-status-chip, .ht-monitor-state, .ht-mode-badge, .ht-demo-safety) {
+  min-height: 22px;
+  border-radius: var(--ht-radius-sm);
+  font-family: var(--ht-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.ht-main :where(.ht-monitor-actions, .ht-endpoint-actions, .ht-status-share-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Endpoint inventory rows previously allowed the navigation hint to consume
+ * the full row, leaving the endpoint name only a few pixels wide. Keep the
+ * affordance as a compact arrow and reserve the flexible column for content. */
+.ht-main .ht-endpoint-name {
+  flex: 1 1 220px;
+}
+
+.ht-main .ht-endpoint-open {
+  width: 28px;
+  flex: 0 0 28px;
+  justify-content: center;
+  gap: 0;
+  margin-left: 0;
+  padding-right: 0;
+  overflow: hidden;
+  font-size: 0;
+}
+
+.ht-main .ht-endpoint-open > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ht-main :where(.ht-monitor-actions .button, .ht-endpoint-actions .button) {
+  min-width: 74px;
+}
+
+/* Remove legacy visual effects from dashboard-only content. */
+.ht-main
+  :where(
+    .ht-panel,
+    .ht-endpoint-card,
+    .ht-guided-demo,
+    .ht-alert-panel,
+    .ht-route-config,
+    .ht-share-evidence,
+    .ht-score-card
+  ) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+@media (max-width: 1024px) {
+  .ht-main {
+    padding-inline: 22px;
+  }
+
+  .ht-main .ht-page-head {
+    min-height: 96px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ht-main {
+    padding-inline: 16px;
+  }
+
+  .ht-main .ht-page-head {
+    align-items: flex-start;
+    min-height: 0;
+    padding-block: 22px 16px;
+  }
+
+  .ht-main .ht-page-head-actions {
+    width: 100%;
+  }
+
+  .ht-main .ht-page-head-actions .button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .ht-main {
+    padding-inline: 12px;
+  }
+
+  .ht-main .ht-page {
+    gap: 18px;
+  }
+
+  .ht-main .ht-page-head h1 {
+    font-size: 30px;
+  }
+
+  .ht-main :where(.ht-monitor-actions, .ht-endpoint-actions) .button {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
