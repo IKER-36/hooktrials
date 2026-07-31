@@ -2,6 +2,36 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.26.0` — Command palette and faster navigation
+
+This release adds a keyboard-first way to move around the workspace and run common actions without
+losing the current route context.
+
+### Added
+
+- Open the command palette from the search control in the workspace bar or with **Cmd/Ctrl + K**.
+- Search every dashboard module, account settings and workspace action from one place.
+- Navigate results with the arrow keys, jump to the first or last result and confirm with Enter.
+- Switch theme, open the product tour, refresh workspace data and collapse the sidebar directly from
+  the palette.
+
+### Improved
+
+- The palette groups destinations and actions so a search result explains where it will take you.
+- The dialog traps focus, announces its active result and closes cleanly with Escape or a backdrop
+  click.
+- The shortcut remains available on narrow screens through the compact search control.
+- Empty searches explain what to try next instead of presenting a blank panel.
+
+### Fixed
+
+- Prevented arrow-key navigation from moving to an invalid result when a search has no matches.
+- Refresh actions now surface the same session and request errors as the rest of the dashboard.
+- Kept the legacy `/app/audit` link redirecting to Operations; no separate Audit history tab is
+  exposed.
+
+No account, route, monitor, incident or database migration is required.
+
 ## Release `v0.25.0` — Evidence and reports
 
 This release gives recorded events a dedicated, redacted evidence workspace so teams can explain

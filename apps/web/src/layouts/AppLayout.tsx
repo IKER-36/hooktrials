@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate, NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom';
+import {
+  Navigate,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useOutletContext,
+} from 'react-router-dom';
 import {
   Activity,
+  Search,
   KeyRound,
   BellRing,
   FileText,
@@ -24,6 +32,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Brand } from '../components/Brand';
+import { CommandPalette, type PaletteCommand } from '../components/app/CommandPalette';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { OnboardingTour } from '../components/app/OnboardingTour';
 import { useAuth } from '../context/AuthContext';
@@ -77,6 +86,7 @@ export function useDashboard(): DashboardContext {
 
 export function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, loading: authLoading, setup, logout, clearSession, completeOnboarding } = useAuth();
   const { t } = useI18n();
   const [endpoints, setEndpoints] = useState<Endpoint[]>([]);
@@ -96,6 +106,7 @@ export function AppLayout() {
     () => localStorage.getItem('ht.sidebarCollapsed') === 'true',
   );
   const [moreOpen, setMoreOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -120,6 +131,18 @@ export function AppLayout() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [moreOpen]);
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (tourOpen) return;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandOpen((value) => !value);
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [tourOpen]);
 
   useEffect(() => {
     if (authLoading || !user || tourDecided) return;
@@ -319,6 +342,81 @@ export function AppLayout() {
       : (navigationItems.find(isCurrent) ?? navigationItems[0]!);
   const secondaryGroups = navigation.filter((group) => group.id !== 'product');
   const secondaryActive = secondaryGroups.some((group) => group.items.some(isCurrent));
+  const closeCommand = () => setCommandOpen(false);
+  const commandItems: PaletteCommand[] = [
+    ...navigationItems.map((item) => ({
+      id: item.to.replaceAll('/', '-').replace(/^-/, '') || 'home',
+      label: t(item.label),
+      description: t(item.areaLabel),
+      group: t(item.areaLabel),
+      icon: item.icon,
+      keywords: [item.label, item.areaLabel],
+      onSelect: () => {
+        closeCommand();
+        navigate(item.to);
+      },
+    })),
+    {
+      id: 'account-settings',
+      label: t('Account settings'),
+      description: t('Profile, password, email and API keys'),
+      group: t('Account'),
+      icon: Users,
+      keywords: ['settings', 'profile', 'password', 'email', 'api'],
+      onSelect: () => {
+        closeCommand();
+        navigate('/app/settings');
+      },
+    },
+    {
+      id: 'toggle-theme',
+      label: t(theme === 'dark' ? 'Use light mode' : 'Use dark mode'),
+      description: t('Switch the workspace appearance'),
+      group: t('Actions'),
+      icon: theme === 'dark' ? Sun : Moon,
+      keywords: ['theme', 'light', 'dark', 'appearance'],
+      onSelect: () => {
+        setTheme((value) => (value === 'dark' ? 'light' : 'dark'));
+        closeCommand();
+      },
+    },
+    {
+      id: 'open-tour',
+      label: t('Product tour'),
+      description: t('Review the complete HookTrials workflow'),
+      group: t('Actions'),
+      icon: HelpCircle,
+      keywords: ['guide', 'onboarding', 'help'],
+      onSelect: () => {
+        closeCommand();
+        setTourOpen(true);
+      },
+    },
+    {
+      id: 'refresh-workspace',
+      label: t('Refresh workspace'),
+      description: t('Reload routes, scenarios and current limits'),
+      group: t('Actions'),
+      icon: Activity,
+      keywords: ['reload', 'refresh', 'sync'],
+      onSelect: () => {
+        closeCommand();
+        void refresh().catch(reportError);
+      },
+    },
+    {
+      id: 'toggle-sidebar',
+      label: t(sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'),
+      description: t('Change the navigation density'),
+      group: t('Actions'),
+      icon: sidebarCollapsed ? PanelLeftOpen : PanelLeftClose,
+      keywords: ['sidebar', 'rail', 'navigation'],
+      onSelect: () => {
+        setSidebarCollapsed((value) => !value);
+        closeCommand();
+      },
+    },
+  ];
 
   return (
     <div className={`ht-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -537,9 +635,31 @@ export function AppLayout() {
           </span>
           <b aria-hidden="true">/</b>
           <strong>{activeModule.label}</strong>
+          <button
+            type="button"
+            className="ht-command-trigger"
+            onClick={() => setCommandOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={commandOpen}
+          >
+            <Search aria-hidden="true" />
+            <span>{t('Search commands')}</span>
+            <kbd>⌘K</kbd>
+          </button>
         </div>
         <Outlet context={context} />
       </main>
+      <CommandPalette
+        open={commandOpen}
+        commands={commandItems}
+        title={t('Command palette')}
+        placeholder={t('Type to search routes and actions…')}
+        emptyLabel={t('No commands match your search.')}
+        hintLabel={t('Navigate the workspace')}
+        navigateLabel={t('Navigate')}
+        selectLabel={t('Select')}
+        onClose={closeCommand}
+      />
       {tourOpen ? (
         <OnboardingTour
           onFinish={async () => {

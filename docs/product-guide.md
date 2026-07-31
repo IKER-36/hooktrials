@@ -18,6 +18,16 @@ The slim context line above every page always identifies the current workspace a
 structure is retained when the desktop rail is collapsed and in the horizontally scrollable mobile
 navigation.
 
+## Command palette
+
+Use the search control in the context bar, or press **Cmd + K** on macOS and **Ctrl + K** on Windows
+and Linux, to open the command palette. Search by module, action or keyword, then use the arrow keys
+and Enter to move or act without leaving the current workspace. Escape closes the palette.
+
+The palette includes every dashboard destination, account settings, theme switching, the product
+tour, workspace refresh and sidebar density. It is available in English and Spanish and respects
+the same focus and reduced-motion preferences as the rest of the dashboard.
+
 ## Navigation and route context
 
 Every module has its own address so a shared link opens the same context instead of falling back to a
