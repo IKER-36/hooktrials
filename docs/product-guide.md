@@ -40,6 +40,11 @@ is derived only from configuration and stored evidence: public HTTPS reachabilit
 signature verification, destination configuration, durable delivery, observed traffic, recovery,
 evidence generation and incident state.
 
+For any selected route, the **Route journey** keeps the lifecycle visible in one place: setup in
+Trial endpoints or Webhook Hub, traffic and retry evidence in Control Center, dependency checks in
+Monitoring, and incident or dead-letter recovery in Operations. Use the links in that strip to move
+between modules without losing the route context.
+
 ## Live connections and Trial endpoints
 
 For real integrations, start in **Webhook Hub**. It creates the provider-facing URL,

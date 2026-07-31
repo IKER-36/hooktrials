@@ -183,7 +183,7 @@ export function OperationsPage() {
             </article>
           </section>
 
-          <section className="ht-operation-panel">
+          <section id="incident-timeline" className="ht-operation-panel">
             <header>
               <div>
                 <h2>Incident timeline</h2>
@@ -324,7 +324,7 @@ export function OperationsPage() {
             )}
           </section>
 
-          <section className="ht-operation-panel">
+          <section id="recovery-queue" className="ht-operation-panel">
             <header>
               <div>
                 <h2>Dead-letter inbox</h2>

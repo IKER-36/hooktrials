@@ -1,6 +1,36 @@
 # Current release status
 
-Updated: 30 July 2026.
+Updated: 31 July 2026.
+
+## Release `v0.22.0` — Route lifecycle and workspace Home
+
+This release makes the dashboard easier to understand from the first screen and keeps each route's
+journey connected from setup through recovery.
+
+### Added
+
+- **Workspace Home** gives one read-only overview of live routes, Trial endpoints, monitors, open
+  incidents, recoveries and recent evidence.
+- **Route journey** in Control Center connects setup, traffic inspection, monitoring and Operations
+  with direct links for the selected route.
+- Home highlights the next actions that will create the most useful reliability evidence, alongside
+  shortcuts to the main product and Lab workflows.
+
+### Improved
+
+- The dashboard now distinguishes Home (workspace orientation) from Control Center (route-level
+  evidence and retry timelines).
+- Route and integration links preserve the selected endpoint when moving between modules.
+- The route journey and Home surfaces adapt to narrow screens without hiding the next action.
+
+### Fixed
+
+- `/app` no longer opens an ambiguous route-detail screen; it now opens the workspace overview.
+- Direct route links no longer fall back to a generic page when the endpoint context is valid.
+- Invalid route links show a clear recovery action to choose another endpoint.
+
+Existing routes, monitors, incidents, evidence and accounts continue to work without reconfiguration.
+See [Product guide](product-guide.md) for the updated workspace flow.
 
 ## Release `v0.21.0` — Account security and settings
 

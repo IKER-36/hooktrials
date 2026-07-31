@@ -14,7 +14,11 @@ export function IntegrationTable({
 }) {
   if (monitors.length === 0 && routes.length === 0) return null;
   return (
-    <section className="ht-integration-table" aria-label="All integrations">
+    <section
+      id="integration-inventory"
+      className="ht-integration-table"
+      aria-label="All integrations"
+    >
       <header>
         <div>
           <h2>All integrations</h2>

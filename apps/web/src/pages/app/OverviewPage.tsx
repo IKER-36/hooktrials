@@ -6,6 +6,7 @@ import { ControlCenterSummary } from '../../components/app/ControlCenterSummary'
 import { EventInspector } from '../../components/app/EventInspector';
 import { GuidedDemo } from '../../components/app/GuidedDemo';
 import { ReadinessPanel } from '../../components/app/ReadinessPanel';
+import { RouteJourney } from '../../components/app/RouteJourney';
 import { RouteConfiguration } from '../../components/app/RouteConfiguration';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
@@ -225,6 +226,7 @@ export function OverviewPage() {
       </header>
 
       <ControlCenterSummary />
+      <RouteJourney endpoint={selected} />
       <ActivationChecklist endpoints={endpoints} />
 
       <section className="ht-endpoint-card" aria-label="Active endpoint">
