@@ -1,0 +1,1115 @@
+/*
+ * Module-level visual system.
+ *
+ * ui-foundation.css sets the shared material and semantic colours. This file
+ * gives each workspace a deliberate composition: one frame, one hierarchy,
+ * one action language. The sidebar is intentionally out of scope.
+ */
+
+html[data-theme] .ht-shell .ht-main {
+  --ht-module-radius: 14px;
+  --ht-module-padding: 22px;
+  --ht-module-divider: var(--ht-hairline);
+  min-width: 0;
+}
+
+/* ---------- Page chrome ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-page {
+  width: min(100%, var(--ht-measure-max));
+  gap: 24px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head {
+  min-height: 0;
+  align-items: flex-end;
+  gap: 22px;
+  padding: 10px 0 18px;
+  border-bottom: 1px solid var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head > div:first-child {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head h1 {
+  max-width: 820px;
+  font-size: clamp(30px, 3.2vw, 46px);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head .ht-kicker {
+  margin: 0 0 10px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head .ht-muted-line {
+  max-width: 680px;
+  margin: 12px 0 0;
+  line-height: 1.55;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head-actions {
+  align-self: flex-end;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: min(100%, 300px);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head-actions .button {
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-subject {
+  margin-top: 9px;
+  font-size: 12px;
+}
+
+/* All module frames use the same radius, border and clipping behaviour. */
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-center,
+    .ht-endpoint-card,
+    .ht-operation-panel,
+    .ht-monitor-grid,
+    .ht-template-section,
+    .ht-endpoint-list,
+    .ht-events,
+    .ht-demo-grid,
+    .ht-docs-layout,
+    .ht-readiness,
+    .ht-status-pages,
+    .ht-live-flow,
+    .ht-live-connect,
+    .ht-live-activation,
+    .ht-live-routes,
+    .ht-settings-section,
+    .ht-api-key-create,
+    .ht-api-key-guide,
+    .ht-api-key-list
+  ) {
+  border-radius: var(--ht-module-radius);
+}
+
+html[data-theme] .ht-shell .ht-main :where(.ht-control-center, .ht-operation-panel) > header,
+html[data-theme] .ht-shell .ht-main :where(.ht-template-section, .ht-events) > header,
+html[data-theme] .ht-shell .ht-main :where(.ht-integration-table, .ht-monitor-create) > header {
+  min-height: 62px;
+  align-items: center;
+  padding: 16px var(--ht-module-padding);
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(.ht-control-center, .ht-operation-panel, .ht-template-section, .ht-events)
+  > header
+  h2 {
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+html[data-theme] .ht-shell .ht-main :where(.ht-control-center, .ht-operation-panel) > header > div,
+html[data-theme] .ht-shell .ht-main :where(.ht-template-section, .ht-events) > header > div {
+  display: grid;
+  gap: 5px;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(.ht-control-center, .ht-operation-panel)
+  > header
+  > div
+  p,
+html[data-theme] .ht-shell .ht-main :where(.ht-template-section, .ht-events) > header > div p {
+  margin: 0;
+}
+
+/* ---------- Data strips ---------- */
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-metrics,
+    .ht-operation-summary,
+    .ht-monitor-summary,
+    .ht-monitor-metrics,
+    .ht-demo-proof
+  ) {
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  min-width: 0;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-metrics article,
+    .ht-operation-summary article,
+    .ht-monitor-summary article,
+    .ht-monitor-metrics article,
+    .ht-demo-proof div
+  ) {
+  min-width: 0;
+  min-height: 94px;
+  padding: 17px 20px;
+  border-right: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-metrics article:last-child,
+    .ht-operation-summary article:last-child,
+    .ht-monitor-summary article:last-child,
+    .ht-monitor-metrics article:last-child
+  ) {
+  border-right: 0;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-metrics span,
+    .ht-operation-summary span,
+    .ht-monitor-summary span,
+    .ht-monitor-metrics span
+  ) {
+  max-width: 17ch;
+  color: var(--ht-faint);
+  font: 700 9px/1.3 var(--ht-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-metrics strong,
+    .ht-operation-summary strong,
+    .ht-monitor-summary strong,
+    .ht-monitor-metrics strong
+  ) {
+  color: var(--ht-ink);
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+/* ---------- Control Center ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-control-center {
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > footer {
+  min-height: 54px;
+  padding: 12px var(--ht-module-padding);
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > footer div {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 34px 38px;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-module-radius);
+  background: var(--ht-surface-1);
+  box-shadow: 0 14px 34px var(--ht-shadow);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding h2 {
+  margin: 18px 0 10px;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.05em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding ol {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0 26px;
+  padding: 0;
+  list-style: none;
+  counter-reset: first-run;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  color: var(--ht-muted);
+  font-size: 12px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding li::before {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  content: counter(first-run);
+  counter-increment: first-run;
+  color: var(--ht-green);
+  border: 1px solid color-mix(in srgb, var(--ht-green) 35%, var(--ht-hairline));
+  border-radius: 50%;
+  font: 700 10px/1 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding > .button {
+  width: 100%;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-card {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-card > * {
+  padding-inline: var(--ht-module-padding);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-card .ht-endpoint-state {
+  min-height: 62px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--ht-module-divider);
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-card .ht-endpoint-state .button {
+  margin-left: auto;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-card .ht-url-row {
+  margin: 20px var(--ht-module-padding) 0;
+  padding: 7px;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-md);
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-card .ht-curl {
+  margin: 18px var(--ht-module-padding) 22px;
+  padding-top: 15px;
+  border-top: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-card .ht-curl-body {
+  padding-bottom: 2px;
+}
+
+/* ---------- Endpoints / scenario lab ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-template-section {
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-template-section > header {
+  display: flex;
+  gap: 18px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-template-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-top: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-template-card {
+  min-height: 154px;
+  padding: 17px 18px;
+  border: 0;
+  border-right: 1px solid var(--ht-module-divider);
+  border-radius: 0;
+  background: var(--ht-surface-1);
+  text-align: left;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-template-card:last-child {
+  border-right: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-template-card.selected {
+  background: var(--ht-surface-hover);
+  box-shadow: inset 0 -2px 0 var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-template-card:hover:not(:disabled) {
+  background: var(--ht-surface-hover);
+  box-shadow: inset 0 -2px 0 var(--ht-green-dim);
+  transform: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoints-grid {
+  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-create-card {
+  min-height: 100%;
+  align-content: start;
+  gap: 15px;
+  padding: 24px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-create-card h2 {
+  margin-top: -2px;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-create-card .ht-muted-line {
+  margin: -4px 0 5px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-create-card > .button {
+  width: 100%;
+  margin-top: 4px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-list {
+  min-width: 0;
+  align-content: start;
+  gap: 0;
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-item {
+  min-width: 0;
+  min-height: 92px;
+  padding: 8px 12px 8px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--ht-module-divider);
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-item:last-child {
+  border-bottom: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-item:hover,
+html[data-theme] .ht-shell .ht-main .ht-endpoint-item.selected {
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-select {
+  min-width: 0;
+  min-height: 68px;
+  padding: 12px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-select .ht-listen {
+  flex: 0 0 102px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-endpoint-actions {
+  align-items: center;
+}
+
+/* ---------- Monitoring ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-summary {
+  border-top: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table {
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table-head,
+html[data-theme] .ht-shell .ht-main .ht-integration-table > button {
+  min-width: 780px;
+  padding-inline: var(--ht-module-padding);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table-head {
+  min-height: 42px;
+  color: var(--ht-faint);
+  background: var(--ht-surface-2);
+  font-size: 9px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table > button {
+  min-height: 62px;
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-create {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-create > header {
+  padding: 18px var(--ht-module-padding);
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-create > header h2 {
+  font-size: 18px;
+  letter-spacing: -0.035em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-create > header > span {
+  color: var(--ht-green-deep);
+  background: var(--ht-positive-bg);
+  border: 1px solid color-mix(in srgb, var(--ht-green) 25%, var(--ht-hairline));
+  border-radius: 999px;
+  padding: 7px 9px;
+  font: 700 9px/1 var(--ht-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-form-grid {
+  gap: 16px;
+  padding: 22px var(--ht-module-padding) 24px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-form-grid > .button,
+html[data-theme] .ht-shell .ht-main .ht-monitor-create > .button {
+  min-height: 42px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-grid {
+  grid-template-columns: minmax(250px, 0.33fr) minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list {
+  min-width: 0;
+  gap: 0;
+  overflow: auto;
+  border-right: 1px solid var(--ht-module-divider);
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 5px 10px;
+  min-height: 98px;
+  align-content: center;
+  padding: 15px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--ht-module-divider);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button:hover,
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button.selected {
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button.selected {
+  box-shadow: inset 3px 0 0 var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button > strong,
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button > small,
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button > code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button > strong {
+  font-size: 12px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button > small,
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button > code {
+  grid-column: 2 / -1;
+  color: var(--ht-muted);
+  font-size: 10px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > button > code {
+  color: var(--ht-faint);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-score-mini {
+  color: var(--ht-green);
+  font: 700 11px/1 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-detail {
+  min-width: 0;
+  padding: 24px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-detail > header {
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-detail > header h2 {
+  margin: 8px 0 6px;
+  font-size: clamp(20px, 2.2vw, 28px);
+  letter-spacing: -0.05em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-detail > header code {
+  display: block;
+  max-width: min(100%, 650px);
+  overflow: hidden;
+  color: var(--ht-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-detail .ht-monitor-incident,
+html[data-theme] .ht-shell .ht-main .ht-monitor-detail .ht-monitor-nominal {
+  margin: 18px 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-detail .ht-monitor-config {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-detail .ht-monitor-config span {
+  padding: 6px 8px;
+  border-radius: var(--ht-radius-sm);
+  font: 700 9px/1 var(--ht-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-share,
+html[data-theme] .ht-shell .ht-main .ht-score-card,
+html[data-theme] .ht-shell .ht-main .ht-monitor-history {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-share {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 18px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-share > div:first-child h3,
+html[data-theme] .ht-shell .ht-main .ht-score-card h3,
+html[data-theme] .ht-shell .ht-main .ht-monitor-history h3 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: -0.025em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-share > div:first-child p {
+  max-width: 650px;
+  margin: 7px 0 0;
+  color: var(--ht-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-share-actions {
+  justify-content: flex-end;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-share-url {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  border-radius: var(--ht-radius-sm);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-share-url code {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Operations and Guided Demo ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-operation-panel {
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-list {
+  padding: 0 var(--ht-module-padding);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-list article {
+  min-height: 92px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-list article:last-child {
+  border-bottom: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-filter select {
+  min-width: 176px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--ht-hairline-bright);
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail {
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid var(--ht-module-divider);
+  border-radius: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article {
+  min-height: 82px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article:last-child {
+  border-bottom: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-console {
+  position: sticky;
+  top: 22px;
+  align-self: start;
+  min-width: 0;
+  padding: 22px;
+  border: 0;
+  border-radius: 0;
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-console .button {
+  width: 100%;
+}
+
+/* ---------- Live Webhooks ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 0;
+  border-top: 1px solid var(--ht-module-divider);
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary > div {
+  min-height: 82px;
+  padding: 16px 18px;
+  border-right: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary > div:last-child {
+  border-right: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow article {
+  min-height: 102px;
+  padding: 20px;
+  border: 0;
+  border-right: 1px solid var(--ht-module-divider);
+  border-radius: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow article:last-child {
+  border-right: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+  gap: 18px;
+  align-items: start;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-connect,
+html[data-theme] .ht-shell .ht-main .ht-live-activation,
+html[data-theme] .ht-shell .ht-main .ht-live-routes {
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-module-radius);
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-connect,
+html[data-theme] .ht-shell .ht-main .ht-live-activation {
+  padding: 22px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-routes {
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-routes > header {
+  padding: 17px 20px;
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-list article {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-list article:last-child {
+  border-bottom: 0;
+}
+
+/* ---------- Settings, workspace and docs ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-settings-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-settings-section {
+  min-width: 0;
+  gap: 18px;
+  padding: 22px;
+  border-radius: var(--ht-module-radius);
+  background: var(--ht-surface-1);
+  box-shadow: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-settings-section > header {
+  min-height: 58px;
+  padding-bottom: 16px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-settings-section h2 {
+  font-size: 17px;
+  letter-spacing: -0.03em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-settings-section > .button,
+html[data-theme] .ht-shell .ht-main .ht-settings-form > .button {
+  min-height: 40px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-api-key-layout {
+  grid-template-columns: minmax(0, 1.25fr) minmax(250px, 0.75fr);
+  gap: 18px;
+  margin-top: 0;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(.ht-api-key-create, .ht-api-key-guide, .ht-api-key-list) {
+  gap: 18px;
+  padding: 22px;
+  border-radius: var(--ht-module-radius);
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-api-key-secret {
+  margin-top: 0;
+  padding: 18px 22px;
+  border-radius: var(--ht-module-radius);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-api-key-list {
+  margin-top: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-layout {
+  grid-template-columns: minmax(210px, 0.34fr) minmax(0, 0.66fr);
+  gap: 0;
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-nav {
+  min-width: 0;
+  padding: 10px;
+  border-right: 1px solid var(--ht-module-divider);
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-nav button {
+  min-height: 56px;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--ht-radius-sm);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-nav button.active,
+html[data-theme] .ht-shell .ht-main .ht-docs-nav button:hover {
+  background: var(--ht-surface-hover);
+  border-color: var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-article {
+  min-width: 0;
+  padding: 30px clamp(22px, 5vw, 56px) 38px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-article > header {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 15px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  color: var(--ht-green);
+  border: 1px solid color-mix(in srgb, var(--ht-green) 38%, var(--ht-hairline));
+  border-radius: 12px;
+  background: var(--ht-positive-bg);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-article > header h2 {
+  margin: 5px 0 8px;
+  font-size: clamp(22px, 3vw, 32px);
+  letter-spacing: -0.05em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-article > section,
+html[data-theme] .ht-shell .ht-main .ht-docs-result {
+  max-width: 720px;
+  margin-top: 24px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-docs-result {
+  padding: 16px 18px;
+  border-left: 2px solid var(--ht-green);
+  background: var(--ht-positive-bg);
+}
+
+/* ---------- Responsive composition ---------- */
+
+@media (max-width: 1100px) {
+  html[data-theme] .ht-shell .ht-main .ht-template-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-template-card:nth-child(2) {
+    border-right: 0;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-template-card:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--ht-module-divider);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-template-card:nth-child(3) {
+    border-right: 1px solid var(--ht-module-divider);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-endpoints-grid,
+  html[data-theme] .ht-shell .ht-main .ht-live-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  html[data-theme] .ht-shell .ht-main .ht-demo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-demo-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--ht-module-divider);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-demo-console {
+    position: static;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-monitor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-monitor-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 260px;
+    border-right: 0;
+    border-bottom: 1px solid var(--ht-module-divider);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-monitor-list > button {
+    min-height: 86px;
+    border-right: 1px solid var(--ht-module-divider);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-monitor-detail {
+    padding: 22px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-settings-grid,
+  html[data-theme] .ht-shell .ht-main .ht-api-key-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  html[data-theme] .ht-shell .ht-main .ht-page-head {
+    align-items: flex-start;
+    padding-block: 4px 16px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-page-head-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-page-head-actions > * {
+    flex: 1 1 0;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-page-head-actions .button {
+    width: 100%;
+  }
+
+  html[data-theme]
+    .ht-shell
+    .ht-main
+    :where(.ht-control-metrics, .ht-operation-summary, .ht-monitor-summary, .ht-monitor-metrics) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[data-theme]
+    .ht-shell
+    .ht-main
+    :where(
+      .ht-control-metrics article,
+      .ht-operation-summary article,
+      .ht-monitor-summary article,
+      .ht-monitor-metrics article
+    ) {
+    min-height: 78px;
+    padding: 14px;
+    border-right: 1px solid var(--ht-module-divider);
+    border-bottom: 1px solid var(--ht-module-divider);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-onboarding,
+  html[data-theme] .ht-shell .ht-main .ht-create-card,
+  html[data-theme] .ht-shell .ht-main .ht-monitor-detail,
+  html[data-theme] .ht-shell .ht-main .ht-live-connect,
+  html[data-theme] .ht-shell .ht-main .ht-live-activation,
+  html[data-theme] .ht-shell .ht-main .ht-settings-section {
+    padding: 18px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-template-grid,
+  html[data-theme] .ht-shell .ht-main .ht-live-flow,
+  html[data-theme] .ht-shell .ht-main .ht-live-summary {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-template-card,
+  html[data-theme] .ht-shell .ht-main .ht-live-flow article,
+  html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--ht-module-divider);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-template-card:last-child,
+  html[data-theme] .ht-shell .ht-main .ht-live-flow article:last-child,
+  html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary > div:last-child {
+    border-bottom: 0;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-monitor-list {
+    grid-template-columns: 1fr;
+    max-height: 300px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-monitor-list > button {
+    min-height: 78px;
+    border-right: 0;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-status-share {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-status-share-actions {
+    justify-content: flex-start;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-status-share-url {
+    flex-wrap: wrap;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-status-share-url code {
+    flex-basis: 100%;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-docs-layout {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-docs-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--ht-module-divider);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-docs-nav button {
+    flex: 0 0 180px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-docs-article {
+    padding: 22px 18px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .ht-shell .ht-main *,
+  html[data-theme] .ht-shell .ht-main *::before,
+  html[data-theme] .ht-shell .ht-main *::after {
+    scroll-behavior: auto;
+    transition: none !important;
+  }
+}

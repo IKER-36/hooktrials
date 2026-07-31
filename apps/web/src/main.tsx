@@ -13,6 +13,7 @@ import './styles/refined.css';
 import './styles/workspace.css';
 import './styles/account.css';
 import './styles/ui-foundation.css';
+import './styles/ui-modules.css';
 // Loaded last: the button contract must win over every earlier layer.
 import './styles/buttons.css';
 
