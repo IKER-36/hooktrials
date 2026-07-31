@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { CopyButton } from '../../ui/CopyButton';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { useI18n } from '../../../i18n/I18nContext';
 import { apiRequest, readableError } from '../../../lib/api';
 import { STATE_LABEL } from './shared';
@@ -26,6 +27,19 @@ export function StatusPagesPanel({
   const [enabled, setEnabled] = useState(true);
   const [busy, setBusy] = useState('');
   const [message, setMessage] = useState('');
+  const [pendingAction, setPendingAction] = useState<{
+    kind: 'delete' | 'rotate';
+    page: StatusPageConfig;
+  } | null>(null);
+
+  const selectedMonitors = monitors.filter((monitor) => monitorIds.includes(monitor.id));
+  const previewState = selectedMonitors.some((monitor) => monitor.state === 'down')
+    ? 'down'
+    : selectedMonitors.some((monitor) => monitor.state === 'degraded')
+      ? 'degraded'
+      : selectedMonitors.length > 0
+        ? 'healthy'
+        : 'new';
 
   function openEditor(page?: StatusPageConfig) {
     setEditing(page ?? 'new');
@@ -69,7 +83,6 @@ export function StatusPagesPanel({
   }
 
   async function remove(page: StatusPageConfig) {
-    if (!window.confirm(`Delete status page “${page.name}”?`)) return;
     setBusy(page.id);
     try {
       await apiRequest(`/v1/status-pages/${page.id}`, { method: 'DELETE' });
@@ -82,7 +95,6 @@ export function StatusPagesPanel({
   }
 
   async function rotate(page: StatusPageConfig) {
-    if (!window.confirm('Rotate this public link? The previous URL will stop working.')) return;
     setBusy(page.id);
     try {
       await apiRequest(`/v1/status-pages/${page.id}/rotate`, {
@@ -94,6 +106,17 @@ export function StatusPagesPanel({
       setMessage(readableError(requestError));
     } finally {
       setBusy('');
+    }
+  }
+
+  async function confirmAction() {
+    if (!pendingAction) return;
+    const action = pendingAction;
+    try {
+      if (action.kind === 'delete') await remove(action.page);
+      else await rotate(action.page);
+    } finally {
+      setPendingAction(null);
     }
   }
 
@@ -152,7 +175,7 @@ export function StatusPagesPanel({
                 <button
                   type="button"
                   className="button secondary compact"
-                  onClick={() => void rotate(page)}
+                  onClick={() => setPendingAction({ kind: 'rotate', page })}
                   disabled={busy === page.id}
                   aria-busy={busy === page.id}
                 >
@@ -161,7 +184,7 @@ export function StatusPagesPanel({
                 <button
                   type="button"
                   className="button danger compact"
-                  onClick={() => void remove(page)}
+                  onClick={() => setPendingAction({ kind: 'delete', page })}
                   disabled={busy === page.id}
                 >
                   Delete
@@ -177,98 +200,147 @@ export function StatusPagesPanel({
         </p>
       ) : null}
       {editing ? (
-        <form className="ht-status-page-form" onSubmit={(event) => void save(event)}>
-          <div className="ht-monitor-form-grid">
-            <label className="ht-field">
-              Internal name
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                required
-                minLength={2}
-                maxLength={80}
-              />
-            </label>
-            <label className="ht-field">
-              Public headline
-              <input
-                value={headline}
-                onChange={(event) => setHeadline(event.target.value)}
-                required
-                minLength={2}
-                maxLength={120}
-              />
-            </label>
-            <label className="ht-field ht-field-wide">
-              Description
-              <textarea
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                maxLength={500}
-              />
-            </label>
-            <label className="ht-field">
-              Accent color
-              <input
-                type="color"
-                value={accentColor}
-                onChange={(event) => setAccentColor(event.target.value)}
-              />
-            </label>
-            <label className="ht-inline-check">
-              <input
-                type="checkbox"
-                checked={enabled}
-                onChange={(event) => setEnabled(event.target.checked)}
-              />{' '}
-              Public page enabled
-            </label>
-          </div>
-          <fieldset className="ht-status-monitor-picker">
-            <legend>Monitors shown publicly</legend>
-            {monitors.map((monitor) => (
-              <label key={monitor.id}>
+        <div className="ht-status-page-editor">
+          <form className="ht-status-page-form" onSubmit={(event) => void save(event)}>
+            <div className="ht-monitor-form-grid">
+              <label className="ht-field">
+                Internal name
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  required
+                  minLength={2}
+                  maxLength={80}
+                />
+              </label>
+              <label className="ht-field">
+                Public headline
+                <input
+                  value={headline}
+                  onChange={(event) => setHeadline(event.target.value)}
+                  required
+                  minLength={2}
+                  maxLength={120}
+                />
+              </label>
+              <label className="ht-field ht-field-wide">
+                Description
+                <textarea
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  maxLength={500}
+                />
+              </label>
+              <label className="ht-field">
+                Accent color
+                <input
+                  type="color"
+                  value={accentColor}
+                  onChange={(event) => setAccentColor(event.target.value)}
+                />
+              </label>
+              <label className="ht-inline-check">
                 <input
                   type="checkbox"
-                  checked={monitorIds.includes(monitor.id)}
-                  onChange={(event) =>
-                    setMonitorIds((current) =>
-                      event.target.checked
-                        ? [...current, monitor.id]
-                        : current.filter((id) => id !== monitor.id),
-                    )
-                  }
-                />
-                <span className={`ht-monitor-state ${monitor.state}`}>
-                  {STATE_LABEL[monitor.state]}
-                </span>
-                <strong>{monitor.name}</strong>
-                <small>
-                  {monitor.protocol.toUpperCase()} · {monitor.displayHost}
-                </small>
+                  checked={enabled}
+                  onChange={(event) => setEnabled(event.target.checked)}
+                />{' '}
+                Public page enabled
               </label>
-            ))}
-          </fieldset>
-          {message ? (
-            <p className="ht-form-error" role="alert">
-              {message}
-            </p>
-          ) : null}
-          <div className="ht-form-actions">
-            <button type="button" className="button secondary" onClick={() => setEditing(null)}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="button primary"
-              disabled={busy === 'save'}
-              aria-busy={busy === 'save'}
-            >
-              {busy === 'save' ? 'Saving…' : 'Save status page'}
-            </button>
-          </div>
-        </form>
+            </div>
+            <fieldset className="ht-status-monitor-picker">
+              <legend>Monitors shown publicly</legend>
+              {monitors.map((monitor) => (
+                <label key={monitor.id}>
+                  <input
+                    type="checkbox"
+                    checked={monitorIds.includes(monitor.id)}
+                    onChange={(event) =>
+                      setMonitorIds((current) =>
+                        event.target.checked
+                          ? [...current, monitor.id]
+                          : current.filter((id) => id !== monitor.id),
+                      )
+                    }
+                  />
+                  <span className={`ht-monitor-state ${monitor.state}`}>
+                    {STATE_LABEL[monitor.state]}
+                  </span>
+                  <strong>{monitor.name}</strong>
+                  <small>
+                    {monitor.protocol.toUpperCase()} · {monitor.displayHost}
+                  </small>
+                </label>
+              ))}
+            </fieldset>
+            {message ? (
+              <p className="ht-form-error" role="alert">
+                {message}
+              </p>
+            ) : null}
+            <div className="ht-form-actions">
+              <button type="button" className="button secondary" onClick={() => setEditing(null)}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="button primary"
+                disabled={busy === 'save'}
+                aria-busy={busy === 'save'}
+              >
+                {busy === 'save' ? 'Saving…' : 'Save status page'}
+              </button>
+            </div>
+          </form>
+          <aside
+            className="ht-status-page-preview"
+            aria-label="Public status page preview"
+            style={{ '--status-accent': accentColor } as CSSProperties}
+          >
+            <div className="ht-status-preview-topline">
+              <span>PUBLIC PREVIEW</span>
+              <span className={`ht-monitor-state ${previewState}`}>
+                {STATE_LABEL[previewState]}
+              </span>
+            </div>
+            <h3>{headline || 'All systems operational'}</h3>
+            <p>{description || 'Live availability and incident history.'}</p>
+            <div className="ht-status-preview-list">
+              {selectedMonitors.length ? (
+                selectedMonitors.map((monitor) => (
+                  <div key={monitor.id}>
+                    <span className={`ht-home-status-dot ${monitor.state}`} aria-hidden="true" />
+                    <strong>{monitor.name}</strong>
+                    <small>{monitor.displayHost}</small>
+                  </div>
+                ))
+              ) : (
+                <small>Select at least one monitor to populate the public page.</small>
+              )}
+            </div>
+            <small className="ht-status-preview-note">
+              Only selected monitor names, redacted hosts and health metrics are public.
+            </small>
+          </aside>
+        </div>
       ) : null}
+      <ConfirmDialog
+        open={pendingAction !== null}
+        title={
+          pendingAction?.kind === 'delete' ? 'Delete this status page?' : 'Rotate this public link?'
+        }
+        body={
+          pendingAction?.kind === 'delete'
+            ? 'The status page will stop being available immediately.'
+            : 'The previous public URL will stop working as soon as the new link is generated.'
+        }
+        confirmLabel={pendingAction?.kind === 'delete' ? 'Delete status page' : 'Rotate link'}
+        busy={Boolean(pendingAction && busy === pendingAction.page.id)}
+        onConfirm={() => void confirmAction()}
+        onCancel={() => {
+          if (!busy) setPendingAction(null);
+        }}
+      />
     </section>
   );
 }

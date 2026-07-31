@@ -619,6 +619,18 @@ export const es: Record<string, string> = {
   'Save status page': 'Guardar página de estado',
   'Saving…': 'Guardando…',
   'Choose at least one monitor.': 'Elige al menos un monitor.',
+  'PUBLIC PREVIEW': 'VISTA PÚBLICA',
+  'Public status page preview': 'Vista previa de la página de estado pública',
+  'Select at least one monitor to populate the public page.':
+    'Selecciona al menos un monitor para completar la página pública.',
+  'Only selected monitor names, redacted hosts and health metrics are public.':
+    'Solo serán públicos los nombres seleccionados, los hosts redactados y las métricas de salud.',
+  'Delete this status page?': '¿Eliminar esta página de estado?',
+  'The status page will stop being available immediately.':
+    'La página de estado dejará de estar disponible inmediatamente.',
+  'Rotate link': 'Rotar enlace',
+  'The previous public URL will stop working as soon as the new link is generated.':
+    'La URL pública anterior dejará de funcionar en cuanto se genere el nuevo enlace.',
   'Rotate this public link? The previous URL will stop working.':
     '¿Rotar este enlace público? La URL anterior dejará de funcionar.',
   'Public status': 'Estado público',
@@ -1058,6 +1070,12 @@ export const es: Record<string, string> = {
   'Send test alert': 'Enviar alerta de prueba',
   'Sending…': 'Enviando…',
   'Not configured': 'No configurado',
+  'Remove channel': 'Eliminar canal',
+  'Remove this alert channel?': '¿Eliminar este canal de alertas?',
+  'New incident notifications will stop immediately. Existing delivery evidence remains available in Operations.':
+    'Las nuevas notificaciones de incidentes se detendrán inmediatamente. La evidencia existente seguirá disponible en Operaciones.',
+  'Alert channel removed. No new notifications will be sent.':
+    'Canal de alertas eliminado. No se enviarán nuevas notificaciones.',
   'HookTrials sends a redacted JSON notification when an incident opens or recovers. This channel is separate from managed webhook destinations.':
     'HookTrials envía una notificación JSON redactada cuando un incidente abre o se recupera. Este canal es independiente de los destinos webhook.',
   'Destination URL': 'URL de destino',

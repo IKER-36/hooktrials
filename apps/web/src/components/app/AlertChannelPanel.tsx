@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
 import { apiRequest, readableError } from '../../lib/api';
 
@@ -33,6 +34,7 @@ export function AlertChannelPanel() {
   const [allowPrivate, setAllowPrivate] = useState(false);
   const [cidrs, setCidrs] = useState('');
   const [busy, setBusy] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [message, setMessage] = useState('');
   // `message` alone doesn't say whether the last outcome was good or bad, so a
   // save failure or a failed test delivery rendered with the same success
@@ -118,6 +120,26 @@ export function AlertChannelPanel() {
           : `Test failed · HTTP ${result.statusCode}`,
         result.delivered ? 'success' : 'error',
       );
+    } catch (error) {
+      report(readableError(error), 'error');
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function remove() {
+    setBusy('delete');
+    try {
+      await apiRequest('/v1/alert-channel', { method: 'DELETE' });
+      setChannel(null);
+      setUrl('');
+      setHeaders('');
+      setProvider('generic');
+      setScopes(['monitor', 'webhook']);
+      setEvents(['opened', 'recovered']);
+      setActive(true);
+      setConfirmDelete(false);
+      report('Alert channel removed. No new notifications will be sent.', 'success');
     } catch (error) {
       report(readableError(error), 'error');
     } finally {
@@ -296,6 +318,16 @@ export function AlertChannelPanel() {
               {busy === 'test' ? 'Sending…' : 'Send test alert'}
             </button>
           ) : null}
+          {channel ? (
+            <button
+              className="button danger compact"
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              disabled={Boolean(busy)}
+            >
+              Remove channel
+            </button>
+          ) : null}
         </div>
         {channel?.recent.length ? (
           <ul className="ht-alert-history">
@@ -310,6 +342,15 @@ export function AlertChannelPanel() {
           </ul>
         ) : null}
       </form>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Remove this alert channel?"
+        body="New incident notifications will stop immediately. Existing delivery evidence remains available in Operations."
+        confirmLabel="Remove channel"
+        busy={busy === 'delete'}
+        onConfirm={() => void remove()}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </details>
   );
 }

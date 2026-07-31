@@ -95,3 +95,106 @@
     scroll-behavior: auto;
   }
 }
+
+/* Status-page editing is a communication task: keep the form and the public
+ * result visible together so users can verify what they are about to share. */
+.ht-main .ht-status-page-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.ht-main .ht-status-page-preview {
+  position: sticky;
+  top: 20px;
+  min-width: 0;
+  padding: 18px;
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
+  border-top: 2px solid var(--status-accent, var(--ht-green));
+  border-radius: var(--ht-radius-md);
+}
+
+.ht-main .ht-status-preview-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+  color: var(--ht-green);
+  font-family: var(--ht-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.ht-main .ht-status-page-preview h3 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+
+.ht-main .ht-status-page-preview > p {
+  margin: 10px 0 18px;
+  color: var(--ht-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.ht-main .ht-status-preview-list {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--ht-hairline);
+}
+
+.ht-main .ht-status-preview-list > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 9px;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+.ht-main .ht-status-preview-list > div .ht-home-status-dot {
+  grid-row: span 2;
+}
+
+.ht-main .ht-status-preview-list strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.ht-main .ht-status-preview-list small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ht-muted);
+  font-family: var(--ht-mono);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ht-main .ht-status-preview-note {
+  display: block;
+  margin-top: 16px;
+  color: var(--ht-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .ht-main .ht-status-page-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .ht-main .ht-status-page-preview {
+    position: static;
+  }
+}

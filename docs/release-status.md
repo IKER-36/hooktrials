@@ -2,6 +2,36 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.28.1` — Safer alert and status-page workflows
+
+This maintenance release makes two operational workflows easier to complete safely: configuring
+what is shared on a public status page and cleaning up an alert destination when it is no longer
+needed.
+
+### Added
+
+- A live **Public preview** appears while creating or editing a status page, showing the selected
+  monitors, their current health and the exact redacted information that can be shared.
+- Alert channels can be removed from **Operations** when a destination has been retired or replaced.
+- Status-page actions now use the same accessible confirmation dialog as the rest of the dashboard.
+
+### Improved
+
+- Status-page previews update as the headline, description, accent and monitor selection change, so
+  the public result is understandable before it is published.
+- Rotating a public link explains that the previous URL will stop working, while the existing page
+  remains available until the action is confirmed.
+- Removing an alert channel leaves its historical delivery evidence in Operations while stopping
+  future notifications immediately.
+
+### Fixed
+
+- Replaced browser-native delete and rotate prompts with keyboard-friendly, focus-trapped dialogs.
+- Added an explicit cleanup path for saved Discord and generic webhook alert channels.
+- Kept public status pages limited to selected monitor names, redacted hosts and health metrics.
+
+No API, database or account migration is required.
+
 ## Release `v0.28.0` — A shared visual system for the workspace
 
 The dashboard now uses one page-heading and responsive composition across the operational modules.
