@@ -15,7 +15,7 @@
 - [Public status pages](public-status-pages.md)
 - [Contracts and signatures](contracts-and-signatures.md)
 - [Incidents, alerts and evidence](incidents-alerts-evidence.md)
-- [Audit history](audit-history.md)
+- [Audit history via Operations](audit-history.md)
 - [Workspaces and roles](workspaces-and-roles.md)
 
 This directory contains documentation intended to be published with the source code.
@@ -43,7 +43,7 @@ This directory contains documentation intended to be published with the source c
 | [Public status pages](public-status-pages.md)          | Revocable monitor health sharing                |
 | [Internationalization](internationalization.md)        | English and Spanish interface behavior          |
 | [SLO and reliability views](reliability-objectives.md) | Availability, latency and objective evidence    |
-| [Audit history](audit-history.md)                      | Redacted operational change record              |
+| [Audit history via Operations](audit-history.md)       | Redacted operational change record              |
 | [Workspaces and roles](workspaces-and-roles.md)        | Team access, invitations and incident ownership |
 
 Private notes, credentials, provider identifiers and internal planning never belong here. Local

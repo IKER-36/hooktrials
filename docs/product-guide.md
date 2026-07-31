@@ -52,7 +52,10 @@ between modules without losing the route context.
 
 For real integrations, start in **Webhook Hub**. It creates the provider-facing URL,
 encrypted destination, validation and delivery strategy atomically, then explains exactly where to
-paste the URL. The route appears beside every other provider connection in the concentrator view.
+paste the URL. Before creation, the inbound contract preview lists the provider headers and
+signature expectations. After creation, copy the generated smoke-test command, send a safe first
+event and watch the latest delivery signal refresh beside the route. The connection list can be
+filtered to all routes, paused routes or routes that need attention.
 
 Use **Trial endpoints** and **Failure scenarios** only for deterministic Lab work. They are listed
 separately from real Observe/Protect connections so synthetic experiments cannot be mistaken for

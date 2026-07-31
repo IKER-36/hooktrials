@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -21,7 +21,8 @@ import { ProductState } from '../../components/ui/ProductState';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
-import type { Endpoint } from '../../lib/types';
+import { timeAgo } from '../../lib/format';
+import type { Endpoint, IntegrationSummary } from '../../lib/types';
 
 type Provider = NonNullable<Endpoint['provider']>;
 type PreflightCheck = {
@@ -46,6 +47,8 @@ type TestEventResult = {
   latencyMs: number;
   destinationTriggered: boolean;
 };
+
+type RouteFilter = 'all' | 'attention' | 'paused';
 
 // Lucide carries no brand marks, so each provider gets the line icon that best
 // describes what it sends. Icons support the label; they never replace it.
@@ -125,6 +128,23 @@ function providerContract(provider: Provider) {
   return { method: 'POST', requiredHeaders, jsonPaths: {} };
 }
 
+function integrationTone(integration: IntegrationSummary | undefined, endpoint: Endpoint) {
+  if (!endpoint.active || integration?.state === 'paused') return 'paused' as const;
+  if (integration?.state === 'down' || integration?.incident?.status === 'open')
+    return 'down' as const;
+  if (integration?.state === 'degraded') return 'degraded' as const;
+  if (integration?.state === 'healthy') return 'healthy' as const;
+  return 'new' as const;
+}
+
+function integrationToneLabel(tone: ReturnType<typeof integrationTone>) {
+  if (tone === 'healthy') return 'Healthy';
+  if (tone === 'degraded') return 'Watch';
+  if (tone === 'down') return 'Needs attention';
+  if (tone === 'paused') return 'Paused';
+  return 'No traffic yet';
+}
+
 export function LiveWebhooksPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -150,6 +170,10 @@ export function LiveWebhooksPage() {
   const [testResult, setTestResult] = useState<
     { routeId: string; result?: TestEventResult; error?: string } | undefined
   >();
+  const [integrationRows, setIntegrationRows] = useState<IntegrationSummary[]>([]);
+  const [integrationLoading, setIntegrationLoading] = useState(true);
+  const [integrationError, setIntegrationError] = useState('');
+  const [routeFilter, setRouteFilter] = useState<RouteFilter>('all');
 
   const liveRoutes = useMemo(
     () => endpoints.filter((endpoint) => endpoint.mode !== 'trial'),
@@ -165,10 +189,53 @@ export function LiveWebhooksPage() {
     preflight?.reachable && preflight.url === destination && destination.length > 0,
   );
 
+  const refreshIntegrations = useCallback(async () => {
+    try {
+      const result = await apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations');
+      setIntegrationRows(result.integrations);
+      setIntegrationError('');
+    } catch (requestError) {
+      setIntegrationError(readableError(requestError));
+    } finally {
+      setIntegrationLoading(false);
+    }
+  }, []);
+
+  const integrationByEndpoint = useMemo(
+    () => new Map(integrationRows.map((integration) => [integration.endpointId, integration])),
+    [integrationRows],
+  );
+  const attentionRouteCount = useMemo(
+    () =>
+      liveRoutes.filter((endpoint) => {
+        const tone = integrationTone(integrationByEndpoint.get(endpoint.id), endpoint);
+        return tone === 'down' || tone === 'degraded';
+      }).length,
+    [integrationByEndpoint, liveRoutes],
+  );
+  const pausedRouteCount = liveRoutes.filter((endpoint) => !endpoint.active).length;
+  const visibleLiveRoutes = useMemo(
+    () =>
+      liveRoutes.filter((endpoint) => {
+        const tone = integrationTone(integrationByEndpoint.get(endpoint.id), endpoint);
+        if (routeFilter === 'attention') return tone === 'down' || tone === 'degraded';
+        if (routeFilter === 'paused') return tone === 'paused';
+        return true;
+      }),
+    [integrationByEndpoint, liveRoutes, routeFilter],
+  );
+
   useEffect(() => {
     setPreflight(null);
     setPreflightError('');
   }, [destinationUrl, provider, signatureSecret]);
+
+  useEffect(() => {
+    setIntegrationLoading(true);
+    void refreshIntegrations();
+    const timer = window.setInterval(() => void refreshIntegrations(), 15_000);
+    return () => window.clearInterval(timer);
+  }, [refreshIntegrations]);
 
   async function runPreflight() {
     if (!destination) return;
@@ -202,6 +269,7 @@ export function LiveWebhooksPage() {
         body: JSON.stringify({ confirm: true }),
       });
       setTestResult({ routeId: endpoint.id, result });
+      void refreshIntegrations();
     } catch (requestError) {
       setTestResult({ routeId: endpoint.id, error: readableError(requestError) });
     } finally {
@@ -239,6 +307,7 @@ export function LiveWebhooksPage() {
       setSignatureSecret('');
       setConfirmProduction(false);
       setPreflight(null);
+      void refreshIntegrations();
     } catch (requestError) {
       setError(readableError(requestError));
     } finally {
@@ -362,6 +431,29 @@ export function LiveWebhooksPage() {
               </button>
             ))}
           </fieldset>
+
+          <section className="ht-provider-contract" aria-live="polite">
+            <div className="ht-provider-contract-heading">
+              <ShieldCheck aria-hidden="true" />
+              <div>
+                <p className="ht-kicker">Inbound contract</p>
+                <b>{PROVIDERS.find((item) => item.id === provider)?.name} verification</b>
+              </div>
+              <span>{supportsSignature ? 'Signature ready' : 'Header contract'}</span>
+            </div>
+            <p>
+              HookTrials records the provider contract before forwarding traffic. Empty values mean
+              that the header must be present; secrets are only accepted through write-only fields.
+            </p>
+            <div className="ht-provider-contract-tags">
+              {Object.keys(providerContract(provider).requiredHeaders).map((header) => (
+                <code key={header}>{header}</code>
+              ))}
+              {Object.keys(providerContract(provider).requiredHeaders).length === 0 ? (
+                <code>content-type</code>
+              ) : null}
+            </div>
+          </section>
 
           <div className="ht-monitor-form-grid">
             <label className="ht-field">
@@ -542,6 +634,19 @@ export function LiveWebhooksPage() {
                   <CopyButton value={created.ingestUrl} label="Copy URL" />
                 </div>
               </label>
+              <div className="ht-live-curl">
+                <div>
+                  <b>Quick smoke test</b>
+                  <CopyButton
+                    value={`curl -X POST '${created.ingestUrl}' -H 'content-type: application/json' -d '{"event":"hooktrials.test","source":"manual"}'`}
+                    label="Copy curl"
+                  />
+                </div>
+                <code>
+                  curl -X POST … -H &quot;content-type: application/json&quot; -d &apos;
+                  {`{"event":"hooktrials.test"}`}&apos;
+                </code>
+              </div>
               <ol>
                 <li>
                   {t('Open the webhook settings in')}{' '}
@@ -645,9 +750,36 @@ export function LiveWebhooksPage() {
           <div>
             <h2>Live connections</h2>
           </div>
-          <p>One control plane for every provider and backend.</p>
+          <div className="ht-live-routes-tools">
+            <p>One control plane for every provider and backend.</p>
+            <div className="ht-route-filters" role="tablist" aria-label="Filter live connections">
+              {(
+                [
+                  ['all', `All ${liveRoutes.length}`],
+                  ['attention', `Attention ${attentionRouteCount}`],
+                  ['paused', `Paused ${pausedRouteCount}`],
+                ] as const
+              ).map(([filter, label]) => (
+                <button
+                  key={filter}
+                  type="button"
+                  role="tab"
+                  aria-selected={routeFilter === filter}
+                  className={routeFilter === filter ? 'active' : ''}
+                  onClick={() => setRouteFilter(filter)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </header>
-        {loading ? (
+        {integrationError ? (
+          <p className="ht-live-inline-error" role="status">
+            Live evidence could not refresh: {integrationError}
+          </p>
+        ) : null}
+        {loading || (integrationLoading && integrationRows.length === 0) ? (
           <div className="ht-skeleton tall" aria-label="Loading live routes" />
         ) : liveRoutes.length === 0 ? (
           <ProductState
@@ -668,59 +800,87 @@ export function LiveWebhooksPage() {
               </button>
             }
           />
+        ) : visibleLiveRoutes.length === 0 ? (
+          <ProductState
+            compact
+            title="No connections match this filter."
+            description="Try another view or change the route state from Control Center."
+            action={
+              <button
+                className="button secondary compact"
+                type="button"
+                onClick={() => setRouteFilter('all')}
+              >
+                Show all connections
+              </button>
+            }
+          />
         ) : (
           <div className="ht-live-route-list">
-            {liveRoutes.map((endpoint) => (
-              <article key={endpoint.id}>
-                <span className={`ht-listen ${endpoint.active ? 'on' : 'off'}`}>
-                  <i /> {endpoint.active ? 'LIVE' : 'PAUSED'}
-                </span>
-                <div className="ht-live-route-title">
-                  <strong>{endpoint.name}</strong>
-                  <small>
-                    {PROVIDERS.find((item) => item.id === endpoint.provider)?.name ?? 'Generic'} ·{' '}
-                    {endpoint.environment}
-                    {endpoint.demoOwned ? (
-                      <span className="ht-demo-data-badge">DEMO DATA</span>
-                    ) : null}
-                  </small>
-                </div>
-                <div className="ht-route-mini-flow">
-                  <span>
-                    {PROVIDERS.find((item) => item.id === endpoint.provider)?.name ?? 'Provider'}
+            {visibleLiveRoutes.map((endpoint) => {
+              const integration = integrationByEndpoint.get(endpoint.id);
+              const tone = integrationTone(integration, endpoint);
+              const latest = integration?.latestDelivery;
+              return (
+                <article key={endpoint.id}>
+                  <span className={`ht-listen ${endpoint.active ? 'on' : 'off'}`}>
+                    <i /> {endpoint.active ? 'LIVE' : 'PAUSED'}
                   </span>
-                  <ArrowRight />
-                  <b>HookTrials</b>
-                  <ArrowRight />
-                  <span>{endpoint.destinationHost ?? 'destination'}</span>
-                </div>
-                <span className={`ht-mode-badge ${endpoint.mode}`}>{endpoint.mode}</span>
-                <div className="ht-live-route-actions">
-                  <button
-                    type="button"
-                    className="button secondary compact"
-                    disabled={testingRouteId === endpoint.id || !endpoint.active}
-                    aria-busy={testingRouteId === endpoint.id}
-                    onClick={() => void sendSyntheticEvent(endpoint)}
-                  >
-                    {testingRouteId === endpoint.id ? 'Sending…' : 'Run test'}
-                  </button>
-                  <button
-                    type="button"
-                    className="button secondary compact"
-                    onClick={() => openRoute(endpoint)}
-                  >
-                    Inspect
-                  </button>
-                  {testResult?.routeId === endpoint.id ? (
-                    <small className={testResult.error ? 'failed' : 'passed'}>
-                      {testResult.error ??
-                        `Recorded · HTTP ${testResult.result?.statusCode ?? '—'} · ${testResult.result?.latencyMs ?? '—'} ms`}
+                  <div className="ht-live-route-title">
+                    <strong>{endpoint.name}</strong>
+                    <small>
+                      {PROVIDERS.find((item) => item.id === endpoint.provider)?.name ?? 'Generic'} ·{' '}
+                      {endpoint.environment}
+                      {endpoint.demoOwned ? (
+                        <span className="ht-demo-data-badge">DEMO DATA</span>
+                      ) : null}
                     </small>
-                  ) : null}
-                </div>
-              </article>
-            ))}
+                  </div>
+                  <div className="ht-route-mini-flow">
+                    <span>
+                      {PROVIDERS.find((item) => item.id === endpoint.provider)?.name ?? 'Provider'}
+                    </span>
+                    <ArrowRight />
+                    <b>HookTrials</b>
+                    <ArrowRight />
+                    <span>{endpoint.destinationHost ?? 'destination'}</span>
+                  </div>
+                  <div className={`ht-live-route-signal ${tone}`}>
+                    <strong>{integrationToneLabel(tone)}</strong>
+                    <small>
+                      {latest
+                        ? `Last ${latest.state.replace('_', ' ')} · ${timeAgo(latest.completedAt ?? latest.createdAt)}`
+                        : 'No delivery evidence yet'}
+                    </small>
+                  </div>
+                  <span className={`ht-mode-badge ${endpoint.mode}`}>{endpoint.mode}</span>
+                  <div className="ht-live-route-actions">
+                    <button
+                      type="button"
+                      className="button secondary compact"
+                      disabled={testingRouteId === endpoint.id || !endpoint.active}
+                      aria-busy={testingRouteId === endpoint.id}
+                      onClick={() => void sendSyntheticEvent(endpoint)}
+                    >
+                      {testingRouteId === endpoint.id ? 'Sending…' : 'Run test'}
+                    </button>
+                    <button
+                      type="button"
+                      className="button secondary compact"
+                      onClick={() => openRoute(endpoint)}
+                    >
+                      Inspect
+                    </button>
+                    {testResult?.routeId === endpoint.id ? (
+                      <small className={testResult.error ? 'failed' : 'passed'}>
+                        {testResult.error ??
+                          `Recorded · HTTP ${testResult.result?.statusCode ?? '—'} · ${testResult.result?.latencyMs ?? '—'} ms`}
+                      </small>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>

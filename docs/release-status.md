@@ -2,6 +2,40 @@
 
 Updated: 31 July 2026.
 
+## Release `v0.24.0` — Webhook Hub operations
+
+This release makes real webhook connections easier to configure, verify and operate without
+confusing them with synthetic Trial endpoints.
+
+### Added
+
+- **Inbound contract preview** shows the provider headers HookTrials expects before a route is
+  created, including signature requirements where supported.
+- **Quick smoke test** gives every new live route a copy-ready `curl` example for sending a safe
+  first event.
+- **Connection filters** separate all live routes from paused connections and routes that need
+  attention.
+- **Live delivery signal** shows the latest recorded delivery state and time beside each route.
+
+### Improved
+
+- Webhook Hub now refreshes operational evidence automatically so recent tests and deliveries are
+  visible without leaving the page.
+- Provider setup, destination details and post-creation actions follow one clearer sequence from
+  configuration to first traffic.
+- The former standalone Audit history screen is no longer part of dashboard navigation. Its
+  redacted operational record remains available from Operations, and old links continue to work.
+- Live route rows remain usable on narrow screens, with status and actions kept together.
+
+### Fixed
+
+- Prevented an audit route from opening a separate, disconnected surface after the navigation was
+  consolidated around Operations.
+- Added an explicit loading and error state when live integration evidence is unavailable instead
+  of presenting a stale-looking route list.
+
+No account, route, monitor, incident or evidence migration is required.
+
 ## Release `v0.23.0` — Workspace telemetry
 
 This release turns Home into a practical operating overview with visual signals that help users

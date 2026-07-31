@@ -13,7 +13,6 @@ import { DemoPage } from './pages/app/DemoPage';
 import { DocsPage } from './pages/app/DocsPage';
 import { LiveWebhooksPage } from './pages/app/LiveWebhooksPage';
 import { ApiKeysPage } from './pages/app/ApiKeysPage';
-import { AuditPage } from './pages/app/AuditPage';
 import { ReliabilityPage } from './pages/app/ReliabilityPage';
 import { WorkspacePage } from './pages/app/WorkspacePage';
 import { AccountSettingsPage } from './pages/app/AccountSettingsPage';
@@ -51,7 +50,9 @@ export function App() {
         <Route path="demo" element={<DemoPage />} />
         <Route path="docs" element={<DocsPage />} />
         <Route path="api-keys" element={<ApiKeysPage />} />
-        <Route path="audit" element={<AuditPage />} />
+        {/* Audit entries now live with operational triage. Keep the old URL as a
+            compatibility redirect so saved links do not land on a dead page. */}
+        <Route path="audit" element={<Navigate to="/app/operations" replace />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="settings" element={<AccountSettingsPage />} />
         <Route path="*" element={<Navigate to="/app/control-center" replace />} />
