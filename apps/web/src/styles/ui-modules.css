@@ -724,60 +724,156 @@ html[data-theme] .ht-shell .ht-main .ht-demo-console .button {
 
 html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(118px, 1fr));
   gap: 0;
+  min-width: min(100%, 330px);
   padding: 0;
-  border-top: 1px solid var(--ht-module-divider);
-  border-bottom: 1px solid var(--ht-module-divider);
-}
-
-html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary > div {
-  min-height: 82px;
-  padding: 16px 18px;
-  border-right: 1px solid var(--ht-module-divider);
-}
-
-html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary > div:last-child {
-  border-right: 0;
-}
-
-html[data-theme] .ht-shell .ht-main .ht-live-flow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  padding: 0;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-md);
+  background: var(--ht-surface-1);
   overflow: hidden;
 }
 
+html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary .ht-live-stat {
+  display: grid;
+  gap: 6px;
+  min-height: 82px;
+  padding: 16px 18px;
+  border-right: 1px solid var(--ht-module-divider);
+  align-content: center;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary .ht-live-stat:last-child {
+  border-right: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary strong {
+  color: var(--ht-green);
+  font: 700 clamp(20px, 2.5vw, 27px)/0.9 var(--ht-mono);
+  letter-spacing: -0.06em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary span {
+  color: var(--ht-muted);
+  font: 700 9px/1.2 var(--ht-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr) 42px minmax(0, 1fr);
+  gap: 0;
+  min-height: 152px;
+  padding: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--ht-hairline-bright);
+  border-bottom: 1px solid var(--ht-hairline-bright);
+  background: var(--ht-surface-1);
+}
+
 html[data-theme] .ht-shell .ht-main .ht-live-flow article {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 0 12px;
+  align-content: center;
   min-height: 102px;
-  padding: 20px;
+  padding: 24px 26px;
   border: 0;
   border-right: 1px solid var(--ht-module-divider);
   border-radius: 0;
+  background: transparent;
 }
 
 html[data-theme] .ht-shell .ht-main .ht-live-flow article:last-child {
   border-right: 0;
 }
 
-html[data-theme] .ht-shell .ht-main .ht-live-grid {
-  grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
-  gap: 18px;
-  align-items: start;
+html[data-theme] .ht-shell .ht-main .ht-live-flow article.active {
+  box-shadow: inset 0 -2px 0 var(--ht-green);
+  background: color-mix(in srgb, var(--ht-green) 5%, var(--ht-surface-1));
 }
 
-html[data-theme] .ht-shell .ht-main .ht-live-connect,
-html[data-theme] .ht-shell .ht-main .ht-live-activation,
-html[data-theme] .ht-shell .ht-main .ht-live-routes {
+html[data-theme] .ht-shell .ht-main .ht-live-flow article > svg {
+  grid-row: 1 / 3;
+  align-self: center;
+  width: 24px;
+  height: 24px;
+  color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow article > span {
+  position: absolute;
+  top: 15px;
+  right: 18px;
+  color: var(--ht-faint);
+  font: 700 9px/1 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow article b,
+html[data-theme] .ht-shell .ht-main .ht-live-flow article small {
+  display: block;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow article b {
+  font-size: 14px;
+  letter-spacing: -0.02em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow article small {
+  max-width: 26ch;
+  margin-top: 5px;
+  color: var(--ht-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-flow > svg {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  justify-self: center;
+  width: 32px;
+  height: 32px;
+  padding: 8px;
+  color: var(--ht-muted);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 50%;
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+  gap: 0;
+  align-items: start;
+  overflow: hidden;
   border: 1px solid var(--ht-hairline-bright);
   border-radius: var(--ht-module-radius);
   background: var(--ht-surface-1);
 }
 
 html[data-theme] .ht-shell .ht-main .ht-live-connect,
+html[data-theme] .ht-shell .ht-main .ht-live-activation,
+html[data-theme] .ht-shell .ht-main .ht-live-routes {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-connect,
 html[data-theme] .ht-shell .ht-main .ht-live-activation {
   padding: 22px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-connect {
+  border-right: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-activation {
+  background: var(--ht-surface-2);
 }
 
 html[data-theme] .ht-shell .ht-main .ht-live-routes {
@@ -946,6 +1042,11 @@ html[data-theme] .ht-shell .ht-main .ht-docs-result {
   html[data-theme] .ht-shell .ht-main .ht-live-grid {
     grid-template-columns: 1fr;
   }
+
+  html[data-theme] .ht-shell .ht-main .ht-live-connect {
+    border-right: 0;
+    border-bottom: 1px solid var(--ht-module-divider);
+  }
 }
 
 @media (max-width: 900px) {
@@ -1045,16 +1146,25 @@ html[data-theme] .ht-shell .ht-main .ht-docs-result {
     grid-template-columns: 1fr;
   }
 
+  html[data-theme] .ht-shell .ht-main .ht-live-flow {
+    min-height: 0;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-live-flow > svg {
+    display: block;
+    transform: rotate(90deg);
+  }
+
   html[data-theme] .ht-shell .ht-main .ht-template-card,
   html[data-theme] .ht-shell .ht-main .ht-live-flow article,
-  html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary > div {
+  html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary .ht-live-stat {
     border-right: 0;
     border-bottom: 1px solid var(--ht-module-divider);
   }
 
   html[data-theme] .ht-shell .ht-main .ht-template-card:last-child,
   html[data-theme] .ht-shell .ht-main .ht-live-flow article:last-child,
-  html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary > div:last-child {
+  html[data-theme] .ht-shell .ht-main .ht-live-webhooks .ht-live-summary .ht-live-stat:last-child {
     border-bottom: 0;
   }
 
@@ -1102,6 +1212,183 @@ html[data-theme] .ht-shell .ht-main .ht-docs-result {
 
   html[data-theme] .ht-shell .ht-main .ht-docs-article {
     padding: 22px 18px 28px;
+  }
+}
+
+/* ---------- Phase 2 composition pass ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-page {
+  max-width: 1480px;
+  gap: 28px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head h1 {
+  font-size: clamp(34px, 4vw, 54px);
+  line-height: 0.94;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page-head .ht-muted-line {
+  max-width: 760px;
+  font-size: 13px;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-center,
+    .ht-operation-panel,
+    .ht-monitor-grid,
+    .ht-monitor-create,
+    .ht-studio-grid,
+    .ht-endpoints-grid,
+    .ht-events,
+    .ht-guided-demo,
+    .ht-readiness,
+    .ht-docs-layout,
+    .ht-settings-grid,
+    .ht-api-key-layout
+  ) {
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-module-radius);
+  background: var(--ht-surface-1);
+  box-shadow: none;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-center > header,
+    .ht-operation-panel > header,
+    .ht-template-section > header,
+    .ht-events > header,
+    .ht-monitor-create > header,
+    .ht-integration-table > header
+  ) {
+  background: var(--ht-surface-2);
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(.ht-control-metrics, .ht-operation-summary, .ht-monitor-summary, .ht-monitor-metrics) {
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-md);
+  background: var(--ht-surface-2);
+  overflow: hidden;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-metrics article,
+    .ht-operation-summary article,
+    .ht-monitor-summary article,
+    .ht-monitor-metrics article
+  ) {
+  background: transparent;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-control-center,
+    .ht-operation-panel,
+    .ht-template-section,
+    .ht-events,
+    .ht-monitor-create
+  ) {
+  overflow: hidden;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-create-card,
+    .ht-monitor-detail,
+    .ht-settings-section,
+    .ht-api-key-create,
+    .ht-api-key-guide
+  ) {
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-md);
+  background: var(--ht-surface-1);
+  box-shadow: none;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-field input,
+    .ht-field select,
+    .ht-field textarea,
+    .ht-settings-form input,
+    .ht-settings-form select,
+    .ht-settings-form textarea
+  ) {
+  min-height: 42px;
+  border-radius: var(--ht-radius-sm);
+  background: var(--ht-surface-2);
+}
+
+html[data-theme] .ht-shell .ht-main :where(.ht-field textarea, .ht-settings-form textarea) {
+  min-height: 104px;
+}
+
+html[data-theme] .ht-shell .ht-main :where(.button.primary, .button.secondary, .button.danger) {
+  min-height: 40px;
+  border-radius: var(--ht-radius-sm);
+  box-shadow: none;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(.ht-button-row, .ht-page-head-actions, .ht-operation-actions, .ht-studio-actions) {
+  gap: 9px;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-operation-list article,
+    .ht-dlq-list article,
+    .ht-alert-audit-list article,
+    .ht-event-row,
+    .ht-api-key-rows article
+  ) {
+  min-height: 68px;
+  border-color: var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main :where(.ht-listen, .ht-mode-badge, .ht-monitor-state) {
+  border-radius: 999px;
+}
+
+html[data-theme] .ht-shell .ht-main :where(.ht-limit-meter, .ht-score-card, .ht-readiness-level) {
+  border-radius: var(--ht-radius-md);
+  background: var(--ht-surface-2);
+  box-shadow: none;
+}
+
+@media (max-width: 680px) {
+  html[data-theme] .ht-shell .ht-main .ht-page {
+    gap: 20px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-page-head h1 {
+    font-size: clamp(30px, 9vw, 42px);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-live-summary {
+    width: 100%;
+    min-width: 0;
   }
 }
 

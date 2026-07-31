@@ -285,17 +285,19 @@ export function LiveWebhooksPage() {
           </p>
         </div>
         <div className="ht-live-summary" aria-label="Live webhook summary">
-          <strong>{liveRoutes.length}</strong>
-          <span>live routes</span>
-          <i />
-          <strong>{liveRoutes.filter((route) => route.mode === 'protect').length}</strong>
-          <span>protected</span>
+          <div className="ht-live-stat">
+            <strong>{liveRoutes.length}</strong>
+            <span>live routes</span>
+          </div>
+          <div className="ht-live-stat">
+            <strong>{liveRoutes.filter((route) => route.mode === 'protect').length}</strong>
+            <span>protected</span>
+          </div>
           {syntheticRoutes.length > 0 ? (
-            <>
-              <i />
+            <div className="ht-live-stat">
               <strong>{syntheticRoutes.length}</strong>
               <span>synthetic</span>
-            </>
+            </div>
           ) : null}
         </div>
       </header>
