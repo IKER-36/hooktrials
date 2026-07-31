@@ -22,14 +22,15 @@ navigation.
 Every module has its own address so a shared link opens the same context instead of falling back to a
 generic page:
 
-- `/app/control-center` is the route-control entry point.
+- `/app` is the workspace Home with cross-module health, activity and next actions.
+- `/app/control-center` is the route-control entry point for one selected route.
 - `/app/control-center/:endpointId` opens one Trial or live route directly.
 - `/app/live-webhooks`, `/app/monitor` and `/app/operations` open their respective Product modules.
 - `/app/endpoints`, `/app/scenarios` and `/app/demo` open the Lab modules.
 
-The legacy `/app` address remains a compatibility redirect to route control while the workspace Home
-dashboard is being introduced. Links from endpoint, webhook, monitor and recovery views preserve the
-selected route when moving between modules.
+Links from endpoint, webhook, monitor and recovery views preserve the selected route when moving
+between modules. Use Home for workspace orientation and Control Center when you need the complete
+evidence and retry timeline for one route.
 
 ## Control Center and Production Readiness
 

@@ -4,6 +4,7 @@ import { AuthPage } from './pages/AuthPage';
 import { EvidencePage } from './pages/EvidencePage';
 import { StatusPage } from './pages/StatusPage';
 import { EndpointsPage } from './pages/app/EndpointsPage';
+import { HomePage } from './pages/app/HomePage';
 import { OverviewPage } from './pages/app/OverviewPage';
 import { OperationsPage } from './pages/app/OperationsPage';
 import { MonitorPage } from './pages/app/MonitorPage';
@@ -22,7 +23,7 @@ import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/
 function RootRedirect() {
   const { user, loading, setup } = useAuth();
   if (loading) return null;
-  if (user) return <Navigate to="/app/control-center" replace />;
+  if (user) return <Navigate to="/app" replace />;
   return <Navigate to={setup?.setupRequired ? '/register' : '/login'} replace />;
 }
 
@@ -38,8 +39,7 @@ export function App() {
       <Route path="/evidence/:token" element={<EvidencePage />} />
       <Route path="/status/:token" element={<StatusPage />} />
       <Route path="/app" element={<AppLayout />}>
-        {/* /app remains a compatibility entrypoint until Home becomes the default dashboard. */}
-        <Route index element={<Navigate to="control-center" replace />} />
+        <Route index element={<HomePage />} />
         <Route path="control-center" element={<OverviewPage />} />
         <Route path="control-center/:endpointId" element={<OverviewPage />} />
         <Route path="live-webhooks" element={<LiveWebhooksPage />} />

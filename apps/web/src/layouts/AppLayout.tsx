@@ -10,6 +10,7 @@ import {
   GitBranch,
   Code2,
   HelpCircle,
+  LayoutDashboard,
   BookOpen,
   LogOut,
   Moon,
@@ -259,6 +260,7 @@ export function AppLayout() {
       label: 'Product',
       contextLabel: 'Production workspace',
       items: [
+        { to: '/app', label: 'Home', icon: LayoutDashboard, end: true },
         { to: '/app/control-center', label: 'Control Center', icon: Gauge },
         {
           to: '/app/live-webhooks',

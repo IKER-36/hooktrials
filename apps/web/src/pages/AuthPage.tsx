@@ -20,7 +20,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
     !requestedPath.startsWith('//') &&
     requestedPath.length <= 200
       ? requestedPath
-      : '/app/control-center';
+      : '/app';
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -170,7 +170,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             <p className="ht-auth-switch">
               {registerMode ? 'Already have an account?' : 'New to HookTrials?'}{' '}
               <Link
-                to={`${registerMode ? '/login' : '/register'}${nextPath !== '/app/control-center' ? `?next=${encodeURIComponent(nextPath)}` : ''}`}
+                to={`${registerMode ? '/login' : '/register'}${nextPath !== '/app' ? `?next=${encodeURIComponent(nextPath)}` : ''}`}
               >
                 {registerMode ? 'Log in' : 'Create account'}
               </Link>

@@ -5,13 +5,13 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const steps = [
   {
-    eyebrow: '01 / OVERVIEW',
+    eyebrow: '01 / HOME',
     title: 'See reliability at a glance',
-    body: 'The Control Center combines active routes, monitor health, incidents, dead letters and recent recoveries. Start here when you need to know what needs attention.',
-    path: '/app/control-center',
-    target: 'overview',
-    selector: '.ht-control-center',
-    note: 'Production Readiness turns configuration and recorded evidence into one transparent checklist.',
+    body: 'Home combines active routes, monitor health, incidents, recoveries and the next best actions. Start here when you need to know what needs attention.',
+    path: '/app',
+    target: 'home',
+    selector: '.ht-home',
+    note: 'Open Control Center when you need the complete evidence and retry timeline for one route.',
   },
   {
     eyebrow: '02 / WEBHOOK HUB',
