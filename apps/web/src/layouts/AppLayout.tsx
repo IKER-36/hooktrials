@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import {
   Activity,
-  ClipboardList,
   KeyRound,
   BellRing,
   FlaskConical,
@@ -299,7 +298,6 @@ export function AppLayout() {
       items: [
         { to: '/app/docs', label: 'Documentation', icon: BookOpen },
         { to: '/app/api-keys', label: 'API keys', icon: KeyRound },
-        { to: '/app/audit', label: 'Audit history', icon: ClipboardList },
         { to: '/app/workspace', label: 'Team workspace', icon: Users },
       ],
     },

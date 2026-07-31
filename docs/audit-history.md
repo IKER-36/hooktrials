@@ -1,7 +1,9 @@
 # Audit history
 
 HookTrials keeps a redacted record of operational changes so a team can explain what happened
-without searching application logs. Open **Audit history** from **Resources** in the dashboard.
+without searching application logs. Open the direct audit route at `/app/audit` when you need the
+account-scoped record; it is intentionally kept out of the primary sidebar to keep daily navigation
+focused on delivery and reliability work.
 
 The history includes actions such as:
 
