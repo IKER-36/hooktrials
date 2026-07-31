@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -24,6 +24,12 @@ import type {
   OperationsResponse,
   ReliabilitySummary,
 } from '../../lib/types';
+
+const HomeTelemetry = lazy(() =>
+  import('../../components/app/HomeTelemetry').then((module) => ({
+    default: module.HomeTelemetry,
+  })),
+);
 
 interface HomeData {
   operations: OperationsResponse | null;
@@ -414,6 +420,15 @@ export function HomePage() {
               <small>Protected delivery paths</small>
             </article>
           </section>
+
+          <Suspense fallback={<div className="ht-home-telemetry-loading" aria-hidden="true" />}>
+            <HomeTelemetry
+              routes={routes}
+              monitors={monitors}
+              operations={operations}
+              reliability={data?.reliability}
+            />
+          </Suspense>
 
           <div className="ht-home-grid">
             <section

@@ -1756,6 +1756,240 @@ html[data-theme] .ht-shell .ht-main .ht-home-activity-list > a {
   min-height: 60px;
 }
 
+/* ---------- Home telemetry ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-home-telemetry {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-telemetry-loading {
+  min-height: 300px;
+  border: 1px solid var(--ht-hairline);
+  border-radius: var(--ht-module-radius);
+  background: var(--ht-surface-1);
+  animation: ht-home-panel-enter 360ms ease both;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ht-hairline);
+  border-radius: var(--ht-module-radius);
+  background: var(--ht-surface-1);
+  animation: ht-home-panel-enter 360ms ease both;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 88px;
+  padding: 16px var(--ht-module-padding);
+  border-bottom: 1px solid var(--ht-module-divider);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel > header > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel > header .ht-kicker {
+  margin: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel > header h2 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel > header p:not(.ht-kicker) {
+  max-width: 500px;
+  margin: 0;
+  color: var(--ht-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel > header > svg {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-health-chart-body {
+  display: grid;
+  grid-template-columns: minmax(168px, 0.9fr) minmax(120px, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 220px;
+  padding: 15px var(--ht-module-padding) 13px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-donut-wrap {
+  position: relative;
+  width: 100%;
+  height: 188px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  pointer-events: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-donut-center strong {
+  color: var(--ht-ink);
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-donut-center span {
+  margin-top: 5px;
+  color: var(--ht-faint);
+  font: 700 9px/1 var(--ht-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-legend {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-legend li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  color: var(--ht-muted);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-legend li > span:first-child {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-legend li strong {
+  color: var(--ht-ink);
+  font: 700 11px/1 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-bar-wrap {
+  width: 100%;
+  height: 220px;
+  padding: 9px var(--ht-module-padding) 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-empty {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 220px;
+  padding: 20px var(--ht-module-padding);
+  color: var(--ht-muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-empty svg {
+  width: 22px;
+  height: 22px;
+  color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-empty p {
+  max-width: 260px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-footnote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  min-height: 42px;
+  align-items: center;
+  padding: 10px var(--ht-module-padding);
+  border-top: 1px solid var(--ht-module-divider);
+  color: var(--ht-faint);
+  font: 400 9px/1.3 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-footnote span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-footnote svg {
+  width: 13px;
+  height: 13px;
+  color: var(--ht-green);
+}
+
+@keyframes ht-home-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  html[data-theme] .ht-shell .ht-main .ht-home-telemetry {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  html[data-theme] .ht-shell .ht-main .ht-home-health-chart-body {
+    grid-template-columns: minmax(130px, 0.85fr) minmax(115px, 1fr);
+    gap: 4px;
+    padding-inline: 14px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-home-donut-wrap {
+    height: 164px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-home-chart-legend {
+    gap: 10px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-home-chart-legend li {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .ht-shell .ht-main .ht-home-chart-panel {
+    animation: none;
+  }
+}
+
 /* ---------- Route lifecycle ---------- */
 
 html[data-theme] .ht-shell .ht-main .ht-route-journey {

@@ -23,6 +23,9 @@ Every module has its own address so a shared link opens the same context instead
 generic page:
 
 - `/app` is the workspace Home with cross-module health, activity and next actions.
+- Home also includes current resource health and monitor-coverage visualizations. These are derived
+  from the same route, monitor and reliability evidence shown elsewhere; an empty chart means that
+  the workspace has not collected enough checks yet, not that data was invented.
 - `/app/control-center` is the route-control entry point for one selected route.
 - `/app/control-center/:endpointId` opens one Trial or live route directly.
 - `/app/live-webhooks`, `/app/monitor` and `/app/operations` open their respective Product modules.

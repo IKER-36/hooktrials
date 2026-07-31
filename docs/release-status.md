@@ -2,6 +2,33 @@
 
 Updated: 31 July 2026.
 
+## Release `v0.23.0` — Workspace telemetry
+
+This release turns Home into a practical operating overview with visual signals that help users
+decide what to inspect next.
+
+### Added
+
+- **Resource health** shows the current mix of healthy, degraded, unavailable and newly configured
+  routes and monitors in one glance.
+- **Monitor coverage** visualizes each monitor's measured availability against its configured target
+  for the current 24-hour window.
+- **Evidence counters** keep the number of checks and protected recoveries visible beside the charts.
+
+### Improved
+
+- Home combines the existing metrics, next actions, route activity and telemetry without duplicating
+  configuration or delivery controls.
+- Charts use the same status colours, typography and dark/light surfaces as the rest of the product.
+- The telemetry area adapts to narrow screens and remains readable when a workspace has many resources.
+
+### Fixed
+
+- A workspace with no checks now shows a clear explanation instead of an empty or misleading graph.
+- Reduced-motion preferences disable chart and panel entrance animation while retaining the same data.
+
+No account, route, monitor, incident or evidence migration is required.
+
 ## Release `v0.22.0` — Route lifecycle and workspace Home
 
 This release makes the dashboard easier to understand from the first screen and keeps each route's
