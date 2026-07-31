@@ -361,7 +361,7 @@ export function DemoPage() {
 
   return (
     <section className="ht-page ht-demo-lab" data-tour-section="demo" data-product-area="lab">
-      <header className="ht-page-head">
+      <header className="ht-page-head ht-shared-page-head">
         <div>
           <h1>Guided demo</h1>
           <p className="ht-muted-line">

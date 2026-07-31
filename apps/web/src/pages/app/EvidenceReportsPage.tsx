@@ -3,6 +3,7 @@ import { Download, ExternalLink, Link2, RefreshCw, Share2, ShieldCheck } from 'l
 import { Link } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { API_ORIGIN, apiRequest, readableError } from '../../lib/api';
@@ -137,18 +138,16 @@ export function EvidenceReportsPage() {
 
   return (
     <section className="ht-page ht-evidence-reports" data-product-area="resources">
-      <header className="ht-page-head">
-        <div>
-          <p className="ht-kicker">{t('EVIDENCE CENTER')}</p>
-          <h1>{t('Evidence & reports')}</h1>
-          <p className="ht-muted-line">
-            {t('Explain what happened, prove recovery and share a redacted record safely.')}
-          </p>
-        </div>
-        <button className="button secondary" type="button" onClick={() => void load()}>
-          <RefreshCw aria-hidden="true" /> {t('Refresh reports')}
-        </button>
-      </header>
+      <PageHeader
+        eyebrow={t('EVIDENCE CENTER')}
+        title={t('Evidence & reports')}
+        description={t('Explain what happened, prove recovery and share a redacted record safely.')}
+        actions={
+          <button className="button secondary" type="button" onClick={() => void load()}>
+            <RefreshCw aria-hidden="true" /> {t('Refresh reports')}
+          </button>
+        }
+      />
 
       {error && reports.length > 0 ? (
         <p className="ht-inline-notice" role="status">

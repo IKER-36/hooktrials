@@ -110,7 +110,7 @@ export function ScenariosPage() {
 
   return (
     <section className="ht-page" data-tour-section="scenarios" data-product-area="lab">
-      <header className="ht-page-head">
+      <header className="ht-page-head ht-shared-page-head">
         <div>
           <h1>Failure scenarios</h1>
           <p className="ht-muted-line">

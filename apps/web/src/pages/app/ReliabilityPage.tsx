@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Activity, RefreshCw, ShieldCheck } from 'lucide-react';
 import { ProductState } from '../../components/ui/ProductState';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { apiRequest, readableError } from '../../lib/api';
 import type { ReliabilitySummary } from '../../lib/types';
 
@@ -31,28 +32,26 @@ export function ReliabilityPage() {
 
   return (
     <section className="ht-page" data-product-area="product">
-      <header className="ht-page-head">
-        <div>
-          <p className="ht-kicker">RELIABILITY</p>
-          <h1>SLO &amp; reliability</h1>
-          <p className="ht-muted-line">
-            Availability, latency and incident evidence across your monitored dependencies.
-          </p>
-        </div>
-        <div className="ht-page-head-actions">
-          <label className="ht-operation-filter">
-            <span className="sr-only">Reliability window</span>
-            <select value={windowDays} onChange={(event) => setWindowDays(event.target.value)}>
-              <option value="1">Last 24 hours</option>
-              <option value="7">Last 7 days</option>
-              <option value="30">Last 30 days</option>
-            </select>
-          </label>
-          <button className="button secondary compact" type="button" onClick={() => void load()}>
-            <RefreshCw aria-hidden="true" /> Refresh
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="RELIABILITY"
+        title="SLO & reliability"
+        description="Availability, latency and incident evidence across your monitored dependencies."
+        actions={
+          <>
+            <label className="ht-operation-filter">
+              <span className="sr-only">Reliability window</span>
+              <select value={windowDays} onChange={(event) => setWindowDays(event.target.value)}>
+                <option value="1">Last 24 hours</option>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
+            </label>
+            <button className="button secondary compact" type="button" onClick={() => void load()}>
+              <RefreshCw aria-hidden="true" /> Refresh
+            </button>
+          </>
+        }
+      />
 
       {error && !data ? (
         <ProductState

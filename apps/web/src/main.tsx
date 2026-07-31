@@ -16,6 +16,8 @@ import './styles/ui-foundation.css';
 import './styles/ui-modules.css';
 // Loaded last: the button contract must win over every earlier layer.
 import './styles/buttons.css';
+// Shared page composition wins over the historical module layers.
+import './styles/visual-system.css';
 
 const storedTheme = localStorage.getItem('ht.theme');
 const initialTheme =

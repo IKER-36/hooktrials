@@ -134,7 +134,7 @@ export function OverviewPage() {
   if (endpointId && !selected) {
     return (
       <section className="ht-page" data-tour-section="overview" data-product-area="product">
-        <header className="ht-page-head">
+        <header className="ht-page-head ht-shared-page-head">
           <div>
             <p className="ht-kicker">ROUTE CONTROL</p>
             <h1>Route not found</h1>
@@ -159,7 +159,7 @@ export function OverviewPage() {
   if (!selected) {
     return (
       <section className="ht-page" data-tour-section="overview" data-product-area="product">
-        <header className="ht-page-head">
+        <header className="ht-page-head ht-shared-page-head">
           <div>
             <p className="ht-kicker">ROUTE CONTROL</p>
             <h1>Control Center</h1>
@@ -191,7 +191,7 @@ export function OverviewPage() {
 
   return (
     <section className="ht-page" data-tour-section="overview" data-product-area="product">
-      <header className="ht-page-head">
+      <header className="ht-page-head ht-shared-page-head">
         <div>
           <p className="ht-kicker">
             ROUTE CONTROL · {selected.mode === 'trial' ? 'TRIAL' : 'LIVE'}

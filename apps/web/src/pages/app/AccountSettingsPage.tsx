@@ -105,7 +105,7 @@ export function AccountSettingsPage() {
 
   return (
     <section className="ht-page ht-settings" data-product-area="resources">
-      <header className="ht-page-head">
+      <header className="ht-page-head ht-shared-page-head">
         <div>
           <p className="ht-kicker">ACCOUNT</p>
           <h1>Account settings</h1>

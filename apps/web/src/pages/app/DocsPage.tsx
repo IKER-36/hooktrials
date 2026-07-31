@@ -231,7 +231,7 @@ export function DocsPage() {
 
   return (
     <section className="ht-page ht-docs" data-tour-section="docs" data-product-area="resources">
-      <header className="ht-page-head">
+      <header className="ht-page-head ht-shared-page-head">
         <div>
           <h1>Documentation</h1>
           <p className="ht-muted-line">

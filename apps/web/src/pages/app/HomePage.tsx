@@ -15,6 +15,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { ProductState } from '../../components/ui/ProductState';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { timeAgo } from '../../lib/format';
@@ -317,28 +318,26 @@ export function HomePage() {
 
   return (
     <section className="ht-page ht-home" data-tour-section="home" data-product-area="product">
-      <header className="ht-page-head">
-        <div>
-          <p className="ht-kicker">WORKSPACE OVERVIEW</p>
-          <h1>Home</h1>
-          <p className="ht-muted-line">
-            See what is running, what needs attention and where to go next.
-          </p>
-        </div>
-        <div className="ht-page-head-actions">
-          <button
-            type="button"
-            className="button secondary compact"
-            onClick={() => void load()}
-            disabled={loading}
-          >
-            <RefreshCw aria-hidden="true" /> {loading ? 'Refreshing…' : 'Refresh'}
-          </button>
-          <Link className="button primary compact" to="/app/live-webhooks">
-            Connect a route <ArrowRight aria-hidden="true" />
-          </Link>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="WORKSPACE OVERVIEW"
+        title="Home"
+        description="See what is running, what needs attention and where to go next."
+        actions={
+          <>
+            <button
+              type="button"
+              className="button secondary compact"
+              onClick={() => void load()}
+              disabled={loading}
+            >
+              <RefreshCw aria-hidden="true" /> {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+            <Link className="button primary compact" to="/app/live-webhooks">
+              Connect a route <ArrowRight aria-hidden="true" />
+            </Link>
+          </>
+        }
+      />
 
       {error && data ? (
         <ProductState

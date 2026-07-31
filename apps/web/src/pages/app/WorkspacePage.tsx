@@ -119,7 +119,7 @@ export function WorkspacePage() {
 
   return (
     <section className="ht-page" data-product-area="resources">
-      <header className="ht-page-head">
+      <header className="ht-page-head ht-shared-page-head">
         <div>
           <div className="ht-eyebrow">
             <Users aria-hidden="true" /> Team workspace

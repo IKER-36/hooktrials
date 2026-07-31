@@ -86,7 +86,7 @@ export function EndpointsPage() {
 
   return (
     <section className="ht-page" data-tour-section="endpoints" data-product-area="lab">
-      <header className="ht-page-head">
+      <header className="ht-page-head ht-shared-page-head">
         <div>
           <h1>Trial endpoints</h1>
           <p className="ht-muted-line">

@@ -2,6 +2,39 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.28.0` — A shared visual system for the workspace
+
+The dashboard now uses one page-heading and responsive composition across the operational modules.
+The result is a calmer, easier-to-scan workspace where the page title, supporting context and next
+action stay aligned on desktop, tablet and mobile.
+
+### Added
+
+- A shared page-header component now gives Home, Webhook Hub, Monitoring, Operations, Evidence,
+  Reliability and account/resource screens the same hierarchy and action placement.
+- Mobile page headers stack their actions deliberately instead of squeezing controls beside a title.
+- Summary strips use a consistent instrument-panel treatment so health counts read as one operational
+  signal rather than unrelated cards.
+
+### Improved
+
+- The visual contract is applied across the remaining dashboard modules, including Trial endpoints,
+  Failure scenarios, Guided demo, Documentation, API keys, Workspace and Account settings.
+- Keyboard focus is visibly preserved for links, controls and data selectors in dense operational
+  views.
+- Existing light/dark tokens, button variants and reduced-motion behaviour remain the single source
+  of interaction feedback.
+- The standalone Audit history tab remains removed; operational audit entries stay with Operations
+  and the legacy URL continues to redirect safely.
+
+### Fixed
+
+- Page headers no longer change spacing and action alignment from one module to another.
+- Long titles and descriptions wrap inside the content measure instead of pushing actions off-screen.
+- Narrow screens no longer rely on a horizontally compressed page header to expose primary actions.
+
+No API, database or account migration is required.
+
 ## Release `v0.27.0` — Safer self-hosted updates
 
 Self-hosted operators can now review, apply and undo application updates with clearer recovery

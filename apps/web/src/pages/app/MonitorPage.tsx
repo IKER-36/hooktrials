@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { ProductState } from '../../components/ui/ProductState';
 import { IntegrationTable } from '../../components/app/monitoring/IntegrationTable';
 import { MonitorDetail } from '../../components/app/monitoring/MonitorDetail';
@@ -116,24 +117,24 @@ export function MonitorPage() {
 
   return (
     <section className="ht-page" data-tour-section="monitor" data-product-area="product">
-      <header className="ht-page-head">
-        <div>
-          <h1>Monitoring</h1>
-          <p className="ht-muted-line">Know what failed, where it failed and when it recovered.</p>
-        </div>
-        <div className="ht-page-head-actions">
-          <Link className="button secondary compact" to="/app/operations#alert-channel">
-            Configure alerts
-          </Link>
-          <button
-            type="button"
-            className="button primary"
-            onClick={() => setShowCreate((value) => !value)}
-          >
-            {showCreate ? 'Close form' : 'New monitor'}
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        title="Monitoring"
+        description="Know what failed, where it failed and when it recovered."
+        actions={
+          <>
+            <Link className="button secondary compact" to="/app/operations#alert-channel">
+              Configure alerts
+            </Link>
+            <button
+              type="button"
+              className="button primary"
+              onClick={() => setShowCreate((value) => !value)}
+            >
+              {showCreate ? 'Close form' : 'New monitor'}
+            </button>
+          </>
+        }
+      />
 
       <section className="ht-monitor-summary" aria-label="Monitor summary">
         <article>

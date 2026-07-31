@@ -1,0 +1,97 @@
+/* Shared workspace composition. Loaded after legacy module layers so the page
+ * header has one predictable responsive contract without touching the sidebar. */
+
+.ht-main .ht-shared-page-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px;
+  min-height: 96px;
+  padding: 24px 0 16px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+.ht-main .ht-shared-page-head > div:first-child {
+  min-width: 0;
+}
+
+.ht-main .ht-shared-page-head .ht-kicker {
+  margin: 0 0 9px;
+  color: var(--ht-green);
+}
+
+.ht-main .ht-shared-page-head h1 {
+  margin: 0;
+  color: var(--ht-ink);
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
+}
+
+.ht-main .ht-shared-page-head .ht-muted-line {
+  max-width: 720px;
+  margin: 10px 0 0;
+  color: var(--ht-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.ht-main .ht-shared-page-head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.ht-main .ht-shared-page-head-actions > :where(.button, a.button, select) {
+  flex: 0 0 auto;
+}
+
+/* Status/summary strips should read as one instrument panel, not five
+ * unrelated cards. This is intentionally limited to existing summary roots. */
+.ht-main :where(.ht-operation-summary, .ht-monitor-summary, .ht-evidence-metrics) {
+  overflow: hidden;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-md);
+  background: var(--ht-surface-1);
+}
+
+.ht-main :where(.ht-operation-summary, .ht-monitor-summary, .ht-evidence-metrics) > article {
+  min-width: 0;
+}
+
+/* A visible keyboard focus ring is especially important for dense operational
+ * lists where colour alone must not communicate the active item. */
+.ht-main :where(button, a, select, input, textarea):focus-visible {
+  outline: 2px solid var(--ht-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .ht-main .ht-shared-page-head {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 16px;
+    min-height: 0;
+    padding: 18px 0 14px;
+  }
+
+  .ht-main .ht-shared-page-head-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .ht-main .ht-shared-page-head-actions > :where(.button, a.button) {
+    min-height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ht-main :where(button, a, select, input, textarea) {
+    scroll-behavior: auto;
+  }
+}

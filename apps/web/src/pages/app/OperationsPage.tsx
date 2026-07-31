@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertChannelPanel } from '../../components/app/AlertChannelPanel';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { ProductState } from '../../components/ui/ProductState';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -108,17 +109,15 @@ export function OperationsPage() {
 
   return (
     <section className="ht-page" data-tour-section="operations" data-product-area="product">
-      <header className="ht-page-head">
-        <div>
-          <h1>Operations</h1>
-          <p className="ht-muted-line">
-            Triage incidents, recover dead letters and verify alert delivery from one queue.
-          </p>
-        </div>
-        <button type="button" className="button secondary" onClick={() => void load()}>
-          Refresh evidence
-        </button>
-      </header>
+      <PageHeader
+        title="Operations"
+        description="Triage incidents, recover dead letters and verify alert delivery from one queue."
+        actions={
+          <button type="button" className="button secondary" onClick={() => void load()}>
+            Refresh evidence
+          </button>
+        }
+      />
 
       {error && data ? (
         <ProductState

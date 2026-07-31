@@ -18,6 +18,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -345,31 +346,29 @@ export function LiveWebhooksPage() {
       data-product-area="product"
       data-tour-section="live-webhooks"
     >
-      <header className="ht-page-head ht-live-head">
-        <div>
-          <h1>Webhook Hub</h1>
-          <p className="ht-muted-line">
-            Put HookTrials between every provider and your backend. Inspect the complete request,
-            validate it and forward it with an auditable delivery trail.
-          </p>
-        </div>
-        <div className="ht-live-summary" aria-label="Live webhook summary">
-          <div className="ht-live-stat">
-            <strong>{liveRoutes.length}</strong>
-            <span>live routes</span>
-          </div>
-          <div className="ht-live-stat">
-            <strong>{liveRoutes.filter((route) => route.mode === 'protect').length}</strong>
-            <span>protected</span>
-          </div>
-          {syntheticRoutes.length > 0 ? (
+      <PageHeader
+        className="ht-live-head"
+        title="Webhook Hub"
+        description="Put HookTrials between every provider and your backend. Inspect the complete request, validate it and forward it with an auditable delivery trail."
+        actions={
+          <div className="ht-live-summary" aria-label="Live webhook summary">
             <div className="ht-live-stat">
-              <strong>{syntheticRoutes.length}</strong>
-              <span>synthetic</span>
+              <strong>{liveRoutes.length}</strong>
+              <span>live routes</span>
             </div>
-          ) : null}
-        </div>
-      </header>
+            <div className="ht-live-stat">
+              <strong>{liveRoutes.filter((route) => route.mode === 'protect').length}</strong>
+              <span>protected</span>
+            </div>
+            {syntheticRoutes.length > 0 ? (
+              <div className="ht-live-stat">
+                <strong>{syntheticRoutes.length}</strong>
+                <span>synthetic</span>
+              </div>
+            ) : null}
+          </div>
+        }
+      />
 
       <section className="ht-live-flow" aria-label="Webhook traffic flow">
         <article>

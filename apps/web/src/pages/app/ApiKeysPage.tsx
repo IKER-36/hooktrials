@@ -73,7 +73,7 @@ export function ApiKeysPage() {
 
   return (
     <section className="ht-page ht-api-keys" data-product-area="resources">
-      <header className="ht-page-head">
+      <header className="ht-page-head ht-shared-page-head">
         <div>
           <p className="ht-kicker">{t('AUTOMATION')}</p>
           <h1>{t('API keys')}</h1>
