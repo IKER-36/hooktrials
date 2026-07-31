@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AttemptSequence, OutcomeBadge } from '../../components/app/AttemptSequence';
 import { ActivationChecklist } from '../../components/app/ActivationChecklist';
 import { ControlCenterSummary } from '../../components/app/ControlCenterSummary';
@@ -34,14 +34,32 @@ function curlSnippet(url: string): string {
 
 export function OverviewPage() {
   const { setup } = useAuth();
-  const { endpoints, scenarios, selected, selectEndpoint, toggleEndpoint, loading, reportError } =
-    useDashboard();
+  const { endpointId } = useParams<{ endpointId?: string }>();
+  const navigate = useNavigate();
+  const {
+    endpoints,
+    scenarios,
+    selected: contextSelected,
+    selectEndpoint,
+    toggleEndpoint,
+    loading,
+    reportError,
+  } = useDashboard();
+  const selected = endpointId
+    ? (endpoints.find((endpoint) => endpoint.id === endpointId) ?? null)
+    : contextSelected;
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [inspecting, setInspecting] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
   const freshIds = useRef<Set<string>>(new Set());
   const knownActivity = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    if (endpointId && selected?.id && contextSelected?.id !== selected.id) {
+      selectEndpoint(selected.id);
+    }
+  }, [contextSelected?.id, endpointId, selectEndpoint, selected?.id]);
 
   const loadEvents = useCallback(async (endpointId: string) => {
     const response = await apiRequest<{ events: EventSummary[] }>(
@@ -106,11 +124,37 @@ export function OverviewPage() {
     );
   }
 
+  if (endpointId && !selected) {
+    return (
+      <section className="ht-page" data-tour-section="overview" data-product-area="product">
+        <header className="ht-page-head">
+          <div>
+            <p className="ht-kicker">ROUTE CONTROL</p>
+            <h1>Route not found</h1>
+            <p className="ht-muted-line">
+              This route is no longer available in the current workspace.
+            </p>
+          </div>
+        </header>
+        <ProductState
+          title="Choose another route"
+          description="Open the endpoint inventory to select an available Trial or live route."
+          action={
+            <Link className="button primary" to="/app/endpoints">
+              Open endpoint inventory
+            </Link>
+          }
+        />
+      </section>
+    );
+  }
+
   if (!selected) {
     return (
       <section className="ht-page" data-tour-section="overview" data-product-area="product">
         <header className="ht-page-head">
           <div>
+            <p className="ht-kicker">ROUTE CONTROL</p>
             <h1>Control Center</h1>
           </div>
         </header>
@@ -142,6 +186,9 @@ export function OverviewPage() {
     <section className="ht-page" data-tour-section="overview" data-product-area="product">
       <header className="ht-page-head">
         <div>
+          <p className="ht-kicker">
+            ROUTE CONTROL · {selected.mode === 'trial' ? 'TRIAL' : 'LIVE'}
+          </p>
           <h1>Control Center</h1>
           {endpoints.length > 1 ? null : (
             <p className="ht-page-subject">
@@ -155,7 +202,14 @@ export function OverviewPage() {
           {endpoints.length > 1 ? (
             <label className="ht-switcher labelled">
               <span>Selected route</span>
-              <select value={selected.id} onChange={(event) => selectEndpoint(event.target.value)}>
+              <select
+                value={selected.id}
+                onChange={(event) => {
+                  const id = event.target.value;
+                  selectEndpoint(id);
+                  navigate(`/app/control-center/${id}`);
+                }}
+              >
                 {endpoints.map((endpoint) => (
                   <option key={endpoint.id} value={endpoint.id}>
                     {endpoint.name}

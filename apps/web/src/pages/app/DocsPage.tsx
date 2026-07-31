@@ -29,15 +29,15 @@ interface Guide {
 const guides: Guide[] = [
   {
     id: 'overview',
-    title: 'Control Center & Readiness',
+    title: 'Route control & readiness',
     summary: 'Understand current risk and the next highest-impact action.',
     icon: Gauge,
-    route: '/app',
+    route: '/app/control-center',
     purpose:
-      'Control Center combines route state, active monitoring, incidents, recovery evidence and Production Readiness for the selected endpoint.',
+      'Route control combines route state, active monitoring, incidents, recovery evidence and Production Readiness for the selected endpoint.',
     steps: [
       'Choose the endpoint from the selector at the top of the page.',
-      'Read the Control Center for cross-product health and operational work.',
+      'Read route control for cross-product health and operational work.',
       'Use Production Readiness to find the first unproven reliability control.',
       'Open a retry timeline to inspect Reliability Replay and individual attempts.',
     ],

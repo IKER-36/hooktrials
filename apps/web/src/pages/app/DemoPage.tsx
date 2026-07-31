@@ -465,7 +465,13 @@ export function DemoPage() {
           ) : null}
           {complete ? (
             <div className="ht-demo-links">
-              <Link to="/app">Inspect timelines</Link>
+              <Link
+                to={
+                  run?.protect.id ? `/app/control-center/${run.protect.id}` : '/app/control-center'
+                }
+              >
+                Inspect timelines
+              </Link>
               <Link to="/app/live-webhooks">Open Webhook Hub</Link>
               <Link to="/app/scenarios">Open failure scenarios</Link>
               <Link to="/app/monitor">Inspect monitoring</Link>

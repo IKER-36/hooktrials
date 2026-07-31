@@ -22,7 +22,7 @@ import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/
 function RootRedirect() {
   const { user, loading, setup } = useAuth();
   if (loading) return null;
-  if (user) return <Navigate to="/app" replace />;
+  if (user) return <Navigate to="/app/control-center" replace />;
   return <Navigate to={setup?.setupRequired ? '/register' : '/login'} replace />;
 }
 
@@ -38,7 +38,10 @@ export function App() {
       <Route path="/evidence/:token" element={<EvidencePage />} />
       <Route path="/status/:token" element={<StatusPage />} />
       <Route path="/app" element={<AppLayout />}>
-        <Route index element={<OverviewPage />} />
+        {/* /app remains a compatibility entrypoint until Home becomes the default dashboard. */}
+        <Route index element={<Navigate to="control-center" replace />} />
+        <Route path="control-center" element={<OverviewPage />} />
+        <Route path="control-center/:endpointId" element={<OverviewPage />} />
         <Route path="live-webhooks" element={<LiveWebhooksPage />} />
         <Route path="endpoints" element={<EndpointsPage />} />
         <Route path="scenarios" element={<ScenariosPage />} />
@@ -51,7 +54,7 @@ export function App() {
         <Route path="audit" element={<AuditPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="settings" element={<AccountSettingsPage />} />
-        <Route path="*" element={<Navigate to="/app" replace />} />
+        <Route path="*" element={<Navigate to="/app/control-center" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />
     </Routes>

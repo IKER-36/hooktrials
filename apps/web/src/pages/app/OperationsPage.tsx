@@ -376,7 +376,10 @@ export function OperationsPage() {
                       {shortDate(delivery.createdAt)} · attempt {delivery.sequence}
                     </small>
                     <div className="ht-operation-actions">
-                      <Link to="/app" onClick={() => selectEndpoint(delivery.endpointId)}>
+                      <Link
+                        to={`/app/control-center/${delivery.endpointId}`}
+                        onClick={() => selectEndpoint(delivery.endpointId)}
+                      >
                         Open journey
                       </Link>
                       {!delivery.resolved && !delivery.recoveryPending ? (

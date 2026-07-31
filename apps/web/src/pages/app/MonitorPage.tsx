@@ -164,7 +164,7 @@ export function MonitorPage() {
         onSelectMonitor={setSelectedId}
         onSelectRoute={(id) => {
           selectEndpoint(id);
-          navigate('/app');
+          navigate(`/app/control-center/${id}`);
         }}
       />
 

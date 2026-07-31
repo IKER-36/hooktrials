@@ -50,9 +50,9 @@ export function EndpointsPage() {
     setSubmitting(true);
     setFormError('');
     try {
-      await createEndpoint(name.trim(), scenarioId);
+      const endpoint = await createEndpoint(name.trim(), scenarioId);
       setName('');
-      navigate('/app');
+      navigate(`/app/control-center/${endpoint.id}`);
     } catch (error) {
       setFormError(readableError(error));
     } finally {
@@ -217,9 +217,9 @@ export function EndpointsPage() {
                   className="ht-endpoint-select"
                   onClick={() => {
                     selectEndpoint(endpoint.id);
-                    navigate('/app');
+                    navigate(`/app/control-center/${endpoint.id}`);
                   }}
-                  aria-label={`Open ${endpoint.name} in Control Center`}
+                  aria-label={`Open route control for ${endpoint.name}`}
                 >
                   <span className={`ht-listen ${endpoint.active ? 'on' : 'off'}`}>
                     <i aria-hidden="true" />
@@ -233,7 +233,7 @@ export function EndpointsPage() {
                     </small>
                   </span>
                   <span className="ht-endpoint-open" aria-hidden="true">
-                    Open in Control Center
+                    Open route control
                     <ArrowRight />
                   </span>
                 </button>

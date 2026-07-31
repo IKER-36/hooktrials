@@ -90,7 +90,7 @@ export function ActivationChecklist({ endpoints }: ActivationChecklistProps) {
       complete: data.eventObserved,
       label: t('Observe your first delivery'),
       detail: t('Run the guided demo or send the generated curl request.'),
-      to: trialEndpoint ? '/app' : '/app/demo',
+      to: trialEndpoint ? `/app/control-center/${trialEndpoint.id}` : '/app/demo',
       action: t('Open Control Center'),
     },
     {

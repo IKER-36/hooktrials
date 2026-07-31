@@ -267,7 +267,7 @@ export function LiveWebhooksPage() {
 
   function openRoute(endpoint: Endpoint) {
     selectEndpoint(endpoint.id);
-    navigate('/app');
+    navigate(`/app/control-center/${endpoint.id}`);
   }
 
   return (

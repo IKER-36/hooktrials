@@ -17,6 +17,20 @@ The slim context line above every page always identifies the current workspace a
 structure is retained when the desktop rail is collapsed and in the horizontally scrollable mobile
 navigation.
 
+## Navigation and route context
+
+Every module has its own address so a shared link opens the same context instead of falling back to a
+generic page:
+
+- `/app/control-center` is the route-control entry point.
+- `/app/control-center/:endpointId` opens one Trial or live route directly.
+- `/app/live-webhooks`, `/app/monitor` and `/app/operations` open their respective Product modules.
+- `/app/endpoints`, `/app/scenarios` and `/app/demo` open the Lab modules.
+
+The legacy `/app` address remains a compatibility redirect to route control while the workspace Home
+dashboard is being introduced. Links from endpoint, webhook, monitor and recovery views preserve the
+selected route when moving between modules.
+
 ## Control Center and Production Readiness
 
 Use **Control Center** as the operational starting point. Select a route, read cross-product health,

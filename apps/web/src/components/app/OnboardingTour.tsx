@@ -8,7 +8,7 @@ const steps = [
     eyebrow: '01 / OVERVIEW',
     title: 'See reliability at a glance',
     body: 'The Control Center combines active routes, monitor health, incidents, dead letters and recent recoveries. Start here when you need to know what needs attention.',
-    path: '/app',
+    path: '/app/control-center',
     target: 'overview',
     selector: '.ht-control-center',
     note: 'Production Readiness turns configuration and recorded evidence into one transparent checklist.',

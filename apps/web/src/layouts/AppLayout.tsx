@@ -259,7 +259,7 @@ export function AppLayout() {
       label: 'Product',
       contextLabel: 'Production workspace',
       items: [
-        { to: '/app', label: 'Control Center', icon: Gauge, end: true },
+        { to: '/app/control-center', label: 'Control Center', icon: Gauge },
         {
           to: '/app/live-webhooks',
           label: 'Webhook Hub',
