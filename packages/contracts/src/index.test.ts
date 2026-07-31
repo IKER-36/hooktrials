@@ -6,6 +6,7 @@ import {
   createEndpointInputSchema,
   destinationPreflightInputSchema,
   evidenceExportQuerySchema,
+  evidenceListQuerySchema,
   incidentTriageInputSchema,
   reliabilityQuerySchema,
   workspaceInviteAcceptSchema,
@@ -175,6 +176,20 @@ describe('evidenceExportQuerySchema', () => {
 
   it('rejects unsupported export formats', () => {
     expect(evidenceExportQuerySchema.safeParse({ format: 'html' }).success).toBe(false);
+  });
+});
+
+describe('evidenceListQuerySchema', () => {
+  it('defaults to the newest 50 reports', () => {
+    expect(evidenceListQuerySchema.parse({})).toEqual({ limit: 50, status: 'all' });
+  });
+
+  it('accepts a bounded status filter and rejects unsupported values', () => {
+    expect(evidenceListQuerySchema.parse({ limit: '20', status: 'failed' })).toEqual({
+      limit: 20,
+      status: 'failed',
+    });
+    expect(evidenceListQuerySchema.safeParse({ status: 'complete' }).success).toBe(false);
   });
 });
 

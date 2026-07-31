@@ -1,6 +1,39 @@
 # Current release status
 
-Updated: 31 July 2026.
+Updated: 1 August 2026.
+
+## Release `v0.25.0` — Evidence and reports
+
+This release gives recorded events a dedicated, redacted evidence workspace so teams can explain
+delivery outcomes, prove recovery and hand off an incident without opening raw payloads.
+
+### Added
+
+- **Evidence & reports** is now available under Resources with search, endpoint filters and report
+  status filters for recorded events.
+- Each report shows an explainable resilience score, outcome, impact, duration, attempt count and
+  destination-delivery count.
+- A recovery timeline makes the sequence of provider responses, delivery states and next actions
+  readable without reconstructing it from separate screens.
+- Authenticated JSON and Markdown exports are available from the selected report.
+- Temporary 24-hour handoff links share only redacted evidence and can be replaced when a new link
+  is created.
+
+### Improved
+
+- Event-level evidence is no longer buried inside an individual inspector; the report inventory can
+  be scanned first and opened only when an event needs attention.
+- Report loading, empty, filtered and last-known states explain what the workspace currently knows.
+- Route context stays connected through a direct link back to the selected route control view.
+
+### Fixed
+
+- Removed the standalone Audit history navigation surface. Existing `/app/audit` links continue to
+  redirect to Operations, while event-level recovery proof is available in Evidence & reports.
+- Report views intentionally exclude request payloads, secret headers, credentials and destination
+  URLs from list responses and temporary share links.
+
+No account, route, monitor, incident or database migration is required.
 
 ## Release `v0.24.0` — Webhook Hub operations
 

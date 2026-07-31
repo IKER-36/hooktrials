@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AttemptSequence, OutcomeBadge } from '../../components/app/AttemptSequence';
 import { ActivationChecklist } from '../../components/app/ActivationChecklist';
 import { ControlCenterSummary } from '../../components/app/ControlCenterSummary';
@@ -36,6 +36,7 @@ function curlSnippet(url: string): string {
 export function OverviewPage() {
   const { setup } = useAuth();
   const { endpointId } = useParams<{ endpointId?: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const {
     endpoints,
@@ -55,6 +56,11 @@ export function OverviewPage() {
   const [toggling, setToggling] = useState(false);
   const freshIds = useRef<Set<string>>(new Set());
   const knownActivity = useRef<Map<string, string>>(new Map());
+  const eventFromUrl = new URLSearchParams(location.search).get('event');
+
+  useEffect(() => {
+    if (eventFromUrl) setInspecting(eventFromUrl);
+  }, [eventFromUrl]);
 
   useEffect(() => {
     if (endpointId && selected?.id && contextSelected?.id !== selected.id) {
@@ -387,7 +393,13 @@ export function OverviewPage() {
       ) : null}
 
       {inspecting ? (
-        <EventInspector eventId={inspecting} onClose={() => setInspecting(null)} />
+        <EventInspector
+          eventId={inspecting}
+          onClose={() => {
+            setInspecting(null);
+            if (eventFromUrl) navigate(location.pathname, { replace: true });
+          }}
+        />
       ) : null}
     </section>
   );

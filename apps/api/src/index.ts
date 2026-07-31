@@ -16,6 +16,7 @@ import {
   deliveryActionInputSchema,
   emailInputSchema,
   evidenceExportQuerySchema,
+  evidenceListQuerySchema,
   incidentTriageInputSchema,
   loginInputSchema,
   monitorInputSchema,
@@ -1259,6 +1260,153 @@ app.get('/v1/audit-events', async (request, reply) => {
       ...row,
       metadata: row.metadata ?? {},
     })),
+    hasMore: rows.length === query.limit,
+  };
+});
+
+app.get('/v1/evidence', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const query = evidenceListQuerySchema.parse(request.query);
+  const filters = [inArray(endpoints.userId, user.workspaceUserIds)];
+  if (query.endpointId) filters.push(eq(events.endpointId, query.endpointId));
+  if (query.before) filters.push(lt(events.lastSeenAt, new Date(query.before)));
+  if (query.status !== 'all') {
+    const statusFilter =
+      query.status === 'pending'
+        ? or(isNull(reports.status), eq(reports.status, 'pending'))
+        : eq(reports.status, query.status);
+    if (statusFilter) filters.push(statusFilter);
+  }
+
+  const rows = await database.db
+    .select({
+      eventId: events.id,
+      endpointId: endpoints.id,
+      endpointName: endpoints.name,
+      mode: endpoints.mode,
+      environment: endpoints.environment,
+      correlationKey: events.correlationKey,
+      bodyHash: events.bodyHash,
+      firstSeenAt: events.firstSeenAt,
+      lastSeenAt: events.lastSeenAt,
+      reportId: reports.id,
+      reportStatus: reports.status,
+      reportScore: reports.score,
+      reportResult: reports.result,
+      reportCreatedAt: reports.createdAt,
+      reportCompletedAt: reports.completedAt,
+      publicTokenHash: reports.publicTokenHash,
+      publicExpiresAt: reports.publicExpiresAt,
+    })
+    .from(events)
+    .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
+    .leftJoin(reports, eq(reports.eventId, events.id))
+    .where(and(...filters))
+    .orderBy(desc(events.lastSeenAt))
+    .limit(query.limit);
+
+  const eventIds = rows.map((row) => row.eventId);
+  const [attemptRows, deliveryRows] =
+    eventIds.length === 0
+      ? [[], []]
+      : await Promise.all([
+          database.db
+            .select({
+              eventId: attempts.eventId,
+              sequence: attempts.sequence,
+              receivedAt: attempts.receivedAt,
+              responseStatus: attempts.responseStatus,
+              responseDelayMs: attempts.responseDelayMs,
+              signatureProvider: attempts.signatureProvider,
+              signatureStatus: attempts.signatureStatus,
+              contractResult: attempts.contractResult,
+            })
+            .from(attempts)
+            .where(inArray(attempts.eventId, eventIds))
+            .orderBy(asc(attempts.sequence)),
+          database.db
+            .select({
+              id: destinationDeliveries.id,
+              eventId: destinationDeliveries.eventId,
+              sequence: destinationDeliveries.sequence,
+              kind: destinationDeliveries.kind,
+              state: destinationDeliveries.state,
+              statusCode: destinationDeliveries.statusCode,
+              latencyMs: destinationDeliveries.latencyMs,
+              errorCategory: destinationDeliveries.errorCategory,
+              startedAt: destinationDeliveries.startedAt,
+              completedAt: destinationDeliveries.completedAt,
+            })
+            .from(destinationDeliveries)
+            .where(inArray(destinationDeliveries.eventId, eventIds))
+            .orderBy(asc(destinationDeliveries.sequence)),
+        ]);
+  const attemptsByEvent = new Map<string, typeof attemptRows>();
+  const deliveriesByEvent = new Map<string, typeof deliveryRows>();
+  for (const row of attemptRows) {
+    const items = attemptsByEvent.get(row.eventId) ?? [];
+    items.push(row);
+    attemptsByEvent.set(row.eventId, items);
+  }
+  for (const row of deliveryRows) {
+    const items = deliveriesByEvent.get(row.eventId) ?? [];
+    items.push(row);
+    deliveriesByEvent.set(row.eventId, items);
+  }
+  const now = Date.now();
+
+  return {
+    reports: rows.map((row) => {
+      const eventAttempts = attemptsByEvent.get(row.eventId) ?? [];
+      const eventDeliveries = deliveriesByEvent.get(row.eventId) ?? [];
+      const replay = buildReliabilityReplay({
+        mode: row.mode,
+        attempts: eventAttempts.map((attempt) => ({
+          ...attempt,
+          contractResult: attempt.contractResult as {
+            configured?: boolean;
+            passed?: boolean;
+          },
+        })),
+        deliveries: eventDeliveries,
+      });
+      const latestDelivery = eventDeliveries.at(-1) ?? null;
+      return {
+        id: row.eventId,
+        eventId: row.eventId,
+        endpointId: row.endpointId,
+        integration: {
+          name: row.endpointName,
+          mode: row.mode,
+          environment: row.environment,
+        },
+        event: {
+          correlationKey: row.correlationKey,
+          bodyHash: row.bodyHash,
+          firstSeenAt: row.firstSeenAt,
+          lastSeenAt: row.lastSeenAt,
+        },
+        report: {
+          id: row.reportId,
+          status: row.reportStatus ?? 'pending',
+          score: row.reportScore,
+          result: row.reportResult,
+          createdAt: row.reportCreatedAt,
+          completedAt: row.reportCompletedAt,
+        },
+        attemptCount: eventAttempts.length,
+        deliveryCount: eventDeliveries.length,
+        latestDelivery,
+        share: {
+          active: Boolean(
+            row.publicTokenHash && row.publicExpiresAt && row.publicExpiresAt.getTime() > now,
+          ),
+          expiresAt: row.publicExpiresAt,
+        },
+        replay,
+      };
+    }),
     hasMore: rows.length === query.limit,
   };
 });

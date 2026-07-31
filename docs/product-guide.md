@@ -11,7 +11,8 @@ The dashboard deliberately separates live work from experiments:
   with real integrations, health signals, incidents and recovery.
 - **Lab** contains Trial endpoints, Failure scenarios and Guided Demo. These modules use synthetic
   traffic and deterministic failures without being presented as live connections.
-- **Resources** contains the searchable operator documentation.
+- **Resources** contains the searchable operator documentation, Evidence & reports, API keys and
+  workspace tools.
 
 The slim context line above every page always identifies the current workspace and module. The same
 structure is retained when the desktop rail is collapsed and in the horizontally scrollable mobile
@@ -30,6 +31,7 @@ generic page:
 - `/app/control-center/:endpointId` opens one Trial or live route directly.
 - `/app/live-webhooks`, `/app/monitor` and `/app/operations` open their respective Product modules.
 - `/app/endpoints`, `/app/scenarios` and `/app/demo` open the Lab modules.
+- `/app/evidence` opens the redacted event reports and recovery timelines.
 
 Links from endpoint, webhook, monitor and recovery views preserve the selected route when moving
 between modules. Use Home for workspace orientation and Control Center when you need the complete
@@ -92,6 +94,14 @@ Operations combines open and recovered incidents, unresolved dead letters and al
 Retry continues an existing protected delivery. Replay creates a new delivery from the preserved
 event. Both require explicit confirmation and record operator/source metadata. Check destination
 health and idempotency before either action.
+
+## Evidence & reports
+
+Open **Resources → Evidence & reports** when you need a durable explanation of a recorded event.
+Filter by route or state, select an event and read its score, outcome, impact, attempts, deliveries
+and recovery timeline. The view is redacted by design and never exposes payload bodies, credentials,
+signing secrets or destination URLs. Authenticated JSON/Markdown exports and temporary 24-hour
+handoff links are available from the selected report.
 
 ## Guided Demo
 

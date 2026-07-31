@@ -170,6 +170,47 @@ export interface ReliabilityReplay {
   actions: string[];
 }
 
+export interface EvidenceReport {
+  id: string;
+  eventId: string;
+  endpointId: string;
+  integration: {
+    name: string;
+    mode: 'trial' | 'observe' | 'protect';
+    environment: 'test' | 'staging' | 'production';
+  };
+  event: {
+    correlationKey: string;
+    bodyHash: string;
+    firstSeenAt: string;
+    lastSeenAt: string;
+  };
+  report: {
+    id: string | null;
+    status: 'pending' | 'passed' | 'failed';
+    score: number | null;
+    result: unknown;
+    createdAt: string | null;
+    completedAt: string | null;
+  };
+  attemptCount: number;
+  deliveryCount: number;
+  latestDelivery: Pick<
+    DestinationDelivery,
+    | 'id'
+    | 'sequence'
+    | 'kind'
+    | 'state'
+    | 'statusCode'
+    | 'latencyMs'
+    | 'errorCategory'
+    | 'startedAt'
+    | 'completedAt'
+  > | null;
+  share: { active: boolean; expiresAt: string | null };
+  replay: ReliabilityReplay;
+}
+
 export interface ReadinessCheck {
   code: string;
   label: string;

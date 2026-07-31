@@ -4,6 +4,7 @@ import {
   Activity,
   KeyRound,
   BellRing,
+  FileText,
   FlaskConical,
   Gauge,
   GitBranch,
@@ -297,6 +298,7 @@ export function AppLayout() {
       label: 'Resources',
       items: [
         { to: '/app/docs', label: 'Documentation', icon: BookOpen },
+        { to: '/app/evidence', label: 'Evidence & reports', icon: FileText },
         { to: '/app/api-keys', label: 'API keys', icon: KeyRound },
         { to: '/app/workspace', label: 'Team workspace', icon: Users },
       ],

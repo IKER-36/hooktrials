@@ -42,6 +42,13 @@ export const reliabilityQuerySchema = z.object({
   target: z.coerce.number().min(90).max(100).default(99.9),
 });
 
+export const evidenceListQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  status: z.enum(['all', 'pending', 'passed', 'failed']).default('all'),
+  endpointId: z.string().uuid().optional(),
+  before: z.string().datetime().optional(),
+});
+
 export const workspaceMemberRoleSchema = z.enum(['admin', 'operator', 'viewer']);
 export const workspaceInviteInputSchema = z.object({
   email: z.string().email().max(254),
@@ -351,6 +358,7 @@ export type DestinationPreflightInput = z.infer<typeof destinationPreflightInput
 export type WebhookContract = z.infer<typeof webhookContractSchema>;
 export type AlertChannelInput = z.infer<typeof alertChannelInputSchema>;
 export type EvidenceExportQuery = z.infer<typeof evidenceExportQuerySchema>;
+export type EvidenceListQuery = z.infer<typeof evidenceListQuerySchema>;
 export type ScenarioInput = z.infer<typeof scenarioInputSchema>;
 export type MonitorInput = z.infer<typeof monitorInputSchema>;
 export type UpdateMonitorInput = z.infer<typeof updateMonitorInputSchema>;

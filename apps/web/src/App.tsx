@@ -11,6 +11,7 @@ import { MonitorPage } from './pages/app/MonitorPage';
 import { ScenariosPage } from './pages/app/ScenariosPage';
 import { DemoPage } from './pages/app/DemoPage';
 import { DocsPage } from './pages/app/DocsPage';
+import { EvidenceReportsPage } from './pages/app/EvidenceReportsPage';
 import { LiveWebhooksPage } from './pages/app/LiveWebhooksPage';
 import { ApiKeysPage } from './pages/app/ApiKeysPage';
 import { ReliabilityPage } from './pages/app/ReliabilityPage';
@@ -49,6 +50,7 @@ export function App() {
         <Route path="operations" element={<OperationsPage />} />
         <Route path="demo" element={<DemoPage />} />
         <Route path="docs" element={<DocsPage />} />
+        <Route path="evidence" element={<EvidenceReportsPage />} />
         <Route path="api-keys" element={<ApiKeysPage />} />
         {/* Audit entries now live with operational triage. Keep the old URL as a
             compatibility redirect so saved links do not land on a dead page. */}

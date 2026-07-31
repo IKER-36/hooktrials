@@ -15,6 +15,7 @@
 - [Public status pages](public-status-pages.md)
 - [Contracts and signatures](contracts-and-signatures.md)
 - [Incidents, alerts and evidence](incidents-alerts-evidence.md)
+- [Evidence and reports](evidence-reports.md)
 - [Audit history via Operations](audit-history.md)
 - [Workspaces and roles](workspaces-and-roles.md)
 
@@ -39,6 +40,7 @@ This directory contains documentation intended to be published with the source c
 | [Self-hosting](self-hosting.md)                        | Operator-oriented installation guide            |
 | [Release status](release-status.md)                    | Current version, validation and known issues    |
 | [Reliability Replay](reliability-replay.md)            | Causal diagnosis, impact and operator runbook   |
+| [Evidence and reports](evidence-reports.md)            | Explainable reports, timelines and safe sharing |
 | [Production readiness](production-readiness.md)        | Explainable route controls and next actions     |
 | [Public status pages](public-status-pages.md)          | Revocable monitor health sharing                |
 | [Internationalization](internationalization.md)        | English and Spanish interface behavior          |
