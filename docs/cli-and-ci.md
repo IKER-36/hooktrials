@@ -25,7 +25,7 @@ Add the endpoint as an Actions secret named `HOOKTRIALS_ENDPOINT_URL`; never com
 token. Copy `examples/github-action.yml` into your own workflow or call the published action:
 
 ```yaml
-- uses: IKER-36/hooktrials@v0.26.0
+- uses: IKER-36/hooktrials@v0.27.0
   with:
     config: examples/payment-webhook.trial.yml
     endpoint: ${{ secrets.HOOKTRIALS_ENDPOINT_URL }}
@@ -61,11 +61,17 @@ The root `./hooktrials` CLI also manages safe self-hosted upgrades:
 
 ```bash
 git fetch --tags origin
-./hooktrials update --release v0.26.0
+./hooktrials update --release v0.27.0 --check
+./hooktrials update --release v0.27.0
 ./hooktrials doctor --external
 ```
 
-The update creates a mode-`0600` PostgreSQL backup, switches to the selected tag, rebuilds the
-containers, waits for migrations and health checks, and prints the backup path. It requires a clean
-Git checkout. If the application fails after the switch, the previous source checkout is restored;
-database migrations are recovered from the printed backup rather than silently reversed.
+`--check` validates that the tag exists and reports whether it differs from the current checkout
+without replacing containers or changing volumes. A real update requires a clean checkout, creates
+mode-`0600` PostgreSQL and runtime backups, switches to the selected tag, rebuilds the containers,
+waits for migrations and health checks, and records the result in `.hooktrials/update-state`.
+
+If the application fails during the update, the previous source checkout is restored automatically.
+After a successful update, `./hooktrials rollback --yes` restores that recorded checkout and
+restarts the stack. Rollback never silently reverses database migrations; use the printed backup and
+the restore procedure when schema recovery is required.

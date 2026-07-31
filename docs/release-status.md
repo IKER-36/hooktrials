@@ -2,6 +2,37 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.27.0` — Safer self-hosted updates
+
+Self-hosted operators can now review, apply and undo application updates with clearer recovery
+boundaries while keeping their stored data and runtime secrets intact.
+
+### Added
+
+- Preview a tagged release with `./hooktrials update --release vX.Y.Z --check` before rebuilding
+  anything.
+- Automatic mode-`0600` snapshots of the PostgreSQL database and encrypted runtime configuration
+  before a real update.
+- Persistent update state showing the target release, backup references and completion status.
+- Explicit `./hooktrials rollback --yes` to restore the previous application checkout and restart
+  the stack.
+
+### Improved
+
+- `./hooktrials status` now shows the active release and the last update state.
+- Failed updates restore the previous checkout automatically and retain both recovery references.
+- Update guidance explains exactly what is preserved: PostgreSQL, Redis, users, endpoints, events
+  and encryption keys remain in place.
+
+### Fixed
+
+- Update failures no longer leave the operator without a clear runtime backup reference.
+- A failed tag switch is recorded as a failed update instead of appearing to have completed.
+- Rollback is explicit and never silently reverses database migrations.
+
+No application data migration is included. Existing self-hosted installations can continue using
+their current release and adopt the new workflow on the next update.
+
 ## Release `v0.26.0` — Command palette and faster navigation
 
 This release adds a keyboard-first way to move around the workspace and run common actions without

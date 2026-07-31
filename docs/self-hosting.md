@@ -67,16 +67,36 @@ application. Never expose PostgreSQL or Redis ports.
 `./hooktrials update` now performs a backup, rebuilds the checked-out release, runs migrations,
 waits for Compose health checks and prints a rollback backup reference. It never runs `git pull` or
 modifies `.hooktrials/runtime.env` for you. Use `--release` to select a tagged release; the working
-tree must be clean.
+tree must be clean. Each update also snapshots the encrypted runtime file in `backups/` and stores a
+small mode-`0600` update state under `.hooktrials/`, so the previous checkout can be restored with a
+single command.
+
+Preview a tagged update without changing containers, volumes or application data:
+
+```bash
+git fetch --tags origin
+./hooktrials update --release v0.27.0 --check
+```
 
 Update to a tagged release:
 
 ```bash
 git status --short                 # keep local changes out of production
 git fetch --tags origin
-./hooktrials update --release v0.26.0
+./hooktrials update --release v0.27.0
 ./hooktrials doctor --external     # omit --external for local-only mode
 ```
+
+If the new checkout is not suitable, restore the previous code and restart the stack with:
+
+```bash
+./hooktrials rollback --yes
+```
+
+Rollback keeps PostgreSQL and Redis data untouched. It restores application code only; the printed
+database backup is the recovery boundary if a migration needs to be reversed manually. `./hooktrials
+status` shows the active release and the last update state. Keep both the database backup and the
+runtime snapshot off-host and encrypted.
 
 To rebuild the current checkout without changing Git refs:
 

@@ -46,4 +46,5 @@ values unless intentionally rotating them.
 
 Generated values include PostgreSQL and Redis passwords, the session secret and the payload
 encryption key. Never commit them. Losing `PAYLOAD_ENCRYPTION_KEY` makes retained payloads
-unreadable. Back up `.hooktrials/runtime.env` separately from the database and encrypt both copies.
+unreadable. The update command snapshots `.hooktrials/runtime.env` with mode `0600` before changing
+the checkout; still copy the runtime snapshot and database backup to an encrypted off-host location.

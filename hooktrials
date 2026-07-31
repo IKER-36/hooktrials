@@ -4,6 +4,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 RUNTIME_DIR="$ROOT/.hooktrials"
 RUNTIME_ENV="$RUNTIME_DIR/runtime.env"
+UPDATE_STATE="$RUNTIME_DIR/update-state"
 
 die() {
   printf '%s\n' "error: $*" >&2
@@ -221,6 +222,65 @@ create_backup() {
   printf '%s\n' "$backup"
 }
 
+create_runtime_backup() {
+  stamp=$1
+  [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+  runtime_backup="$ROOT/backups/runtime-$stamp.env"
+  cp "$RUNTIME_ENV" "$runtime_backup"
+  chmod 600 "$runtime_backup"
+  printf '%s\n' "$runtime_backup"
+}
+
+current_release() {
+  release=$(git -C "$ROOT" describe --tags --exact-match HEAD 2>/dev/null || true)
+  if [ -n "$release" ]; then
+    printf '%s\n' "$release"
+  else
+    printf 'commit %s\n' "$(git -C "$ROOT" rev-parse --short HEAD)"
+  fi
+}
+
+state_value() {
+  key=$1
+  [ -f "$UPDATE_STATE" ] || return 0
+  sed -n "s/^${key}=//p" "$UPDATE_STATE" | tail -n 1
+}
+
+write_update_state() {
+  state=$1
+  previous_sha=$2
+  previous_ref=$3
+  target=$4
+  backup=$5
+  runtime_backup=$6
+  temp="$UPDATE_STATE.tmp.$$"
+  mkdir -p "$RUNTIME_DIR"
+  {
+    printf 'state=%s\n' "$state"
+    printf 'previous_sha=%s\n' "$previous_sha"
+    printf 'previous_ref=%s\n' "$previous_ref"
+    printf 'target=%s\n' "$target"
+    printf 'backup=%s\n' "$backup"
+    printf 'runtime_backup=%s\n' "$runtime_backup"
+    printf 'updated_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  } >"$temp"
+  chmod 600 "$temp"
+  mv "$temp" "$UPDATE_STATE"
+}
+
+show_update_state() {
+  [ -f "$UPDATE_STATE" ] || return 0
+  printf '%s\n' "Last update: $(state_value state)"
+  target=$(state_value target)
+  [ -n "$target" ] && printf '%s\n' "Target release: $target"
+  updated_at=$(state_value updated_at)
+  [ -n "$updated_at" ] && printf '%s\n' "Updated at: $updated_at"
+  backup=$(state_value backup)
+  [ -n "$backup" ] && printf '%s\n' "Database backup: $backup"
+  runtime_backup=$(state_value runtime_backup)
+  [ -n "$runtime_backup" ] && printf '%s\n' "Runtime backup: $runtime_backup"
+}
+
 assert_clean_checkout() {
   require git
   git -C "$ROOT" rev-parse --show-toplevel >/dev/null 2>&1 ||
@@ -246,6 +306,7 @@ restore_previous_checkout() {
 
 update_installation() {
   release=
+  check_only=0
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --release)
@@ -255,6 +316,10 @@ update_installation() {
         ;;
       --release=*)
         release=${1#*=}
+        shift
+        ;;
+      --check | --dry-run)
+        check_only=1
         shift
         ;;
       *) die "unknown update option: $1" ;;
@@ -271,10 +336,29 @@ update_installation() {
       die "release tag not found: $release"
   fi
 
+  if [ "$check_only" -eq 1 ]; then
+    printf '%s\n' "Current: $(current_release)"
+    if [ -n "$release" ]; then
+      printf '%s\n' "Available: $release"
+      if [ "$(git -C "$ROOT" rev-parse HEAD)" = "$(git -C "$ROOT" rev-list -1 "$release^{commit}")" ]; then
+        printf '%s\n' "Status: already on this release"
+      else
+        printf '%s\n' "Status: ready to update (no data or containers changed)"
+      fi
+    else
+      printf '%s\n' "Specify a release with --release vX.Y.Z to check a tagged update."
+    fi
+    return 0
+  fi
+
   backup_path=$(create_backup)
+  stamp=$(date -u +%Y%m%dT%H%M%SZ)
+  runtime_backup=$(create_runtime_backup "$stamp")
+  write_update_state prepared "$previous_sha" "$previous_ref" "${release:-current-checkout}" "$backup_path" "$runtime_backup"
   if [ -n "$release" ]; then
     git -C "$ROOT" switch --detach "$release" >/dev/null || {
       printf '%s\n' "error: could not switch to release; checkout unchanged" >&2
+      write_update_state failed "$previous_sha" "$previous_ref" "$release" "$backup_path" "$runtime_backup"
       exit 1
     }
   fi
@@ -285,13 +369,46 @@ update_installation() {
     if ! update_stack; then
       printf '%s\n' "rollback stack restart failed; inspect logs before retrying" >&2
     fi
+    write_update_state rolled-back "$previous_sha" "$previous_ref" "${release:-current-checkout}" "$backup_path" "$runtime_backup"
     die "update failed; database backup available at $backup_path"
   fi
+
+  write_update_state complete "$previous_sha" "$previous_ref" "${release:-current-checkout}" "$backup_path" "$runtime_backup"
 
   printf '%s\n' "Update complete."
   printf '%s\n' "Release: ${release:-current checkout}"
   printf '%s\n' "Backup: $backup_path"
+  printf '%s\n' "Runtime backup: $runtime_backup"
+  printf '%s\n' "Rollback: ./hooktrials rollback --yes"
   printf '%s\n' "Run ./hooktrials doctor --external to verify public access."
+}
+
+rollback_installation() {
+  [ "${1:-}" = "--yes" ] || die "rollback changes the running checkout; rerun: ./hooktrials rollback --yes"
+  [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
+  [ -f "$UPDATE_STATE" ] || die "no previous update is available to roll back"
+  assert_clean_checkout
+
+  previous_sha=$(state_value previous_sha)
+  [ -n "$previous_sha" ] || die "update state has no previous checkout"
+  current_sha=$(git -C "$ROOT" rev-parse HEAD)
+  [ "$current_sha" != "$previous_sha" ] || die "the current checkout is already the recorded previous version"
+  target=$(state_value target)
+  backup_path=$(state_value backup)
+  runtime_backup=$(state_value runtime_backup)
+
+  printf '%s\n' "Rolling back code from ${target:-the last update}..."
+  git -C "$ROOT" switch --detach "$previous_sha" >/dev/null ||
+    die "could not restore the previous checkout"
+  if ! update_stack; then
+    git -C "$ROOT" switch --detach "$current_sha" >/dev/null 2>&1 || true
+    update_stack >/dev/null 2>&1 || true
+    die "rollback stack restart failed; inspect logs before retrying"
+  fi
+  write_update_state rolled-back "$previous_sha" "" "$target" "$backup_path" "$runtime_backup"
+  printf '%s\n' "Rollback complete."
+  printf '%s\n' "Database backup retained at: $backup_path"
+  printf '%s\n' "The database was not changed; restore it only if a migration requires recovery."
 }
 
 require docker
@@ -322,6 +439,8 @@ case "${1:-up}" in
     [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
     compose ps
     show_access
+    printf '%s\n' "Release: $(current_release)"
+    show_update_state
     ;;
   doctor)
     generate_runtime
@@ -337,6 +456,9 @@ case "${1:-up}" in
     shift
     update_installation "$@"
     ;;
+  rollback)
+    rollback_installation "${2:-}"
+    ;;
   backup)
     printf 'Backup created: %s\n' "$(create_backup)"
     ;;
@@ -348,10 +470,10 @@ case "${1:-up}" in
     printf '%s\n' "HookTrials data and runtime secrets removed."
     ;;
   help | -h | --help)
-    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update [--release vX.Y.Z]|backup|reset --yes}"
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update [--release vX.Y.Z] [--check]|rollback --yes|backup|reset --yes}"
     ;;
   *)
-    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update [--release vX.Y.Z]|backup|reset --yes}" >&2
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update [--release vX.Y.Z] [--check]|rollback --yes|backup|reset --yes}" >&2
     exit 2
     ;;
 esac
