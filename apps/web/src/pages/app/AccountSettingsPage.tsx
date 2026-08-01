@@ -13,6 +13,7 @@ import {
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { apiRequest, readableError } from '../../lib/api';
 import type { AccountSession } from '../../lib/types';
 
@@ -31,6 +32,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
 
 export function AccountSettingsPage() {
   const { user, updateUser } = useAuth();
+  const { t } = useI18n();
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [email, setEmail] = useState('');
@@ -44,6 +46,7 @@ export function AccountSettingsPage() {
   const [sessions, setSessions] = useState<AccountSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsBusy, setSessionsBusy] = useState(false);
+  const [verificationBusy, setVerificationBusy] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -99,6 +102,24 @@ export function AccountSettingsPage() {
       setError(readableError(cause));
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function resendVerification() {
+    if (!user) return;
+    setVerificationBusy(true);
+    setNotice('');
+    setError('');
+    try {
+      await apiRequest('/v1/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email: user.email }),
+      });
+      setNotice(t('Verification email sent. Check your inbox and spam folder.'));
+    } catch (cause) {
+      setError(readableError(cause));
+    } finally {
+      setVerificationBusy(false);
     }
   }
 
@@ -217,6 +238,18 @@ export function AccountSettingsPage() {
               ? 'Your current email is verified and can receive account security messages.'
               : 'Verify your email to protect recovery and account changes.'}
           </p>
+          {!user.emailVerified ? (
+            <button
+              type="button"
+              className="button secondary compact"
+              onClick={() => void resendVerification()}
+              disabled={verificationBusy}
+              aria-busy={verificationBusy}
+            >
+              <RefreshCw aria-hidden="true" />
+              {verificationBusy ? t('Sending…') : t('Resend verification email')}
+            </button>
+          ) : null}
           {user.pendingEmail ? (
             <p className="ht-settings-note">
               Waiting for confirmation at <strong>{user.pendingEmail}</strong>.

@@ -1073,6 +1073,9 @@ export const es: Record<string, string> = {
   'Update channel': 'Actualizar canal',
   'Send test alert': 'Enviar alerta de prueba',
   'Sending…': 'Enviando…',
+  'Resend verification email': 'Reenviar correo de verificación',
+  'Verification email sent. Check your inbox and spam folder.':
+    'Correo de verificación enviado. Revisa tu bandeja de entrada y spam.',
   'Not configured': 'No configurado',
   'Remove channel': 'Eliminar canal',
   'Remove this alert channel?': '¿Eliminar este canal de alertas?',

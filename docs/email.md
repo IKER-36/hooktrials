@@ -7,7 +7,7 @@ committed to Git.
 ## Messages
 
 - Email verification after registration, plus a verification reminder when a new unverified account
-  attempts to log in.
+  attempts to log in or requests a resend from Account settings.
 - Welcome message after verification.
 - Password reset link with a short, single-use expiry.
 - Password-changed confirmation after a successful reset.
@@ -58,8 +58,9 @@ After adding the runtime values, create a disposable account and confirm:
 2. Maileroo logs a `email-verification` message from the verified domain.
 3. The link opens `/verify-email`, marks the account verified and sends the welcome message.
 4. Login succeeds after verification.
-5. `/forgot-password` sends a reset link and the link can be used once.
-6. A second use of either link is rejected.
+5. Account settings can resend verification for an unverified account without changing its email.
+6. `/forgot-password` sends a reset link and the link can be used once.
+7. A second use of either link is rejected.
 
 The API uses Maileroo's JSON endpoint `POST https://smtp.maileroo.com/api/v2/emails` with an
 `X-Api-Key` header, as documented in the [Maileroo Email API reference](https://maileroo.com/docs/api-reference/emails/send-email).
