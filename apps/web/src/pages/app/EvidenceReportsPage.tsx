@@ -284,6 +284,7 @@ export function EvidenceReportsPage() {
                       type="button"
                       className={`ht-evidence-row ${selected?.id === report.id ? 'active' : ''}`}
                       aria-pressed={selected?.id === report.id}
+                      aria-label={`${report.integration.name}, ${statusLabel(report.report.status, t)}, ${report.report.score ?? '—'} / 100`}
                       onClick={() => {
                         setSelectedId(report.id);
                         setShareUrl('');
@@ -306,6 +307,9 @@ export function EvidenceReportsPage() {
                       <span className="ht-evidence-row-counts">
                         {report.attemptCount} {t('attempts')} · {report.deliveryCount}{' '}
                         {t('deliveries')}
+                      </span>
+                      <span className="ht-table-action" aria-hidden="true">
+                        Open →
                       </span>
                     </button>
                   ))}

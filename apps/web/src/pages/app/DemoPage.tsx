@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import type { EventDetail, EventSummary, MonitorCheck, OperationsResponse } from '../../lib/types';
@@ -361,16 +362,12 @@ export function DemoPage() {
 
   return (
     <section className="ht-page ht-demo-lab" data-tour-section="demo" data-product-area="lab">
-      <header className="ht-page-head ht-shared-page-head">
-        <div>
-          <h1>Guided demo</h1>
-          <p className="ht-muted-line">
-            One click fills every HookTrials module with a realistic, synthetic reliability
-            workspace.
-          </p>
-        </div>
-        <span className="ht-demo-safety">ISOLATED · USER OWNED · SAFE TO CLEAN</span>
-      </header>
+      <PageHeader
+        eyebrow="LAB / GUIDED DEMO"
+        title="Guided demo"
+        description="One click fills every HookTrials module with a realistic, synthetic reliability workspace."
+        actions={<span className="ht-demo-safety">ISOLATED · USER OWNED · SAFE TO CLEAN</span>}
+      />
 
       <div className="ht-demo-grid">
         <div className="ht-demo-rail" aria-label="Demo journey progress">

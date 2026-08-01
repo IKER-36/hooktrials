@@ -36,6 +36,10 @@ The system prioritizes operational clarity, legibility and predictable hierarchy
   transition contracts. Telemetry charts use Recharts only where a visual comparison is useful.
 - Inventory and monitor rows must expose a visible open/selection affordance, a keyboard focus
   ring and an accessible name. Editors and dialogs must trap focus and restore it on close.
+- Reliability, Evidence, Scenario and Guided Demo surfaces use the shared page-header contract;
+  dense rows remain open and separated by hairlines rather than nested floating cards. Responsive
+  layouts must stack the detail surface below its inventory or journey rail without horizontal
+  scrolling.
 
 Keeping layout and visual overrides separate allows the product to evolve without changing API or
 workflow behavior. New components should use semantic `--ht-*` tokens rather than hard-coded brand

@@ -18,6 +18,15 @@ function sloLabel(status: 'no_data' | 'healthy' | 'at_risk' | 'breached') {
   }[status];
 }
 
+function budgetLabel(
+  status: 'no_data' | 'healthy' | 'at_risk' | 'breached',
+  remainingPercent: number | null | undefined,
+) {
+  const label = sloLabel(status);
+  if (status === 'no_data' || typeof remainingPercent !== 'number') return label;
+  return `${label} · ${remainingPercent.toFixed(0)}% left`;
+}
+
 export function ReliabilityPage() {
   const [data, setData] = useState<ReliabilitySummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -112,7 +121,8 @@ export function ReliabilityPage() {
             >
               <span>Error budget</span>
               <strong>
-                {data.aggregate.sloStatus === 'no_data'
+                {data.aggregate.sloStatus === 'no_data' ||
+                typeof data.aggregate.budgetRemainingPercent !== 'number'
                   ? '—'
                   : `${data.aggregate.budgetRemainingPercent.toFixed(0)}%`}
               </strong>
@@ -141,7 +151,7 @@ export function ReliabilityPage() {
             ) : (
               <div className="ht-operation-list">
                 {data.monitors.map((monitor) => (
-                  <article key={monitor.id}>
+                  <article key={monitor.id} className="ht-reliability-row">
                     <div>
                       <h3>{monitor.name}</h3>
                       <p>
@@ -175,9 +185,10 @@ export function ReliabilityPage() {
                             : 'ht-status-good'
                       }
                     >
-                      {monitor.metrics.sloStatus === 'no_data'
-                        ? 'Collecting budget'
-                        : `${sloLabel(monitor.metrics.sloStatus)} · ${monitor.metrics.budgetRemainingPercent.toFixed(0)}% left`}
+                      {budgetLabel(
+                        monitor.metrics.sloStatus,
+                        monitor.metrics.budgetRemainingPercent,
+                      )}
                     </span>
                   </article>
                 ))}

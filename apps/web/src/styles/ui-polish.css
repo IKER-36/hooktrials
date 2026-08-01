@@ -258,6 +258,478 @@ html[data-theme] .ht-shell .ht-main .ht-home-chart-panel .recharts-surface {
   }
 }
 
+/* Phase 16A: the reliability and lab surfaces now share the same instrument
+ * language as Webhook Hub. Detail work stays dense, but hierarchy comes from
+ * dividers, action affordances and state colour rather than stacked cards. */
+html[data-theme] .ht-shell .ht-main .ht-studio-grid,
+html[data-theme] .ht-shell .ht-main .ht-evidence-workspace,
+html[data-theme] .ht-shell .ht-main .ht-demo-grid {
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-studio-grid {
+  overflow: hidden;
+  background: var(--ht-surface-1);
+  border: 1px solid var(--ht-hairline);
+  border-radius: var(--ht-radius-md);
+  box-shadow: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-studio-library {
+  min-width: 0;
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-studio-library > header {
+  min-height: 56px;
+  padding: 16px 18px;
+  color: var(--ht-ink);
+  background: var(--ht-surface-2);
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-scenario-library-item {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 15px 18px;
+  color: var(--ht-muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ht-hairline);
+  border-radius: 0;
+  text-align: left;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-scenario-library-item:hover,
+html[data-theme] .ht-shell .ht-main .ht-scenario-library-item.selected {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-scenario-library-item.selected {
+  box-shadow: inset 3px 0 0 var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-scenario-library-item:focus-visible {
+  z-index: var(--ht-z-raised);
+  outline: 2px solid var(--ht-focus);
+  outline-offset: -2px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-studio-editor {
+  min-width: 0;
+  padding: 24px;
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-studio-editor > header {
+  min-height: 56px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-studio-editor h2 {
+  font-size: clamp(18px, 2vw, 24px);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-step-list {
+  gap: 8px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-step-card {
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-sm);
+  box-shadow: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-step-card > header {
+  min-height: 42px;
+  padding: 11px 14px;
+  background: transparent;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-step-card > footer {
+  align-items: center;
+  min-height: 46px;
+  margin-top: 0;
+  padding: 0 14px 12px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-repeat-control {
+  align-items: flex-start;
+  background: var(--ht-surface-2);
+  border-color: var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-sm);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-reliability-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto minmax(190px, 0.8fr);
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px 18px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-reliability-row + .ht-reliability-row {
+  border-top: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-reliability-row h3,
+html[data-theme] .ht-shell .ht-main .ht-reliability-row p {
+  min-width: 0;
+  margin: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-reliability-row h3 {
+  overflow: hidden;
+  color: var(--ht-ink);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-reliability-row p,
+html[data-theme] .ht-shell .ht-main .ht-reliability-row > span {
+  color: var(--ht-muted);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-reliability-row > strong {
+  font: 700 15px/1 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-workspace {
+  display: grid;
+  grid-template-columns: minmax(290px, 0.72fr) minmax(0, 1.45fr);
+  overflow: hidden;
+  background: var(--ht-surface-1);
+  border: 1px solid var(--ht-hairline);
+  border-radius: var(--ht-radius-md);
+  box-shadow: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-inventory,
+html[data-theme] .ht-shell .ht-main .ht-evidence-detail {
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-inventory {
+  border-right: 1px solid var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-inventory > header,
+html[data-theme] .ht-shell .ht-main .ht-evidence-detail-head {
+  min-height: 72px;
+  padding: 18px 20px;
+  background: var(--ht-surface-2);
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-inventory > header h2,
+html[data-theme] .ht-shell .ht-main .ht-evidence-detail-head h2 {
+  margin: 0;
+  color: var(--ht-ink);
+  font-size: 15px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-filters {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-filters button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 5px 9px;
+  color: var(--ht-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--ht-radius-sm);
+  font: 650 10px/1 var(--ht-sans);
+  cursor: pointer;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-filters button:hover,
+html[data-theme] .ht-shell .ht-main .ht-evidence-filters button.active {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+  border-color: var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-filters button:focus-visible {
+  outline: 2px solid var(--ht-focus);
+  outline-offset: -2px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 14px 16px;
+  color: var(--ht-muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ht-hairline);
+  border-radius: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-row:hover,
+html[data-theme] .ht-shell .ht-main .ht-evidence-row.active {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-row:focus-visible {
+  z-index: var(--ht-z-raised);
+  outline: 2px solid var(--ht-focus);
+  outline-offset: -2px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-row .ht-table-action {
+  justify-self: end;
+  color: var(--ht-green-dim);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-evidence-detail {
+  overflow: hidden;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.7fr);
+  align-items: start;
+  gap: 0;
+  overflow: hidden;
+  background: var(--ht-surface-1);
+  border: 1px solid var(--ht-hairline);
+  border-radius: var(--ht-radius-md);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail {
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid var(--ht-hairline-bright);
+  border-radius: 0;
+  background: transparent;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  min-height: 76px;
+  padding: 18px 20px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article:last-child {
+  border-bottom: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article > span {
+  color: var(--ht-faint);
+  font: 650 10px/1.2 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article h2,
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article p {
+  margin: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article h2 {
+  color: var(--ht-ink);
+  font-size: 13px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article p {
+  margin-top: 4px;
+  color: var(--ht-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-rail article > b {
+  color: var(--ht-faint);
+  font: 650 9px/1.2 var(--ht-mono);
+  text-transform: uppercase;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-console {
+  position: sticky;
+  top: 18px;
+  align-self: start;
+  min-width: 0;
+  padding: 24px;
+  background: var(--ht-surface-2);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-console h2 {
+  margin: 0;
+  color: var(--ht-ink);
+  font-size: 19px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-console > p:not(.ht-kicker):not(.ht-demo-message) {
+  color: var(--ht-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  .ht-demo-console
+  > :where(.button, .ht-demo-message, .ht-demo-proof, .ht-demo-links) {
+  margin-top: 14px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-demo-safety {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 10px;
+  color: var(--ht-green);
+  background: var(--ht-positive-bg);
+  border: 1px solid color-mix(in srgb, var(--ht-green) 24%, var(--ht-hairline));
+  border-radius: var(--ht-radius-sm);
+  font: 650 9px/1.2 var(--ht-mono);
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 1000px) {
+  html[data-theme] .ht-shell .ht-main .ht-reliability-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-reliability-row > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 860px) {
+  html[data-theme] .ht-shell .ht-main .ht-evidence-workspace,
+  html[data-theme] .ht-shell .ht-main .ht-demo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-evidence-inventory,
+  html[data-theme] .ht-shell .ht-main .ht-demo-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--ht-hairline-bright);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-demo-console {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  html[data-theme] .ht-shell .ht-main .ht-studio-grid {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-studio-library {
+    border-top: 1px solid var(--ht-hairline-bright);
+    border-bottom: 1px solid var(--ht-hairline-bright);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-studio-editor {
+    padding: 20px 0 0;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-step-fields {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-field-wide {
+    grid-column: auto;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-reliability-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-reliability-row > :nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-evidence-controls {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-evidence-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-evidence-row-counts {
+    grid-column: 2 / -1;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-evidence-row .ht-table-action {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-demo-rail article {
+    grid-template-columns: 28px minmax(0, 1fr);
+    padding: 15px 16px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-demo-rail article > b {
+    grid-column: 2;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-demo-console {
+    padding: 20px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .ht-shell .ht-main :where(.ht-scenario-library-item, .ht-evidence-row) {
+    transition: none;
+  }
+}
+
 /* Phase 15B: operational surfaces share one action and selection contract.
  * Rows are buttons on purpose, but they must look like navigable rows rather
  * than unstyled text. The last column gives a sighted user the same cue that

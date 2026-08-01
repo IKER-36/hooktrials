@@ -2,6 +2,34 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.4` — Reliability workspace coherence
+
+Released 1 August 2026. Reliability, Evidence and Lab surfaces now share the same visual rhythm
+and clearer action states as the rest of the dashboard.
+
+### Added
+
+- Failure scenarios and Guided Demo now use the shared page header and responsive workspace layout.
+- Evidence rows expose a visible **Open** affordance alongside their keyboard-accessible selection.
+- Scenario library items and evidence filters show consistent selected, hover and focus states.
+
+### Improved
+
+- Reliability monitor rows are easier to scan across availability, latency, incidents and budget.
+- The Guided Demo rail reads as one chronological journey, with the control surface kept beside it
+  on desktop and below it on smaller screens.
+- Scenario editing keeps the response sequence, repeat policy and destructive actions grouped with
+  predictable spacing on desktop and mobile.
+
+### Fixed
+
+- Reliability no longer crashes when an older or partial response omits an error-budget percentage;
+  it keeps the status label and available metrics visible.
+- Dense Evidence, Scenario and Demo layouts no longer depend on light-theme surfaces in dark mode.
+- New lab headings follow the selected language in the same way as the other workspace headings.
+
+No database migration or user action is required.
+
 ## Release `v0.33.3` — Operational workspace polish
 
 Released 1 August 2026. The dashboard now makes module actions, selected resources and empty

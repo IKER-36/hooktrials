@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useDashboard } from '../../layouts/AppLayout';
 import type { Scenario, ScenarioStep } from '../../lib/types';
 
@@ -110,17 +111,16 @@ export function ScenariosPage() {
 
   return (
     <section className="ht-page" data-tour-section="scenarios" data-product-area="lab">
-      <header className="ht-page-head ht-shared-page-head">
-        <div>
-          <h1>Failure scenarios</h1>
-          <p className="ht-muted-line">
-            Model the exact response sequence your webhook sender must survive.
-          </p>
-        </div>
-        <button type="button" className="button primary" onClick={() => startNew()}>
-          New scenario
-        </button>
-      </header>
+      <PageHeader
+        eyebrow="LAB / SCENARIOS"
+        title="Failure scenarios"
+        description="Model the exact response sequence your webhook sender must survive."
+        actions={
+          <button type="button" className="button primary" onClick={() => startNew()}>
+            New scenario
+          </button>
+        }
+      />
 
       <div className="ht-studio-grid">
         <aside className="ht-studio-library" aria-label="Scenario library">
@@ -132,7 +132,9 @@ export function ScenariosPage() {
             <button
               key={scenario.id}
               type="button"
-              className={scenario.id === selectedId ? 'selected' : ''}
+              className={`ht-scenario-library-item ${scenario.id === selectedId ? 'selected' : ''}`}
+              aria-pressed={scenario.id === selectedId}
+              aria-label={`${scenario.name}${scenario.builtIn ? ', built-in' : ', custom'}`}
               onClick={() => {
                 setNotice('');
                 setCreating(false);
