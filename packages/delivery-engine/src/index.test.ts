@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { computeBackoff, parseRetryAfter, retriesExhausted } from './index.js';
+import {
+  computeBackoff,
+  idempotencyKey,
+  nextFailoverIndex,
+  parseRetryAfter,
+  retriesExhausted,
+} from './index.js';
 
 describe('parseRetryAfter', () => {
   it('parses delta seconds and caps excessive values', () => {
@@ -34,5 +40,21 @@ describe('retriesExhausted', () => {
   it('exhausts exactly at the configured maximum', () => {
     expect(retriesExhausted(4, 5)).toBe(false);
     expect(retriesExhausted(5, 5)).toBe(true);
+  });
+});
+
+describe('delivery policy helpers', () => {
+  it('keeps idempotency stable across attempts and scopes fan-out destinations', () => {
+    const hash = (value: string) => `hash:${value}`;
+    expect(idempotencyKey('evt_1', 'primary', 'destination', hash)).toBe('hash:evt_1:primary');
+    expect(idempotencyKey('evt_1', 'fallback', 'destination', hash)).toBe('hash:evt_1:fallback');
+    expect(idempotencyKey('evt_1', 'fallback', 'event', hash)).toBe('hash:evt_1');
+  });
+
+  it('moves through failover destinations and stops at the last one', () => {
+    expect(nextFailoverIndex('failover', 0, 3)).toBe(1);
+    expect(nextFailoverIndex('failover', 1, 3)).toBe(2);
+    expect(nextFailoverIndex('failover', 2, 3)).toBeNull();
+    expect(nextFailoverIndex('fanout', 0, 3)).toBeNull();
   });
 });

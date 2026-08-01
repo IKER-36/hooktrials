@@ -35,7 +35,9 @@ export const monitorStateEnum = pgEnum('monitor_state', [
 export const monitorOutcomeEnum = pgEnum('monitor_outcome', ['healthy', 'degraded', 'down']);
 export const incidentStatusEnum = pgEnum('incident_status', ['open', 'recovered']);
 export const endpointModeEnum = pgEnum('endpoint_mode', ['trial', 'observe', 'protect']);
-export const deliveryKindEnum = pgEnum('delivery_kind', ['forward', 'retry', 'replay']);
+export const deliveryStrategyEnum = pgEnum('delivery_strategy', ['single', 'fanout', 'failover']);
+export const idempotencyScopeEnum = pgEnum('idempotency_scope', ['destination', 'event']);
+export const deliveryKindEnum = pgEnum('delivery_kind', ['forward', 'retry', 'replay', 'failover']);
 export const deliveryStateEnum = pgEnum('delivery_state', [
   'queued',
   'delivering',
@@ -259,6 +261,9 @@ export const endpoints = pgTable(
     retryBaseDelayMs: integer('retry_base_delay_ms').notNull().default(2_000),
     retryMaxDelayMs: integer('retry_max_delay_ms').notNull().default(300_000),
     deliveryPaused: boolean('delivery_paused').notNull().default(false),
+    deliveryStrategy: deliveryStrategyEnum('delivery_strategy').notNull().default('single'),
+    idempotencyScope: idempotencyScopeEnum('idempotency_scope').notNull().default('destination'),
+    encryptedDeliveryPolicy: text('encrypted_delivery_policy'),
     encryptedContract: text('encrypted_contract'),
     signatureProvider: signatureProviderEnum('signature_provider').notNull().default('none'),
     encryptedSignatureSecret: text('encrypted_signature_secret'),

@@ -13,6 +13,7 @@ import {
   auditQuerySchema,
   authTokenInputSchema,
   destinationPreflightInputSchema,
+  deliveryPolicyInputSchema,
   deliveryActionInputSchema,
   emailInputSchema,
   evidenceExportQuerySchema,
@@ -550,6 +551,123 @@ function encryptedMonitorHeaders(headers: Record<string, string>): string | null
 
 function encryptHeaders(headers: Record<string, string>): string | null {
   return encryptedMonitorHeaders(headers);
+}
+
+type StoredDeliveryDestination = {
+  id: string;
+  name: string;
+  url: string;
+  headers: Record<string, string>;
+  timeoutMs: number;
+  expectedMinStatus: number;
+  expectedMaxStatus: number;
+  active: boolean;
+};
+type StoredDeliveryPolicy = {
+  strategy: 'single' | 'fanout' | 'failover';
+  idempotencyScope: 'destination' | 'event';
+  destinations: StoredDeliveryDestination[];
+};
+
+function legacyDeliveryPolicy(input: {
+  url: string | null;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+  expectedMinStatus?: number;
+  expectedMaxStatus?: number;
+}): StoredDeliveryPolicy | null {
+  if (!input.url) return null;
+  return {
+    strategy: 'single',
+    idempotencyScope: 'destination',
+    destinations: [
+      {
+        id: 'primary',
+        name: 'Primary destination',
+        url: input.url,
+        headers: input.headers ?? {},
+        timeoutMs: input.timeoutMs ?? 10_000,
+        expectedMinStatus: input.expectedMinStatus ?? 200,
+        expectedMaxStatus: input.expectedMaxStatus ?? 299,
+        active: true,
+      },
+    ],
+  };
+}
+
+async function prepareDeliveryPolicy(
+  input: unknown,
+  fallback: StoredDeliveryPolicy | null,
+): Promise<StoredDeliveryPolicy | null> {
+  if (input === undefined) return fallback;
+  if (input === null) return null;
+  const parsed = deliveryPolicyInputSchema.parse(input);
+  const destinations = await Promise.all(
+    parsed.destinations.map(async (destination, index) => {
+      await validateTarget(
+        destination.url,
+        monitorNetworkOptions({ allowPrivateNetworks: false, allowedPrivateCidrs: [] }),
+      );
+      return {
+        id: destination.id ?? `destination-${index + 1}-${nanoid(6)}`,
+        name: destination.name,
+        url: destination.url,
+        headers: destination.headers,
+        timeoutMs: destination.timeoutMs,
+        expectedMinStatus: destination.expectedMinStatus,
+        expectedMaxStatus: destination.expectedMaxStatus,
+        active: destination.active,
+      } satisfies StoredDeliveryDestination;
+    }),
+  );
+  return {
+    strategy: parsed.strategy,
+    idempotencyScope: parsed.idempotencyScope,
+    destinations,
+  };
+}
+
+function encryptDeliveryPolicy(policy: StoredDeliveryPolicy | null): string | null {
+  return policy ? encryptValue(JSON.stringify(policy), config.PAYLOAD_ENCRYPTION_KEY) : null;
+}
+
+function decryptDeliveryPolicy(value: string | null): StoredDeliveryPolicy | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(
+      decryptValue(value, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8'),
+    ) as StoredDeliveryPolicy;
+    return parsed && Array.isArray(parsed.destinations) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function deliveryPolicySummary(
+  policy: StoredDeliveryPolicy | null,
+  legacy: { host: string | null },
+) {
+  if (!policy) {
+    return {
+      deliveryStrategy: 'single' as const,
+      idempotencyScope: 'destination' as const,
+      destinationCount: legacy.host ? 1 : 0,
+      deliveryDestinations: legacy.host
+        ? [{ id: 'primary', name: 'Primary destination', host: legacy.host, active: true }]
+        : [],
+    };
+  }
+  return {
+    deliveryStrategy: policy.strategy,
+    idempotencyScope: policy.idempotencyScope,
+    destinationCount: policy.destinations.length,
+    deliveryDestinations: policy.destinations.map((destination) => ({
+      id: destination.id,
+      name: destination.name,
+      host: new URL(destination.url).host,
+      active: destination.active,
+    })),
+  };
 }
 
 function decryptedMonitorHeaders(value: string | null): Record<string, string> {
@@ -3036,6 +3154,9 @@ app.get('/v1/endpoints', async (request, reply) => {
       retryBaseDelayMs: endpoints.retryBaseDelayMs,
       retryMaxDelayMs: endpoints.retryMaxDelayMs,
       deliveryPaused: endpoints.deliveryPaused,
+      deliveryStrategy: endpoints.deliveryStrategy,
+      idempotencyScope: endpoints.idempotencyScope,
+      encryptedDeliveryPolicy: endpoints.encryptedDeliveryPolicy,
       contractConfigured: sql<boolean>`${endpoints.encryptedContract} is not null`,
       signatureProvider: endpoints.signatureProvider,
       signatureConfigured: sql<boolean>`${endpoints.encryptedSignatureSecret} is not null`,
@@ -3058,30 +3179,35 @@ app.get('/v1/endpoints', async (request, reply) => {
     .orderBy(desc(endpoints.createdAt));
 
   return {
-    endpoints: items.map(({ encryptedToken, resourceMetadata, ...item }) => {
-      const token = decryptToken(encryptedToken);
-      const metadata = resourceMetadata as { demoRunId?: unknown; provider?: unknown } | null;
-      const provider = [
-        'generic',
-        'stripe',
-        'github',
-        'shopify',
-        'slack',
-        'gitlab',
-        'linear',
-        'hubspot',
-      ].includes(String(metadata?.provider))
-        ? String(metadata?.provider)
-        : item.signatureProvider === 'github' || item.signatureProvider === 'stripe'
-          ? item.signatureProvider
-          : 'generic';
-      return {
-        ...item,
-        demoOwned: typeof metadata?.demoRunId === 'string',
-        provider,
-        ingestUrl: token ? `${config.INGEST_ORIGIN}/i/${token}` : null,
-      };
-    }),
+    endpoints: items.map(
+      ({ encryptedToken, resourceMetadata, encryptedDeliveryPolicy, ...item }) => {
+        const token = decryptToken(encryptedToken);
+        const metadata = resourceMetadata as { demoRunId?: unknown; provider?: unknown } | null;
+        const provider = [
+          'generic',
+          'stripe',
+          'github',
+          'shopify',
+          'slack',
+          'gitlab',
+          'linear',
+          'hubspot',
+        ].includes(String(metadata?.provider))
+          ? String(metadata?.provider)
+          : item.signatureProvider === 'github' || item.signatureProvider === 'stripe'
+            ? item.signatureProvider
+            : 'generic';
+        return {
+          ...item,
+          ...deliveryPolicySummary(decryptDeliveryPolicy(encryptedDeliveryPolicy), {
+            host: item.destinationHost,
+          }),
+          demoOwned: typeof metadata?.demoRunId === 'string',
+          provider,
+          ingestUrl: token ? `${config.INGEST_ORIGIN}/i/${token}` : null,
+        };
+      },
+    ),
     limits: {
       endpoints: config.ENDPOINTS_LIMIT,
       endpointUsage: items.filter((item) => {
@@ -3943,7 +4069,25 @@ app.post('/v1/endpoints', async (request, reply) => {
     .limit(1);
   if (!allowedScenario[0]) return reply.code(400).send({ error: 'invalid_scenario' });
 
-  if (input.destinationUrl) {
+  const preparedPolicy = await prepareDeliveryPolicy(
+    input.deliveryPolicy,
+    input.deliveryPolicy === undefined
+      ? legacyDeliveryPolicy({
+          url: input.destinationUrl ?? null,
+          headers: input.destinationHeaders,
+          timeoutMs: input.destinationTimeoutMs,
+          expectedMinStatus: input.destinationExpectedMinStatus,
+          expectedMaxStatus: input.destinationExpectedMaxStatus,
+        })
+      : null,
+  );
+  const primaryDestination = preparedPolicy?.destinations[0] ?? null;
+  const destinationUrl = input.destinationUrl ?? primaryDestination?.url ?? null;
+  const primaryHeaders =
+    primaryDestination && Object.keys(primaryDestination.headers).length > 0
+      ? primaryDestination.headers
+      : input.destinationHeaders;
+  if (input.destinationUrl && input.deliveryPolicy === undefined) {
     await validateTarget(
       input.destinationUrl,
       monitorNetworkOptions({ allowPrivateNetworks: false, allowedPrivateCidrs: [] }),
@@ -3978,18 +4122,20 @@ app.post('/v1/endpoints', async (request, reply) => {
           encryptedToken: encryptValue(publicToken, config.PAYLOAD_ENCRYPTION_KEY),
           mode: input.mode,
           environment: input.environment,
-          encryptedDestinationUrl: input.destinationUrl
-            ? encryptValue(input.destinationUrl, config.PAYLOAD_ENCRYPTION_KEY)
+          encryptedDestinationUrl: destinationUrl
+            ? encryptValue(destinationUrl, config.PAYLOAD_ENCRYPTION_KEY)
             : null,
           encryptedDestinationHeaders:
-            Object.keys(input.destinationHeaders).length > 0
-              ? encryptHeaders(input.destinationHeaders)
-              : null,
-          displayDestinationHost: input.destinationUrl ? new URL(input.destinationUrl).host : null,
-          destinationTimeoutMs: input.destinationTimeoutMs,
+            Object.keys(primaryHeaders).length > 0 ? encryptHeaders(primaryHeaders) : null,
+          displayDestinationHost: destinationUrl ? new URL(destinationUrl).host : null,
+          destinationTimeoutMs: primaryDestination?.timeoutMs ?? input.destinationTimeoutMs,
           retryMaxAttempts: input.retryMaxAttempts,
           retryBaseDelayMs: input.retryBaseDelayMs,
           retryMaxDelayMs: input.retryMaxDelayMs,
+          deliveryStrategy: preparedPolicy?.strategy ?? 'single',
+          idempotencyScope: preparedPolicy?.idempotencyScope ?? 'destination',
+          encryptedDeliveryPolicy:
+            input.deliveryPolicy !== undefined ? encryptDeliveryPolicy(preparedPolicy) : null,
           encryptedContract: input.contract
             ? encryptValue(JSON.stringify(input.contract), config.PAYLOAD_ENCRYPTION_KEY)
             : null,
@@ -3998,8 +4144,10 @@ app.post('/v1/endpoints', async (request, reply) => {
             ? encryptValue(input.signatureSecret, config.PAYLOAD_ENCRYPTION_KEY)
             : null,
           signatureToleranceSeconds: input.signatureToleranceSeconds,
-          destinationExpectedMinStatus: input.destinationExpectedMinStatus,
-          destinationExpectedMaxStatus: input.destinationExpectedMaxStatus,
+          destinationExpectedMinStatus:
+            primaryDestination?.expectedMinStatus ?? input.destinationExpectedMinStatus,
+          destinationExpectedMaxStatus:
+            primaryDestination?.expectedMaxStatus ?? input.destinationExpectedMaxStatus,
           productionConfirmedAt:
             input.environment === 'production' && input.mode !== 'trial' ? new Date() : null,
         })
@@ -4028,9 +4176,9 @@ app.post('/v1/endpoints', async (request, reply) => {
       active: true,
       mode: input.mode,
       environment: input.environment,
-      destinationHost: input.destinationUrl ? new URL(input.destinationUrl).host : null,
-      destinationConfigured: Boolean(input.destinationUrl),
-      destinationTimeoutMs: input.destinationTimeoutMs,
+      destinationHost: destinationUrl ? new URL(destinationUrl).host : null,
+      destinationConfigured: Boolean(destinationUrl),
+      destinationTimeoutMs: primaryDestination?.timeoutMs ?? input.destinationTimeoutMs,
       retryMaxAttempts: input.retryMaxAttempts,
       retryBaseDelayMs: input.retryBaseDelayMs,
       retryMaxDelayMs: input.retryMaxDelayMs,
@@ -4039,8 +4187,10 @@ app.post('/v1/endpoints', async (request, reply) => {
       signatureProvider: input.signatureProvider,
       signatureConfigured: Boolean(input.signatureSecret),
       signatureToleranceSeconds: input.signatureToleranceSeconds,
-      destinationExpectedMinStatus: input.destinationExpectedMinStatus,
-      destinationExpectedMaxStatus: input.destinationExpectedMaxStatus,
+      destinationExpectedMinStatus:
+        primaryDestination?.expectedMinStatus ?? input.destinationExpectedMinStatus,
+      destinationExpectedMaxStatus:
+        primaryDestination?.expectedMaxStatus ?? input.destinationExpectedMaxStatus,
       allowPrivateNetworks: false,
       allowedPrivateCidrs: [],
       productionConfirmedAt:
@@ -4048,6 +4198,9 @@ app.post('/v1/endpoints', async (request, reply) => {
           ? new Date().toISOString()
           : null,
       ingestUrl: `${config.INGEST_ORIGIN}/i/${publicToken}`,
+      ...deliveryPolicySummary(preparedPolicy, {
+        host: destinationUrl ? new URL(destinationUrl).host : null,
+      }),
     },
   });
 });
@@ -4089,8 +4242,28 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
   const existingDestination = current.encryptedDestinationUrl
     ? decryptValue(current.encryptedDestinationUrl, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8')
     : null;
+  const currentPolicy =
+    decryptDeliveryPolicy(current.encryptedDeliveryPolicy) ??
+    legacyDeliveryPolicy({
+      url: existingDestination,
+      timeoutMs: current.destinationTimeoutMs,
+      expectedMinStatus: current.destinationExpectedMinStatus,
+      expectedMaxStatus: current.destinationExpectedMaxStatus,
+    });
+  const preparedPolicy = await prepareDeliveryPolicy(
+    input.deliveryPolicy,
+    input.deliveryPolicy === undefined ? currentPolicy : null,
+  );
+  const primaryDestination = preparedPolicy?.destinations[0] ?? null;
+  const existingPrimaryHeaders = decryptedMonitorHeaders(current.encryptedDestinationHeaders);
+  const primaryHeaders =
+    primaryDestination && Object.keys(primaryDestination.headers).length > 0
+      ? primaryDestination.headers
+      : (input.destinationHeaders ?? existingPrimaryHeaders);
   const destinationUrl =
-    input.destinationUrl === undefined ? existingDestination : input.destinationUrl;
+    input.destinationUrl !== undefined
+      ? input.destinationUrl
+      : (primaryDestination?.url ?? existingDestination);
   const signatureProvider = input.signatureProvider ?? current.signatureProvider;
   const signatureSecretConfigured =
     input.signatureSecret === undefined
@@ -4128,19 +4301,26 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
     ...(input.active !== undefined ? { active: input.active } : {}),
     ...(input.mode !== undefined ? { mode: input.mode } : {}),
     ...(input.environment !== undefined ? { environment: input.environment } : {}),
-    ...(input.destinationUrl !== undefined
+    ...(input.destinationUrl !== undefined || input.deliveryPolicy !== undefined
       ? {
-          encryptedDestinationUrl: input.destinationUrl
-            ? encryptValue(input.destinationUrl, config.PAYLOAD_ENCRYPTION_KEY)
+          encryptedDestinationUrl: destinationUrl
+            ? encryptValue(destinationUrl, config.PAYLOAD_ENCRYPTION_KEY)
             : null,
-          displayDestinationHost: input.destinationUrl ? new URL(input.destinationUrl).host : null,
+          displayDestinationHost: destinationUrl ? new URL(destinationUrl).host : null,
         }
       : {}),
-    ...(input.destinationHeaders !== undefined
-      ? { encryptedDestinationHeaders: encryptHeaders(input.destinationHeaders) }
+    ...(input.destinationHeaders !== undefined || input.deliveryPolicy !== undefined
+      ? {
+          encryptedDestinationHeaders: encryptHeaders(primaryHeaders),
+        }
       : {}),
-    ...(input.destinationTimeoutMs !== undefined
-      ? { destinationTimeoutMs: input.destinationTimeoutMs }
+    ...(input.destinationTimeoutMs !== undefined || input.deliveryPolicy !== undefined
+      ? {
+          destinationTimeoutMs:
+            primaryDestination?.timeoutMs ??
+            input.destinationTimeoutMs ??
+            current.destinationTimeoutMs,
+        }
       : {}),
     ...(input.retryMaxAttempts !== undefined ? { retryMaxAttempts: input.retryMaxAttempts } : {}),
     ...(input.retryBaseDelayMs !== undefined ? { retryBaseDelayMs: input.retryBaseDelayMs } : {}),
@@ -4164,11 +4344,28 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
     ...(input.signatureToleranceSeconds !== undefined
       ? { signatureToleranceSeconds: input.signatureToleranceSeconds }
       : {}),
-    ...(input.destinationExpectedMinStatus !== undefined
-      ? { destinationExpectedMinStatus: input.destinationExpectedMinStatus }
+    ...(input.destinationExpectedMinStatus !== undefined || input.deliveryPolicy !== undefined
+      ? {
+          destinationExpectedMinStatus:
+            primaryDestination?.expectedMinStatus ??
+            input.destinationExpectedMinStatus ??
+            current.destinationExpectedMinStatus,
+        }
       : {}),
-    ...(input.destinationExpectedMaxStatus !== undefined
-      ? { destinationExpectedMaxStatus: input.destinationExpectedMaxStatus }
+    ...(input.destinationExpectedMaxStatus !== undefined || input.deliveryPolicy !== undefined
+      ? {
+          destinationExpectedMaxStatus:
+            primaryDestination?.expectedMaxStatus ??
+            input.destinationExpectedMaxStatus ??
+            current.destinationExpectedMaxStatus,
+        }
+      : {}),
+    ...(input.deliveryPolicy !== undefined
+      ? {
+          deliveryStrategy: preparedPolicy?.strategy ?? 'single',
+          idempotencyScope: preparedPolicy?.idempotencyScope ?? 'destination',
+          encryptedDeliveryPolicy: encryptDeliveryPolicy(preparedPolicy),
+        }
       : {}),
     ...(input.allowPrivateNetworks !== undefined ? { allowPrivateNetworks } : {}),
     ...(input.allowedPrivateCidrs !== undefined ? { allowedPrivateCidrs } : {}),
@@ -4197,6 +4394,8 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
           retryBaseDelayMs: endpoints.retryBaseDelayMs,
           retryMaxDelayMs: endpoints.retryMaxDelayMs,
           deliveryPaused: endpoints.deliveryPaused,
+          deliveryStrategy: endpoints.deliveryStrategy,
+          idempotencyScope: endpoints.idempotencyScope,
           contractConfigured: sql<boolean>`${endpoints.encryptedContract} is not null`,
           signatureProvider: endpoints.signatureProvider,
           signatureConfigured: sql<boolean>`${endpoints.encryptedSignatureSecret} is not null`,
@@ -4221,7 +4420,18 @@ app.patch('/v1/endpoints/:id', async (request, reply) => {
     }
     return row;
   });
-  return { endpoint: { ...updated, destinationConfigured: Boolean(destinationUrl) } };
+  return {
+    endpoint: {
+      ...updated,
+      destinationConfigured: Boolean(destinationUrl),
+      ...deliveryPolicySummary(
+        input.deliveryPolicy !== undefined ? preparedPolicy : currentPolicy,
+        {
+          host: destinationUrl ? new URL(destinationUrl).host : null,
+        },
+      ),
+    },
+  };
 });
 
 app.post('/v1/endpoints/:id/rotate', async (request, reply) => {

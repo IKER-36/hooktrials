@@ -22,13 +22,15 @@ destination of that route.
 - method, header and JSON-path contracts before forwarding;
 - destination status, latency, response size and failure classification;
 - stable event and delivery identity headers for downstream idempotency;
-- a single event journey from provider to HookTrials, validation, destination and provider response;
+- a single event journey from provider to HookTrials, validation, one or more destinations and the
+  provider response;
 - incidents, recovery evidence, alerting and manual dead-letter operations;
 - encrypted payloads, captured request headers, destinations, destination headers and signing
   secrets at rest.
 
-The current route model connects one provider-facing ingestion URL to one destination. Create
-multiple routes to concentrate different providers and backends in the same workspace. Provider
+The default route connects one provider-facing ingestion URL to one destination. Protect routes can
+also use a Fan-out or ordered Failover policy with up to three HTTPS targets. Create multiple routes
+to concentrate different providers and backends in the same workspace. Provider
 starters configure the expected method and header surface; native cryptographic verification is
 currently available for Stripe and GitHub, while the other starters remain contract-first.
 
@@ -47,6 +49,11 @@ currently available for Stripe and GitHub, while the other starters remain contr
 8. If the provider issues its signing secret only after URL registration, paste it into the
    activation panel before accepting real traffic.
 9. Send the provider's test event and open **Live inspector**.
+
+For a Protect connection, choose a delivery policy before creating it. **Single** keeps the default
+retry path, **Fan-out** delivers to every active target, and **Failover** moves through targets in
+order after the current retry budget is exhausted. See [Delivery policies](delivery-policies.md)
+for the idempotency header and write-only destination behavior.
 
 The connection is created atomically: route, encrypted destination, contract, signature settings and
 public token are committed together. A failed validation does not leave a partially configured live

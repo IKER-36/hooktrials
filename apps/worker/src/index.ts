@@ -1,6 +1,12 @@
 import { readRuntimeConfig } from '@hooktrials/config';
-import { decryptValue, sha256 } from '@hooktrials/crypto';
-import { computeBackoff, parseRetryAfter, retriesExhausted } from '@hooktrials/delivery-engine';
+import { decryptValue, encryptValue, sha256 } from '@hooktrials/crypto';
+import {
+  computeBackoff,
+  idempotencyKey,
+  nextFailoverIndex,
+  parseRetryAfter,
+  retriesExhausted,
+} from '@hooktrials/delivery-engine';
 import {
   attempts,
   alertChannels,
@@ -87,9 +93,26 @@ async function analyzeEvent(eventId: string) {
     .from(destinationDeliveries)
     .where(eq(destinationDeliveries.eventId, eventId))
     .orderBy(destinationDeliveries.sequence);
-  const lastDelivery = deliveryRows.at(-1) ?? null;
-  const recovered = lastDelivery
-    ? lastDelivery.state === 'succeeded'
+  const finalDeliveries = new Map<string, (typeof deliveryRows)[number]>();
+  let hasFailover = false;
+  for (const delivery of deliveryRows) {
+    const metadata = delivery.auditMetadata as { destinationId?: unknown; strategy?: unknown };
+    const destinationKey =
+      typeof metadata.destinationId === 'string' ? metadata.destinationId : 'primary';
+    if (metadata.strategy === 'failover') hasFailover = true;
+    finalDeliveries.set(destinationKey, delivery);
+  }
+  const finalDeliveryRows = [...finalDeliveries.values()];
+  const hasPendingDelivery = finalDeliveryRows.some((delivery) =>
+    ['queued', 'retrying', 'delivering'].includes(delivery.state),
+  );
+  const hasDeadLetter = finalDeliveryRows.some((delivery) => delivery.state === 'dead_letter');
+  const recovered = finalDeliveryRows.length
+    ? !hasPendingDelivery &&
+      !hasDeadLetter &&
+      (hasFailover
+        ? finalDeliveryRows.some((delivery) => delivery.state === 'succeeded')
+        : finalDeliveryRows.every((delivery) => delivery.state === 'succeeded'))
     : lastAttempt.responseStatus >= 200 && lastAttempt.responseStatus < 300;
   const retryObserved = deliveryRows.length > 1 || rows.length > 1;
   const invalidSignatures = rows.filter((attempt) =>
@@ -186,11 +209,44 @@ function decryptedHeaders(value: string | null): Record<string, unknown> {
   }
 }
 
+type StoredDeliveryDestination = {
+  id: string;
+  name: string;
+  url: string;
+  headers: Record<string, string>;
+  timeoutMs: number;
+  expectedMinStatus: number;
+  expectedMaxStatus: number;
+  active: boolean;
+};
+type StoredDeliveryPolicy = {
+  strategy: 'single' | 'fanout' | 'failover';
+  idempotencyScope: 'destination' | 'event';
+  destinations: StoredDeliveryDestination[];
+};
+
+function decryptDeliveryPolicy(value: string | null): StoredDeliveryPolicy | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(
+      decryptValue(value, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8'),
+    ) as StoredDeliveryPolicy;
+    return parsed && Array.isArray(parsed.destinations) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function forwardingHeaders(
   encryptedValue: string | null,
   fallbackValue: unknown,
   encryptedCustom: string | null,
-  deliveryContext: { eventId: string; deliveryId: string; attempt: number },
+  deliveryContext: {
+    eventId: string;
+    deliveryId: string;
+    attempt: number;
+    idempotencyKey?: string;
+  },
 ): Record<string, string> {
   const blocked = new Set([
     'connection',
@@ -234,6 +290,9 @@ function forwardingHeaders(
     'x-hooktrials-event-id': deliveryContext.eventId,
     'x-hooktrials-delivery-id': deliveryContext.deliveryId,
     'x-hooktrials-delivery-attempt': String(deliveryContext.attempt),
+    ...(deliveryContext.idempotencyKey
+      ? { 'x-hooktrials-idempotency-key': deliveryContext.idempotencyKey }
+      : {}),
   };
 }
 
@@ -328,13 +387,49 @@ async function performDestinationDelivery(deliveryId: string) {
   if (!row || !['queued', 'retrying', 'delivering'].includes(row.delivery.state)) return;
   if (row.endpoint.mode !== 'protect' && row.delivery.kind === 'forward') return;
 
-  await withDestinationLock(row.endpoint.id, async () => {
+  const storedPolicy = decryptDeliveryPolicy(row.endpoint.encryptedDeliveryPolicy);
+  const legacyUrl = row.endpoint.encryptedDestinationUrl
+    ? decryptValue(row.endpoint.encryptedDestinationUrl, config.PAYLOAD_ENCRYPTION_KEY).toString(
+        'utf8',
+      )
+    : null;
+  const policy: StoredDeliveryPolicy = storedPolicy ?? {
+    strategy: 'single',
+    idempotencyScope: row.endpoint.idempotencyScope,
+    destinations: legacyUrl
+      ? [
+          {
+            id: 'primary',
+            name: 'Primary destination',
+            url: legacyUrl,
+            headers: {},
+            timeoutMs: row.endpoint.destinationTimeoutMs,
+            expectedMinStatus: row.endpoint.destinationExpectedMinStatus,
+            expectedMaxStatus: row.endpoint.destinationExpectedMaxStatus,
+            active: true,
+          },
+        ]
+      : [],
+  };
+  const metadata = row.delivery.auditMetadata as {
+    attemptNumber?: number;
+    destinationId?: string;
+    destinationIndex?: number;
+    idempotencyKey?: string;
+  };
+  const destinationIndex = Number(metadata.destinationIndex ?? 0);
+  const destination =
+    policy.destinations.find((item) => item.id === metadata.destinationId) ??
+    policy.destinations[destinationIndex] ??
+    policy.destinations[0];
+  if (!destination) return;
+
+  await withDestinationLock(`${row.endpoint.id}:${destination.id}`, async () => {
     const startedAt = new Date();
     await database.db
       .update(destinationDeliveries)
       .set({ state: 'delivering', startedAt })
       .where(eq(destinationDeliveries.id, deliveryId));
-    const metadata = row.delivery.auditMetadata as { attemptNumber?: number };
     const attemptNumber = Math.max(1, Number(metadata.attemptNumber ?? 1));
     let failureCategory = 'connect';
     let failureMessage = 'Destination delivery failed';
@@ -342,13 +437,10 @@ async function performDestinationDelivery(deliveryId: string) {
     let latencyMs: number | null = null;
     let responseBytes = 0;
     let retryDelay: number | null = null;
+    let failoverTriggered = false;
 
     try {
-      if (!row.endpoint.encryptedDestinationUrl) throw new Error('Destination is not configured');
-      const url = decryptValue(
-        row.endpoint.encryptedDestinationUrl,
-        config.PAYLOAD_ENCRYPTION_KEY,
-      ).toString('utf8');
+      const url = destination.url;
       const supportedMethods = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']);
       if (!supportedMethods.has(row.attempt.method)) {
         throw new NetworkPolicyError(
@@ -361,11 +453,20 @@ async function performDestinationDelivery(deliveryId: string) {
         headers: forwardingHeaders(
           row.attempt.encryptedHeaders,
           row.attempt.headers,
-          row.endpoint.encryptedDestinationHeaders,
-          { eventId: row.delivery.eventId, deliveryId, attempt: attemptNumber },
+          destination.headers && Object.keys(destination.headers).length > 0
+            ? encryptValue(JSON.stringify(destination.headers), config.PAYLOAD_ENCRYPTION_KEY)
+            : row.endpoint.encryptedDestinationHeaders,
+          {
+            eventId: row.delivery.eventId,
+            deliveryId,
+            attempt: attemptNumber,
+            idempotencyKey:
+              metadata.idempotencyKey ??
+              idempotencyKey(row.delivery.eventId, destination.id, policy.idempotencyScope, sha256),
+          },
         ),
         body: decryptValue(row.attempt.encryptedBody, config.PAYLOAD_ENCRYPTION_KEY),
-        timeoutMs: row.endpoint.destinationTimeoutMs,
+        timeoutMs: destination.timeoutMs,
         maxResponseBytes: 65_536,
         allowHttp: config.DEPLOYMENT_MODE === 'selfhost' && row.endpoint.allowPrivateNetworks,
         allowPrivateNetworks:
@@ -376,8 +477,8 @@ async function performDestinationDelivery(deliveryId: string) {
       latencyMs = response.latencyMs;
       responseBytes = response.body.length;
       if (
-        statusCode >= row.endpoint.destinationExpectedMinStatus &&
-        statusCode <= row.endpoint.destinationExpectedMaxStatus
+        statusCode >= destination.expectedMinStatus &&
+        statusCode <= destination.expectedMaxStatus
       ) {
         const completedAt = new Date();
         await database.db
@@ -415,25 +516,104 @@ async function performDestinationDelivery(deliveryId: string) {
     const exhausted = retriesExhausted(attemptNumber, row.endpoint.retryMaxAttempts);
     const completedAt = new Date();
     if (exhausted) {
-      await database.db
-        .update(destinationDeliveries)
-        .set({
-          state: 'dead_letter',
-          statusCode,
-          latencyMs,
-          responseBytes,
-          errorCategory: failureCategory,
-          errorMessage: failureMessage.slice(0, 512),
-          completedAt,
-        })
-        .where(eq(destinationDeliveries.id, deliveryId));
-      await updateDeliveryIncident(
-        row.delivery.resourceId,
-        row.resourceName,
-        failureCategory,
-        `delivery exhausted ${attemptNumber} attempts and entered dead-letter. No event was lost.`,
-        { deliveryId, statusCode, attemptNumber, state: 'dead_letter' },
+      let nextIndex = nextFailoverIndex(
+        policy.strategy,
+        destinationIndex,
+        policy.destinations.length,
       );
+      while (nextIndex !== null && !policy.destinations[nextIndex]?.active) {
+        nextIndex = nextFailoverIndex(policy.strategy, nextIndex, policy.destinations.length);
+      }
+      if (nextIndex !== null) {
+        failoverTriggered = true;
+        const nextDestination = policy.destinations[nextIndex]!;
+        const sequenceRows = await database.db
+          .select({ value: sql<number>`coalesce(max(${destinationDeliveries.sequence}), 0)` })
+          .from(destinationDeliveries)
+          .where(eq(destinationDeliveries.eventId, row.delivery.eventId));
+        const next = await database.db.transaction(async (tx) => {
+          await tx
+            .update(destinationDeliveries)
+            .set({
+              state: 'failed',
+              statusCode,
+              latencyMs,
+              responseBytes,
+              errorCategory: failureCategory,
+              errorMessage: failureMessage.slice(0, 512),
+              completedAt,
+              auditMetadata: { ...metadata, failoverTo: nextDestination.id },
+            })
+            .where(eq(destinationDeliveries.id, deliveryId));
+          return (
+            await tx
+              .insert(destinationDeliveries)
+              .values({
+                eventId: row.delivery.eventId,
+                inboundAttemptId: row.delivery.inboundAttemptId,
+                resourceId: row.delivery.resourceId,
+                sequence: Number(sequenceRows[0]?.value ?? 0) + 1,
+                kind: 'failover',
+                state: 'queued',
+                replayOfDeliveryId: deliveryId,
+                auditMetadata: {
+                  attemptNumber: 1,
+                  automatic: true,
+                  strategy: 'failover',
+                  destinationIndex: nextIndex,
+                  destinationId: nextDestination.id,
+                  destinationName: nextDestination.name,
+                  idempotencyKey: idempotencyKey(
+                    row.delivery.eventId,
+                    nextDestination.id,
+                    policy.idempotencyScope,
+                    sha256,
+                  ),
+                },
+              })
+              .returning({ id: destinationDeliveries.id })
+          )[0];
+        });
+        if (!next) throw new Error('Failover delivery creation returned no record');
+        await deliveryQueue.add(
+          'automatic-failover',
+          { deliveryId: next.id },
+          { jobId: `delivery-${next.id}`, removeOnComplete: 500, removeOnFail: true },
+        );
+        await updateDeliveryIncident(
+          row.delivery.resourceId,
+          row.resourceName,
+          failureCategory,
+          `primary destination exhausted ${attemptNumber} attempts; delivery failed over to ${nextDestination.name}.`,
+          {
+            deliveryId,
+            statusCode,
+            attemptNumber,
+            state: 'failed',
+            failoverTo: nextDestination.id,
+          },
+        );
+      } else {
+        await database.db
+          .update(destinationDeliveries)
+          .set({
+            state: 'dead_letter',
+            statusCode,
+            latencyMs,
+            responseBytes,
+            errorCategory: failureCategory,
+            errorMessage: failureMessage.slice(0, 512),
+            completedAt,
+          })
+          .where(eq(destinationDeliveries.id, deliveryId));
+        await updateDeliveryIncident(
+          row.delivery.resourceId,
+          row.resourceName,
+          failureCategory,
+          `delivery exhausted ${attemptNumber} attempts and entered dead-letter. No event was lost.`,
+          { deliveryId, statusCode, attemptNumber, state: 'dead_letter' },
+        );
+      }
     } else {
       const delay =
         retryDelay ??
@@ -469,7 +649,11 @@ async function performDestinationDelivery(deliveryId: string) {
               state: 'queued',
               nextAttemptAt,
               replayOfDeliveryId: deliveryId,
-              auditMetadata: { attemptNumber: attemptNumber + 1, automatic: true },
+              auditMetadata: {
+                ...metadata,
+                attemptNumber: attemptNumber + 1,
+                automatic: true,
+              },
             })
             .returning({ id: destinationDeliveries.id })
         )[0];
@@ -493,7 +677,7 @@ async function performDestinationDelivery(deliveryId: string) {
       JSON.stringify({
         eventId: row.delivery.eventId,
         deliveryId,
-        state: exhausted ? 'dead_letter' : 'retrying',
+        state: failoverTriggered ? 'failover' : exhausted ? 'dead_letter' : 'retrying',
       }),
     );
     await analyzeEvent(row.delivery.eventId);

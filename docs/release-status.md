@@ -2,6 +2,36 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.31.0` — Delivery policies for resilient routes
+
+Protect routes can now send one event to one destination, every destination or an ordered fallback
+chain. Each target keeps its own delivery evidence and retries carry a stable idempotency key.
+
+### Added
+
+- **Single**, **Fan-out** and **Failover** routing in Webhook Hub and route configuration.
+- Up to three HTTPS targets per policy, with per-target timeout, expected status range and optional
+  headers.
+- Per-destination or per-event idempotency scope through `X-HookTrials-Idempotency-Key`.
+- Redacted topology summaries in endpoint lists and a write-only target editor.
+- Public [delivery policy guidance](delivery-policies.md) and an updated OpenAPI contract.
+
+### Improved
+
+- Fan-out deliveries are tracked independently, so partial failure stays visible.
+- Failover hand-offs are recorded as first-class delivery events and remain available in Operations.
+- Existing endpoints without a policy continue to use their current single destination.
+
+### Fixed
+
+- Advanced route edits preserve existing write-only targets when the topology is not changed.
+- Destination URLs and custom headers remain encrypted and are never returned by the API.
+
+### Upgrade note
+
+The release includes an additive database migration. Existing routes, accounts and evidence remain
+compatible; Trial and Observe behavior is unchanged.
+
 ## Release `v0.30.0` — OpenAPI import for monitored integrations
 
 The dashboard can now read an OpenAPI 3.x contract, preview safe operations and create reviewed

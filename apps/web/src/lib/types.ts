@@ -39,6 +39,15 @@ export interface Endpoint {
   retryBaseDelayMs?: number;
   retryMaxDelayMs?: number;
   deliveryPaused?: boolean;
+  deliveryStrategy?: 'single' | 'fanout' | 'failover';
+  idempotencyScope?: 'destination' | 'event';
+  destinationCount?: number;
+  deliveryDestinations?: Array<{
+    id: string;
+    name: string;
+    host: string;
+    active: boolean;
+  }>;
   contractConfigured?: boolean;
   signatureProvider?: 'none' | 'github' | 'stripe';
   signatureConfigured?: boolean;

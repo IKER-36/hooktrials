@@ -9,7 +9,8 @@ provider -> validate -> persist -> 202 Accepted -> queue -> destination
 
 ## Delivery behavior
 
-- one idempotent initial delivery is created per correlated event;
+- one initial delivery is created per correlated event, or one per active target when Fan-out is
+  selected;
 - retries use bounded exponential backoff with jitter;
 - safe `Retry-After` values are respected;
 - destination concurrency is limited;
@@ -26,10 +27,13 @@ Every delivery sent to your destination includes stable HookTrials headers:
 - `x-hooktrials-event-id` identifies the provider event across all attempts;
 - `x-hooktrials-delivery-id` identifies the specific forward, retry or replay delivery;
 - `x-hooktrials-delivery-attempt` identifies the attempt number for that delivery.
+- `x-hooktrials-idempotency-key` stays stable for the selected event/destination scope across
+  retries.
 
-Use `x-hooktrials-event-id` as the idempotency key in the destination before enabling Protect. The
-same event is accepted and correlated once even when a provider retries it; a replay gets a new
-delivery ID while retaining its source in the audit trail.
+Use the dedicated idempotency header in the destination. The default destination scope gives every
+target its own stable key; event scope gives all targets the same key. The same event is accepted
+and correlated once even when a provider retries it; a replay gets a new delivery ID while retaining
+its source in the audit trail.
 
 Route control offers Fast, Balanced and Patient retry profiles, or a Custom policy. Profiles set the
 maximum attempts and exponential backoff bounds. A destination's `Retry-After` response is respected

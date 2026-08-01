@@ -156,6 +156,13 @@ export function LiveWebhooksPage() {
   const [destinationUrl, setDestinationUrl] = useState('');
   const [mode, setMode] = useState<'observe' | 'protect'>('observe');
   const [environment, setEnvironment] = useState<'test' | 'staging' | 'production'>('test');
+  const [deliveryStrategy, setDeliveryStrategy] = useState<'single' | 'fanout' | 'failover'>(
+    'single',
+  );
+  const [idempotencyScope, setIdempotencyScope] = useState<'destination' | 'event'>('destination');
+  const [additionalDestinations, setAdditionalDestinations] = useState<
+    Array<{ name: string; url: string }>
+  >([]);
   const [signatureSecret, setSignatureSecret] = useState('');
   const [confirmProduction, setConfirmProduction] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -286,6 +293,20 @@ export function LiveWebhooksPage() {
       setError('Check that the destination is reachable before creating the live route.');
       return;
     }
+    if (deliveryStrategy !== 'single' && mode !== 'protect') {
+      setError('Fan-out and failover require Protect mode.');
+      return;
+    }
+    const extraDestinations = additionalDestinations
+      .map((destination, index) => ({
+        name: destination.name.trim() || `Destination ${index + 2}`,
+        url: destination.url.trim(),
+      }))
+      .filter((destination) => destination.url.length > 0);
+    if (deliveryStrategy === 'failover' && extraDestinations.length === 0) {
+      setError('Failover needs at least one fallback destination.');
+      return;
+    }
     setSubmitting(true);
     setError('');
     setCreated(null);
@@ -295,6 +316,18 @@ export function LiveWebhooksPage() {
         mode,
         environment,
         destinationUrl: destinationUrl.trim(),
+        ...(deliveryStrategy !== 'single'
+          ? {
+              deliveryPolicy: {
+                strategy: deliveryStrategy,
+                idempotencyScope,
+                destinations: [
+                  { name: 'Primary destination', url: destinationUrl.trim() },
+                  ...extraDestinations,
+                ],
+              },
+            }
+          : {}),
         contract: providerContract(provider),
         signatureProvider: supportsSignature && signatureSecret.trim() ? provider : 'none',
         ...(supportsSignature && signatureSecret.trim()
@@ -305,6 +338,9 @@ export function LiveWebhooksPage() {
       setCreated(endpoint);
       setName('');
       setDestinationUrl('');
+      setDeliveryStrategy('single');
+      setIdempotencyScope('destination');
+      setAdditionalDestinations([]);
       setSignatureSecret('');
       setConfirmProduction(false);
       setPreflight(null);
@@ -557,6 +593,130 @@ export function LiveWebhooksPage() {
               <span>Accept first, queue durably and retry safely if your backend is down.</span>
             </label>
           </fieldset>
+
+          <section className="ht-delivery-policy" aria-labelledby="delivery-policy-title">
+            <div className="ht-delivery-policy-heading">
+              <div>
+                <p className="ht-kicker">Protect routing</p>
+                <h3 id="delivery-policy-title">Choose what happens when delivery branches</h3>
+              </div>
+              <span className="ht-policy-badge">Encrypted policy</span>
+            </div>
+            <div className="ht-monitor-form-grid">
+              <label className="ht-field">
+                Routing policy
+                <select
+                  value={deliveryStrategy}
+                  onChange={(event) => {
+                    const next = event.target.value as typeof deliveryStrategy;
+                    setDeliveryStrategy(next);
+                    if (next !== 'single' && mode !== 'protect') setMode('protect');
+                    if (next === 'single') setAdditionalDestinations([]);
+                  }}
+                >
+                  <option value="single">Single destination</option>
+                  <option value="fanout">Fan-out · deliver to every target</option>
+                  <option value="failover">Failover · move to the next target</option>
+                </select>
+                <small>
+                  Fan-out runs targets independently. Failover advances only after the retry budget
+                  is exhausted.
+                </small>
+              </label>
+              <label className="ht-field">
+                Idempotency scope
+                <select
+                  value={idempotencyScope}
+                  onChange={(event) =>
+                    setIdempotencyScope(event.target.value as typeof idempotencyScope)
+                  }
+                  disabled={deliveryStrategy === 'single'}
+                >
+                  <option value="destination">One key per destination</option>
+                  <option value="event">One key per event</option>
+                </select>
+                <small>HookTrials sends a stable `x-hooktrials-idempotency-key` on retries.</small>
+              </label>
+            </div>
+            {deliveryStrategy !== 'single' ? (
+              <div className="ht-policy-destinations">
+                <div className="ht-policy-destination-head">
+                  <b>{deliveryStrategy === 'fanout' ? 'Fan-out targets' : 'Failover chain'}</b>
+                  <span>Up to three HTTPS destinations. URLs are write-only after save.</span>
+                </div>
+                {additionalDestinations.map((destination, index) => (
+                  <div className="ht-policy-destination-row" key={`${index}-${destination.name}`}>
+                    <label className="ht-field">
+                      Target name
+                      <input
+                        value={destination.name}
+                        onChange={(event) =>
+                          setAdditionalDestinations((items) =>
+                            items.map((item, itemIndex) =>
+                              itemIndex === index ? { ...item, name: event.target.value } : item,
+                            ),
+                          )
+                        }
+                        placeholder={
+                          deliveryStrategy === 'failover'
+                            ? `Fallback ${index + 1}`
+                            : `Target ${index + 2}`
+                        }
+                        maxLength={80}
+                      />
+                    </label>
+                    <label className="ht-field ht-field-wide">
+                      HTTPS destination
+                      <input
+                        type="url"
+                        value={destination.url}
+                        onChange={(event) =>
+                          setAdditionalDestinations((items) =>
+                            items.map((item, itemIndex) =>
+                              itemIndex === index ? { ...item, url: event.target.value } : item,
+                            ),
+                          )
+                        }
+                        placeholder="https://backup.example.com/webhooks"
+                      />
+                    </label>
+                    <button
+                      className="button quiet"
+                      type="button"
+                      onClick={() =>
+                        setAdditionalDestinations((items) =>
+                          items.filter((_, itemIndex) => itemIndex !== index),
+                        )
+                      }
+                      aria-label={`Remove destination ${index + 2}`}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                {additionalDestinations.length < 2 ? (
+                  <button
+                    className="button secondary"
+                    type="button"
+                    onClick={() =>
+                      setAdditionalDestinations((items) => [
+                        ...items,
+                        {
+                          name:
+                            deliveryStrategy === 'failover'
+                              ? `Fallback ${items.length + 1}`
+                              : `Target ${items.length + 2}`,
+                          url: '',
+                        },
+                      ])
+                    }
+                  >
+                    Add destination
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
 
           {supportsSignature ? (
             <label className="ht-field">

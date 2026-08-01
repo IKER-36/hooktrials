@@ -25,3 +25,25 @@ export function computeBackoff(
 export function retriesExhausted(attemptNumber: number, maximumAttempts: number): boolean {
   return attemptNumber >= maximumAttempts;
 }
+
+export type DeliveryStrategy = 'single' | 'fanout' | 'failover';
+export type IdempotencyScope = 'destination' | 'event';
+
+export function idempotencyKey(
+  eventId: string,
+  destinationId: string,
+  scope: IdempotencyScope,
+  hash: (value: string) => string,
+): string {
+  return hash(scope === 'event' ? eventId : `${eventId}:${destinationId}`);
+}
+
+export function nextFailoverIndex(
+  strategy: DeliveryStrategy,
+  currentIndex: number,
+  destinationCount: number,
+): number | null {
+  if (strategy !== 'failover') return null;
+  const next = currentIndex + 1;
+  return next < destinationCount ? next : null;
+}

@@ -111,6 +111,15 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
     ),
   );
   const [deliveryPaused, setDeliveryPaused] = useState(endpoint.deliveryPaused ?? false);
+  const [deliveryStrategy, setDeliveryStrategy] = useState<
+    NonNullable<Endpoint['deliveryStrategy']>
+  >(endpoint.deliveryStrategy ?? 'single');
+  const [idempotencyScope, setIdempotencyScope] = useState<
+    NonNullable<Endpoint['idempotencyScope']>
+  >(endpoint.idempotencyScope ?? 'destination');
+  const [policyDestinations, setPolicyDestinations] = useState<
+    Array<{ name: string; url: string }>
+  >([]);
   const [contractMethod, setContractMethod] = useState('');
   const [contractHeaders, setContractHeaders] = useState('');
   const [contractJsonPaths, setContractJsonPaths] = useState('');
@@ -160,6 +169,9 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
       ),
     );
     setDeliveryPaused(endpoint.deliveryPaused ?? false);
+    setDeliveryStrategy(endpoint.deliveryStrategy ?? 'single');
+    setIdempotencyScope(endpoint.idempotencyScope ?? 'destination');
+    setPolicyDestinations([]);
     setSignatureProvider(endpoint.signatureProvider ?? 'none');
     setSignatureTolerance(String(endpoint.signatureToleranceSeconds ?? 300));
     setExpectedMinStatus(String(endpoint.destinationExpectedMinStatus ?? 200));
@@ -185,6 +197,27 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
     try {
       if (mode !== 'trial' && !endpoint.destinationConfigured && !destinationUrl.trim()) {
         throw new Error('A destination URL is required for Observe mode.');
+      }
+      const extraDestinations = policyDestinations
+        .map((destination, index) => ({
+          name: destination.name.trim() || `Destination ${index + 2}`,
+          url: destination.url.trim(),
+        }))
+        .filter((destination) => destination.url.length > 0);
+      const currentStrategy = endpoint.deliveryStrategy ?? 'single';
+      const currentScope = endpoint.idempotencyScope ?? 'destination';
+      const replacingAdvancedPolicy =
+        currentStrategy !== deliveryStrategy ||
+        (deliveryStrategy !== 'single' && currentScope !== idempotencyScope) ||
+        extraDestinations.length > 0;
+      if (replacingAdvancedPolicy) {
+        if (mode !== 'protect') throw new Error('Fan-out and failover require Protect mode.');
+        if (!destinationUrl.trim()) {
+          throw new Error('Re-enter the primary destination before changing the delivery policy.');
+        }
+        if (deliveryStrategy === 'failover' && extraDestinations.length === 0) {
+          throw new Error('Failover needs at least one fallback destination.');
+        }
       }
       let parsedHeaders: Record<string, string> | undefined;
       if (headers.trim()) {
@@ -237,6 +270,18 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
         signatureToleranceSeconds: Number(signatureTolerance),
         ...(destinationUrl.trim() ? { destinationUrl: destinationUrl.trim() } : {}),
         ...(parsedHeaders ? { destinationHeaders: parsedHeaders } : {}),
+        ...(replacingAdvancedPolicy
+          ? {
+              deliveryPolicy: {
+                strategy: deliveryStrategy,
+                idempotencyScope,
+                destinations: [
+                  { name: 'Primary destination', url: destinationUrl.trim() },
+                  ...extraDestinations,
+                ],
+              },
+            }
+          : {}),
         allowPrivateNetworks: setup?.deploymentMode === 'selfhost' ? allowPrivate : false,
         allowedPrivateCidrs:
           setup?.deploymentMode === 'selfhost' && allowPrivate
@@ -255,6 +300,7 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
       setRemoveContract(false);
       setSignatureSecret('');
       setConfirmProduction(false);
+      setPolicyDestinations([]);
       setSaved(true);
     } catch (requestError) {
       setError(
@@ -297,6 +343,128 @@ export function RouteConfiguration({ endpoint }: { endpoint: Endpoint }) {
             <span>Durable queue, retries and dead-letter recovery.</span>
           </article>
         </div>
+        <section className="ht-route-policy" aria-labelledby="route-policy-title">
+          <header>
+            <div>
+              <p className="ht-kicker">Delivery topology</p>
+              <h3 id="route-policy-title">Route events with intent</h3>
+            </div>
+            <span>
+              {endpoint.destinationCount ?? (endpoint.destinationConfigured ? 1 : 0)} target
+              {(endpoint.destinationCount ?? (endpoint.destinationConfigured ? 1 : 0)) === 1
+                ? ''
+                : 's'}
+            </span>
+          </header>
+          {endpoint.deliveryDestinations?.length ? (
+            <div className="ht-route-policy-current" aria-label="Configured delivery targets">
+              {endpoint.deliveryDestinations.map((destination) => (
+                <span key={destination.id}>
+                  <i aria-hidden="true" /> {destination.name} · {destination.host}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          <div className="ht-monitor-form-grid">
+            <label className="ht-field">
+              Routing policy
+              <select
+                value={deliveryStrategy}
+                onChange={(event) => {
+                  const next = event.target.value as NonNullable<Endpoint['deliveryStrategy']>;
+                  setDeliveryStrategy(next);
+                  if (next !== 'single') setMode('protect');
+                  if (next === 'single') setPolicyDestinations([]);
+                }}
+              >
+                <option value="single">Single destination</option>
+                <option value="fanout">Fan-out · every target</option>
+                <option value="failover">Failover · next target on exhaustion</option>
+              </select>
+            </label>
+            <label className="ht-field">
+              Idempotency scope
+              <select
+                value={idempotencyScope}
+                onChange={(event) =>
+                  setIdempotencyScope(
+                    event.target.value as NonNullable<Endpoint['idempotencyScope']>,
+                  )
+                }
+                disabled={deliveryStrategy === 'single'}
+              >
+                <option value="destination">Per destination</option>
+                <option value="event">Per event</option>
+              </select>
+            </label>
+          </div>
+          {deliveryStrategy !== 'single' ? (
+            <div className="ht-route-policy-edit">
+              <p>
+                For security, destinations are write-only. Re-enter the primary URL above and add
+                every fallback/target when replacing this policy.
+              </p>
+              {policyDestinations.map((destination, index) => (
+                <div className="ht-policy-destination-row" key={`${index}-${destination.name}`}>
+                  <label className="ht-field">
+                    Target name
+                    <input
+                      value={destination.name}
+                      onChange={(event) =>
+                        setPolicyDestinations((items) =>
+                          items.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, name: event.target.value } : item,
+                          ),
+                        )
+                      }
+                      placeholder={`Fallback ${index + 1}`}
+                    />
+                  </label>
+                  <label className="ht-field ht-field-wide">
+                    HTTPS destination
+                    <input
+                      type="url"
+                      value={destination.url}
+                      onChange={(event) =>
+                        setPolicyDestinations((items) =>
+                          items.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, url: event.target.value } : item,
+                          ),
+                        )
+                      }
+                      placeholder="https://backup.example.com/webhooks"
+                    />
+                  </label>
+                  <button
+                    className="button quiet"
+                    type="button"
+                    onClick={() =>
+                      setPolicyDestinations((items) =>
+                        items.filter((_, itemIndex) => itemIndex !== index),
+                      )
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              {policyDestinations.length < 2 ? (
+                <button
+                  className="button secondary"
+                  type="button"
+                  onClick={() =>
+                    setPolicyDestinations((items) => [
+                      ...items,
+                      { name: `Fallback ${items.length + 1}`, url: '' },
+                    ])
+                  }
+                >
+                  Add target
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
         <div className="ht-monitor-form-grid">
           <label className="ht-field">
             Mode

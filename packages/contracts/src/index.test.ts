@@ -5,6 +5,7 @@ import {
   apiKeyInputSchema,
   createEndpointInputSchema,
   destinationPreflightInputSchema,
+  deliveryPolicyInputSchema,
   evidenceExportQuerySchema,
   evidenceListQuerySchema,
   incidentTriageInputSchema,
@@ -111,6 +112,45 @@ describe('createEndpointInputSchema', () => {
   it('accepts pausing outbound Protect delivery', () => {
     const result = updateEndpointInputSchema.safeParse({ deliveryPaused: true });
     expect(result.success).toBe(true);
+  });
+
+  it('accepts a protected fan-out policy without exposing destination data', () => {
+    const input = createEndpointInputSchema.parse({
+      name: 'fan-out-route',
+      mode: 'protect',
+      deliveryPolicy: {
+        strategy: 'fanout',
+        idempotencyScope: 'destination',
+        destinations: [
+          { name: 'primary', url: 'https://api.example.com/primary' },
+          { name: 'audit', url: 'https://audit.example.com/events' },
+        ],
+      },
+    });
+    expect(input.deliveryPolicy?.destinations).toHaveLength(2);
+  });
+
+  it('requires a fallback for failover and Protect mode for advanced routing', () => {
+    expect(
+      deliveryPolicyInputSchema.safeParse({
+        strategy: 'failover',
+        destinations: [{ name: 'primary', url: 'https://api.example.com/primary' }],
+      }).success,
+    ).toBe(false);
+    expect(
+      createEndpointInputSchema.safeParse({
+        name: 'observe-fan-out',
+        mode: 'observe',
+        destinationUrl: 'https://api.example.com/primary',
+        deliveryPolicy: {
+          strategy: 'fanout',
+          destinations: [
+            { name: 'primary', url: 'https://api.example.com/primary' },
+            { name: 'audit', url: 'https://audit.example.com/events' },
+          ],
+        },
+      }).success,
+    ).toBe(false);
   });
 });
 

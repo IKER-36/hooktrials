@@ -19,6 +19,7 @@ import {
   verifyWebhookSignature,
   type WebhookContract,
 } from '@hooktrials/integration-engine';
+import { idempotencyKey } from '@hooktrials/delivery-engine';
 import { NetworkPolicyError, safeRequest } from '@hooktrials/network-policy';
 import {
   builtInScenarios,
@@ -104,10 +105,43 @@ function decryptContract(value: string | null): WebhookContract | null {
   return text ? (JSON.parse(text) as WebhookContract) : null;
 }
 
+type StoredDeliveryDestination = {
+  id: string;
+  name: string;
+  url: string;
+  headers: Record<string, string>;
+  timeoutMs: number;
+  expectedMinStatus: number;
+  expectedMaxStatus: number;
+  active: boolean;
+};
+type StoredDeliveryPolicy = {
+  strategy: 'single' | 'fanout' | 'failover';
+  idempotencyScope: 'destination' | 'event';
+  destinations: StoredDeliveryDestination[];
+};
+
+function decryptDeliveryPolicy(value: string | null): StoredDeliveryPolicy | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(
+      decryptValue(value, config.PAYLOAD_ENCRYPTION_KEY).toString('utf8'),
+    ) as StoredDeliveryPolicy;
+    return parsed && Array.isArray(parsed.destinations) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function destinationHeaders(
   inbound: Record<string, string | string[] | undefined>,
   encrypted: string | null,
-  deliveryContext?: { eventId: string; deliveryId: string; attempt: number },
+  deliveryContext?: {
+    eventId: string;
+    deliveryId: string;
+    attempt: number;
+    idempotencyKey?: string;
+  },
 ) {
   const blocked = new Set([
     'connection',
@@ -144,6 +178,9 @@ function destinationHeaders(
     headers['x-hooktrials-event-id'] = deliveryContext.eventId;
     headers['x-hooktrials-delivery-id'] = deliveryContext.deliveryId;
     headers['x-hooktrials-delivery-attempt'] = String(deliveryContext.attempt);
+    if (deliveryContext.idempotencyKey) {
+      headers['x-hooktrials-idempotency-key'] = deliveryContext.idempotencyKey;
+    }
   }
   return headers;
 }
@@ -247,6 +284,9 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
       name: endpoints.name,
       mode: endpoints.mode,
       deliveryPaused: endpoints.deliveryPaused,
+      deliveryStrategy: endpoints.deliveryStrategy,
+      idempotencyScope: endpoints.idempotencyScope,
+      encryptedDeliveryPolicy: endpoints.encryptedDeliveryPolicy,
       encryptedDestinationUrl: endpoints.encryptedDestinationUrl,
       encryptedDestinationHeaders: endpoints.encryptedDestinationHeaders,
       destinationTimeoutMs: endpoints.destinationTimeoutMs,
@@ -397,8 +437,33 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
   }
 
   if (managed) {
-    const destinationUrl = decryptText(endpoint.encryptedDestinationUrl);
-    if (!destinationUrl || !endpoint.resourceId) {
+    const storedPolicy = decryptDeliveryPolicy(endpoint.encryptedDeliveryPolicy);
+    const legacyUrl = decryptText(endpoint.encryptedDestinationUrl);
+    const policy: StoredDeliveryPolicy | null =
+      storedPolicy ??
+      (legacyUrl
+        ? {
+            strategy: 'single',
+            idempotencyScope: 'destination',
+            destinations: [
+              {
+                id: 'primary',
+                name: 'Primary destination',
+                url: legacyUrl,
+                headers: {},
+                timeoutMs: endpoint.destinationTimeoutMs,
+                expectedMinStatus: endpoint.destinationExpectedMinStatus,
+                expectedMaxStatus: endpoint.destinationExpectedMaxStatus,
+                active: true,
+              },
+            ],
+          }
+        : null);
+    const activeDestinations =
+      policy?.destinations.filter((destination) => destination.active) ?? [];
+    const destination = activeDestinations[0];
+    const destinationUrl = destination?.url ?? null;
+    if (!destination || !destinationUrl || !endpoint.resourceId) {
       await database.db
         .update(attempts)
         .set({ responseStatus: 503 })
@@ -414,28 +479,52 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
             .limit(1)
         )[0]
       : null;
-    const delivery =
-      previousDelivery ??
-      (
-        await database.db
+    const deliveryRows = previousDelivery
+      ? [previousDelivery]
+      : await database.db
           .insert(destinationDeliveries)
-          .values({
-            eventId: event.id,
-            inboundAttemptId: attemptId,
-            resourceId: endpoint.resourceId,
-            state: protectedMode ? 'queued' : 'delivering',
-            auditMetadata: protectedMode ? { attemptNumber: 1, automatic: true } : {},
-          })
-          .returning({ id: destinationDeliveries.id })
-      )[0];
+          .values(
+            (protectedMode && policy?.strategy === 'fanout'
+              ? activeDestinations
+              : [destination]
+            ).map((target, index) => ({
+              eventId: event.id,
+              inboundAttemptId: attemptId,
+              resourceId: endpoint.resourceId!,
+              sequence: index + 1,
+              state: protectedMode ? ('queued' as const) : ('delivering' as const),
+              auditMetadata: protectedMode
+                ? {
+                    attemptNumber: 1,
+                    automatic: true,
+                    strategy: policy?.strategy ?? 'single',
+                    destinationIndex: activeDestinations.indexOf(target),
+                    destinationId: target.id,
+                    destinationName: target.name,
+                    idempotencyKey: idempotencyKey(
+                      event.id,
+                      target.id,
+                      policy?.idempotencyScope ?? 'destination',
+                      sha256,
+                    ),
+                  }
+                : {},
+            })),
+          )
+          .returning({ id: destinationDeliveries.id });
+    const delivery = deliveryRows[0];
     if (!delivery) throw new Error('Destination delivery creation returned no record');
 
     if (protectedMode) {
       if (!previousDelivery && !endpoint.deliveryPaused) {
-        await deliveryQueue.add(
-          'protected-forward',
-          { deliveryId: delivery.id },
-          { jobId: `delivery-${delivery.id}`, removeOnComplete: 500, removeOnFail: true },
+        await Promise.all(
+          deliveryRows.map((item) =>
+            deliveryQueue.add(
+              'protected-forward',
+              { deliveryId: item.id },
+              { jobId: `delivery-${item.id}`, removeOnComplete: 500, removeOnFail: true },
+            ),
+          ),
         );
       }
       await Promise.all([
@@ -471,6 +560,12 @@ async function ingest(request: FastifyRequest<{ Params: { token: string } }>, re
           eventId: event.id,
           deliveryId: delivery.id,
           attempt: 1,
+          idempotencyKey: idempotencyKey(
+            event.id,
+            destination.id,
+            policy?.idempotencyScope ?? 'destination',
+            sha256,
+          ),
         }),
         body,
         timeoutMs: endpoint.destinationTimeoutMs,

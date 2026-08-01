@@ -17,6 +17,7 @@
     "@hooktrials/config": "workspace:*",
     "@hooktrials/crypto": "workspace:*",
     "@hooktrials/database": "workspace:*",
+    "@hooktrials/delivery-engine": "workspace:*",
     "@hooktrials/logger": "workspace:*",
     "@hooktrials/integration-engine": "workspace:*",
     "@hooktrials/network-policy": "workspace:*",

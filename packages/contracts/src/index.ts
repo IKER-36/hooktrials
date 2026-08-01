@@ -105,6 +105,67 @@ export const webhookContractSchema = z.object({
   jsonPaths: z.record(jsonPathSchema, contractValueSchema).default({}),
 });
 
+const deliveryDestinationSchema = z.object({
+  id: z.string().trim().min(2).max(40).optional(),
+  name: z.string().trim().min(2).max(80),
+  url: z.string().url().max(2_048),
+  headers: outboundHeadersSchema.default({}),
+  timeoutMs: z.number().int().min(1_000).max(30_000).default(10_000),
+  expectedMinStatus: z.number().int().min(100).max(599).default(200),
+  expectedMaxStatus: z.number().int().min(100).max(599).default(299),
+  active: z.boolean().default(true),
+});
+
+export const deliveryPolicyInputSchema = z
+  .object({
+    strategy: z.enum(['single', 'fanout', 'failover']).default('single'),
+    idempotencyScope: z.enum(['destination', 'event']).default('destination'),
+    destinations: z.array(deliveryDestinationSchema).min(1).max(3),
+  })
+  .superRefine((value, context) => {
+    const names = new Set<string>();
+    value.destinations.forEach((destination, index) => {
+      if (names.has(destination.name.toLowerCase())) {
+        context.addIssue({
+          code: 'custom',
+          path: ['destinations', index, 'name'],
+          message: 'Destination names must be unique',
+        });
+      }
+      names.add(destination.name.toLowerCase());
+      if (destination.expectedMinStatus > destination.expectedMaxStatus) {
+        context.addIssue({
+          code: 'custom',
+          path: ['destinations', index, 'expectedMaxStatus'],
+          message: 'Invalid destination status range',
+        });
+      }
+    });
+    if (value.strategy === 'failover' && value.destinations.length < 2) {
+      context.addIssue({
+        code: 'custom',
+        path: ['destinations'],
+        message: 'Failover requires a primary and at least one fallback',
+      });
+    }
+    if (value.strategy === 'single' && value.destinations.length > 1) {
+      context.addIssue({
+        code: 'custom',
+        path: ['destinations'],
+        message: 'Single delivery accepts one destination',
+      });
+    }
+    if (!value.destinations.some((destination) => destination.active)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['destinations'],
+        message: 'At least one destination must be active',
+      });
+    }
+  });
+
+export type DeliveryPolicyInput = z.infer<typeof deliveryPolicyInputSchema>;
+
 export const createEndpointInputSchema = z
   .object({
     name: z.string().trim().min(2).max(80),
@@ -126,10 +187,15 @@ export const createEndpointInputSchema = z
     signatureToleranceSeconds: z.number().int().min(30).max(3_600).default(300),
     destinationExpectedMinStatus: z.number().int().min(100).max(599).default(200),
     destinationExpectedMaxStatus: z.number().int().min(100).max(599).default(299),
+    deliveryPolicy: deliveryPolicyInputSchema.optional(),
     confirmProductionImpact: z.boolean().default(false),
   })
   .superRefine((value, context) => {
-    if (value.mode !== 'trial' && !value.destinationUrl) {
+    if (
+      value.mode !== 'trial' &&
+      !value.destinationUrl &&
+      !value.deliveryPolicy?.destinations.length
+    ) {
       context.addIssue({
         code: 'custom',
         path: ['destinationUrl'],
@@ -148,6 +214,17 @@ export const createEndpointInputSchema = z
         code: 'custom',
         path: ['destinationExpectedMaxStatus'],
         message: 'Invalid status range',
+      });
+    }
+    if (
+      value.deliveryPolicy &&
+      value.mode !== 'protect' &&
+      value.deliveryPolicy.strategy !== 'single'
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['deliveryPolicy', 'strategy'],
+        message: 'Fan-out and failover require Protect mode',
       });
     }
     if (
@@ -183,6 +260,7 @@ export const updateEndpointInputSchema = z
     signatureToleranceSeconds: z.number().int().min(30).max(3_600).optional(),
     destinationExpectedMinStatus: z.number().int().min(100).max(599).optional(),
     destinationExpectedMaxStatus: z.number().int().min(100).max(599).optional(),
+    deliveryPolicy: deliveryPolicyInputSchema.nullable().optional(),
     allowPrivateNetworks: z.boolean().optional(),
     allowedPrivateCidrs: z.array(z.string().max(64)).max(16).optional(),
     confirmProductionImpact: z.boolean().optional(),

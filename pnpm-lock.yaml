@@ -138,6 +138,9 @@ importers:
       '@hooktrials/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@hooktrials/delivery-engine':
+        specifier: workspace:*
+        version: link:../../packages/delivery-engine
       '@hooktrials/integration-engine':
         specifier: workspace:*
         version: link:../../packages/integration-engine

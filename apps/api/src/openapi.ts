@@ -31,7 +31,7 @@ export function buildOpenApiDocument(apiOrigin: string): Record<string, unknown>
     jsonSchemaDialect: 'https://json-schema.org/draft/2020-12/schema',
     info: {
       title: 'HookTrials API',
-      version: '0.30.0',
+      version: '0.31.0',
       description:
         'A redacted contract for integration setup, synthetic reliability checks and evidence export. Payload bodies, captured headers, credentials and destination URLs are never returned by the automation surface.',
       license: { name: 'AGPL-3.0-only', identifier: 'AGPL-3.0-only' },
@@ -318,6 +318,40 @@ export function buildOpenApiDocument(apiOrigin: string): Record<string, unknown>
             mode: { type: 'string', enum: ['trial', 'observe', 'protect'] },
             scenarioId: { type: 'string' },
             destinationUrl: { type: 'string', format: 'uri', writeOnly: true },
+            deliveryPolicy: { ...ref('DeliveryPolicyRequest'), writeOnly: true },
+          },
+        },
+        DeliveryPolicyRequest: {
+          type: 'object',
+          required: ['destinations'],
+          description:
+            'Protect-mode routing policy. Destination URLs and headers are accepted on write and never returned.',
+          properties: {
+            strategy: { type: 'string', enum: ['single', 'fanout', 'failover'], default: 'single' },
+            idempotencyScope: {
+              type: 'string',
+              enum: ['destination', 'event'],
+              default: 'destination',
+            },
+            destinations: {
+              type: 'array',
+              minItems: 1,
+              maxItems: 3,
+              items: {
+                type: 'object',
+                required: ['name', 'url'],
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string', minLength: 2, maxLength: 80 },
+                  url: { type: 'string', format: 'uri', writeOnly: true },
+                  headers: { type: 'object', writeOnly: true },
+                  timeoutMs: { type: 'integer', minimum: 1000, maximum: 30000 },
+                  expectedMinStatus: { type: 'integer', minimum: 100, maximum: 599 },
+                  expectedMaxStatus: { type: 'integer', minimum: 100, maximum: 599 },
+                  active: { type: 'boolean', default: true },
+                },
+              },
+            },
           },
         },
         Endpoint: {

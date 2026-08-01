@@ -81,8 +81,9 @@ production delivery paths.
 
 **Trial** returns deterministic responses without contacting a destination. **Observe** forwards once
 and records both sides. **Protect** persists the event first, retries with bounded backoff and moves
-exhausted deliveries to the dead-letter inbox. Destination URLs, headers, contracts and signing
-secrets are encrypted and write-only.
+exhausted deliveries to the dead-letter inbox. Protect can use one destination, Fan-out to deliver
+to every active target, or ordered Failover to move to the next target after retry exhaustion.
+Destination URLs, headers, contracts and signing secrets are encrypted and write-only.
 
 ## Failure scenarios
 
