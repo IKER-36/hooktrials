@@ -18,6 +18,8 @@ import './styles/ui-modules.css';
 import './styles/buttons.css';
 // Shared page composition wins over the historical module layers.
 import './styles/visual-system.css';
+// Final cross-module polish: shared metric, surface and responsive contracts.
+import './styles/ui-polish.css';
 
 const storedTheme = localStorage.getItem('ht.theme');
 const initialTheme =

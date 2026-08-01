@@ -18,7 +18,8 @@ The system prioritizes operational clarity, legibility and predictable hierarchy
 - Green is the product action and healthy-state color. Amber and red only communicate real warning
   or failure states.
 - Icons come from Lucide and accompany navigation or meaning. They are not decorative filler.
-- Motion is short and purposeful: focus feedback, state transitions and live-state pulses.
+- Motion is short and purposeful: focus feedback, state transitions and live-state pulses. Route
+  transitions and telemetry entrances use Motion and always respect `prefers-reduced-motion`.
 
 ## Source layout
 
@@ -29,6 +30,10 @@ The system prioritizes operational clarity, legibility and predictable hierarchy
 - `apps/web/src/styles/theme.css`: theme compatibility for product and public surfaces.
 - `apps/web/src/styles/refined.css`: authoritative visual layer for spacing, surfaces, contrast,
   typography and responsive refinements.
+- `apps/web/src/styles/ui-polish.css`: final shared control rhythm, metric surfaces, list states and
+  chart containment. It is loaded last and uses the semantic tokens above.
+- `apps/web/src/components/ui/MetricCard.tsx` and `RouteTransition.tsx`: shared metric and route
+  transition contracts. Telemetry charts use Recharts only where a visual comparison is useful.
 
 Keeping layout and visual overrides separate allows the product to evolve without changing API or
 workflow behavior. New components should use semantic `--ht-*` tokens rather than hard-coded brand
@@ -43,8 +48,9 @@ colors.
 3. Keep body copy in Inter. Use mono only where exact characters or timing matter.
 4. Never use green for decoration beside a red or amber operational state that needs attention.
 5. Every interactive element requires a visible focus state and at least a 36px touch target.
-6. Desktop navigation lives in the left workspace rail. Mobile navigation becomes a six-icon bottom
-   bar with accessible labels.
+6. Desktop navigation lives in the left workspace rail. Mobile navigation keeps four primary
+   destinations visible and places the remaining modules in an explicit **More** sheet with
+   accessible labels.
 7. Respect `prefers-reduced-motion`; no workflow may depend on animation.
 8. A route change starts at the top of the workspace. Scroll position from another module must not
    leak into the next screen.
@@ -55,10 +61,14 @@ colors.
     translated accessible names and tooltips.
 11. Do not repeat navigation destinations or generic health copy above every page. Product routes
     begin with their own title and actions; global utilities remain in the rail.
+12. Audit history is not a standalone navigation destination. Redacted operational activity remains
+    available where it is actionable in Operations, and `/app/audit` is retained only as a
+    compatibility redirect.
 
 ## Accessibility and verification
 
 Every visual change must be checked at desktop and mobile widths, with authenticated and public
-surfaces. The required gate is `pnpm check`; local browser validation should cover login, Control
-Center, Webhook Hub, Monitoring, Operations, Trial endpoints, Failure scenarios, Guided Demo and
-public evidence/status views.
+surfaces. The required gate is `pnpm check`; local browser validation should cover login, Home,
+Control Center, Webhook Hub, Monitoring, Operations, Trial endpoints, Failure scenarios, Guided Demo
+and public evidence/status views. Check at least 320, 768, 1024 and 1440px in both themes, plus a
+keyboard pass and a reduced-motion pass.

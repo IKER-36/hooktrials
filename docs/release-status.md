@@ -2,6 +2,30 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.2` — Workspace visual polish
+
+Released 1 August 2026. The dashboard now uses a more consistent visual rhythm across modules,
+with a clearer Home overview and a mobile navigation that keeps the full product reachable.
+
+### Added
+
+- Home metric surfaces for resource totals, health state and recovery signals.
+- Calm route transitions and telemetry motion that respect reduced-motion preferences.
+- A compact mobile **More** menu for secondary workspace destinations.
+
+### Improved
+
+- Shared button, field, panel, list and focus treatments across the authenticated workspace.
+- Stable chart and metric layouts that remain readable while data is loading.
+- Dark and light theme contrast for hover, focus and selected states.
+
+### Fixed
+
+- Mobile navigation wrapping and hidden destinations at narrow widths.
+- Page movement during chart loading and inconsistent action sizing between modules.
+
+Read the [v0.33.2 release notes](releases/v0.33.2.md).
+
 ## Release `v0.33.1` — Self-host diagnostics
 
 Released 1 August 2026. Self-hosted operators can now run a deeper read-only preflight before an

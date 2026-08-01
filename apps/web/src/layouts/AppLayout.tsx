@@ -36,6 +36,7 @@ import { Brand } from '../components/Brand';
 import { CommandPalette, type PaletteCommand } from '../components/app/CommandPalette';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { OnboardingTour } from '../components/app/OnboardingTour';
+import { RouteTransition } from '../components/ui/RouteTransition';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
 import { apiRequest, isAuthError, readableError } from '../lib/api';
@@ -342,8 +343,23 @@ export function AppLayout() {
     location.pathname === '/app/settings'
       ? { area: 'resources' as const, areaLabel: 'Account', label: 'Account settings' }
       : (navigationItems.find(isCurrent) ?? navigationItems[0]!);
-  const secondaryGroups = navigation.filter((group) => group.id !== 'product');
-  const secondaryActive = secondaryGroups.some((group) => group.items.some(isCurrent));
+  // Keep the mobile bar to five equal destinations. The remaining product
+  // routes are intentionally discoverable in More instead of wrapping into a
+  // second row or disappearing behind horizontal scrolling.
+  const mobilePrimaryPaths = new Set([
+    '/app',
+    '/app/live-webhooks',
+    '/app/monitor',
+    '/app/operations',
+  ]);
+  const mobilePrimaryItems = navigation[0]!.items.filter((item) => mobilePrimaryPaths.has(item.to));
+  const mobileMoreGroups = navigation
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !mobilePrimaryPaths.has(item.to)),
+    }))
+    .filter((group) => group.items.length > 0);
+  const secondaryActive = mobileMoreGroups.some((group) => group.items.some(isCurrent));
   const closeCommand = () => setCommandOpen(false);
   const commandItems: PaletteCommand[] = [
     ...navigationItems.map((item) => ({
@@ -457,7 +473,7 @@ export function AppLayout() {
           items needed 702px of track, so half of them were unreachable on a
           phone behind a scroll with no scrollbar and no other affordance. */}
       <nav className="ht-mobilenav" aria-label="Dashboard sections">
-        {navigation[0]!.items.map(({ to, label, icon: Icon, end }) => (
+        {mobilePrimaryItems.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} aria-label={label}>
             <Icon aria-hidden="true" />
             <span>{label}</span>
@@ -482,7 +498,7 @@ export function AppLayout() {
             onClick={() => setMoreOpen(false)}
           />
           <div className="ht-mobilemore" id="ht-mobilemore">
-            {secondaryGroups.map((group) => (
+            {mobileMoreGroups.map((group) => (
               <div key={group.id}>
                 <p>{group.label}</p>
                 {group.items.map(({ to, label, icon: Icon, count, end }) => (
@@ -649,7 +665,9 @@ export function AppLayout() {
             <kbd>⌘K</kbd>
           </button>
         </div>
-        <Outlet context={context} />
+        <RouteTransition>
+          <Outlet context={context} />
+        </RouteTransition>
       </main>
       <CommandPalette
         open={commandOpen}

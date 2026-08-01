@@ -1,0 +1,259 @@
+/* HookTrials visual system v4.
+ *
+ * This layer is intentionally small and loaded last. It standardises the
+ * repeated interaction primitives without replacing the sidebar or changing
+ * module semantics: route transitions, metric tiles, forms, lists and chart
+ * surfaces all share the same measurable rhythm.
+ */
+
+html[data-theme] .ht-route-transition {
+  width: 100%;
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main {
+  --ht-content-gap: clamp(18px, 2.2vw, 28px);
+  --ht-control-height: 38px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-page {
+  gap: var(--ht-content-gap);
+}
+
+/* One action rhythm: no button should be visually louder because a module
+ * authored it in a different era. */
+html[data-theme] .ht-shell .ht-main .button {
+  min-height: var(--ht-control-height);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+html[data-theme] .ht-shell .ht-main .button.compact {
+  min-height: 34px;
+  padding: 7px 11px;
+  font-size: 10px;
+}
+
+html[data-theme] .ht-shell .ht-main :where(input, select, textarea) {
+  border-radius: 8px;
+  background: var(--ht-surface-2);
+  box-shadow: none;
+}
+
+html[data-theme] .ht-shell .ht-main :where(input, select, textarea):focus {
+  border-color: color-mix(in srgb, var(--ht-green) 68%, var(--ht-hairline-bright));
+  background: var(--ht-surface-1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ht-green) 14%, transparent);
+}
+
+/* Shared surface depth: borders carry hierarchy; shadows are reserved for
+ * dialogs and menus so the workspace remains calm in both themes. */
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-home-panel,
+    .ht-home-chart-panel,
+    .ht-operation-panel,
+    .ht-monitor-create,
+    .ht-monitor-list,
+    .ht-monitor-detail,
+    .ht-control-center,
+    .ht-live-connect,
+    .ht-live-routes,
+    .ht-live-activation,
+    .ht-studio-library,
+    .ht-studio-editor,
+    .ht-docs-nav,
+    .ht-docs-article,
+    .ht-api-key-create,
+    .ht-api-key-guide,
+    .ht-api-key-list,
+    .ht-settings-section
+  ) {
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(.ht-home-panel, .ht-home-chart-panel, .ht-operation-panel)
+  > header {
+  min-height: 66px;
+  padding: 15px 18px;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(.ht-home-panel, .ht-home-chart-panel, .ht-operation-panel)
+  > header
+  h2 {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+/* Home metric strip. The icon is a secondary cue, never the only state
+ * indicator, so colour-blind users still get label/value/detail text. */
+html[data-theme] .ht-shell .ht-main .ht-home-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 12px;
+  background: var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-metric-card {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 15px 16px;
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-metric-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--ht-muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-metric-card-topline svg {
+  width: 14px;
+  height: 14px;
+  color: var(--ht-faint);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-metric-card strong {
+  color: var(--ht-ink);
+  font: 700 clamp(22px, 2.1vw, 28px)/1 var(--ht-mono);
+  letter-spacing: -0.06em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-metric-card small {
+  overflow: hidden;
+  color: var(--ht-faint);
+  font-size: 10px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-metric-card.healthy strong,
+html[data-theme] .ht-shell .ht-main .ht-metric-card.healthy .ht-metric-card-topline svg {
+  color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-metric-card.warning strong,
+html[data-theme] .ht-shell .ht-main .ht-metric-card.warning .ht-metric-card-topline svg {
+  color: var(--ht-amber);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-metric-card.danger strong,
+html[data-theme] .ht-shell .ht-main .ht-metric-card.danger .ht-metric-card-topline svg {
+  color: var(--ht-red);
+}
+
+/* All list rows share a predictable hover and focus target. */
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-home-resource-list > a,
+    .ht-home-activity-list > a,
+    .ht-home-quick-list > a,
+    .ht-home-priority,
+    .ht-operation-list article,
+    .ht-dlq-list article,
+    .ht-alert-audit-list article
+  ) {
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(
+    .ht-home-resource-list > a,
+    .ht-home-activity-list > a,
+    .ht-home-quick-list > a,
+    .ht-home-priority
+  ):hover {
+  background: var(--ht-surface-hover);
+}
+
+/* Charts are instruments, not decorative cards. Keep the plot area stable so
+ * lazy-loaded Recharts never causes the page to jump. */
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel {
+  contain: layout paint;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel .recharts-wrapper,
+html[data-theme] .ht-shell .ht-main .ht-home-chart-panel .recharts-surface {
+  overflow: visible;
+}
+
+@media (max-width: 1100px) {
+  html[data-theme] .ht-shell .ht-main .ht-home-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-metric-card:nth-child(4),
+  html[data-theme] .ht-shell .ht-main .ht-metric-card:nth-child(5) {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 760px) {
+  html[data-theme] .ht-shell .ht-main .ht-home-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-metric-card {
+    padding: 13px 14px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-home-panel,
+  html[data-theme] .ht-shell .ht-main .ht-home-chart-panel,
+  html[data-theme] .ht-shell .ht-main .ht-operation-panel {
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 460px) {
+  html[data-theme] .ht-shell .ht-main .ht-home-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-metric-card strong {
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme]
+    .ht-shell
+    .ht-main
+    :where(
+      .ht-home-resource-list > a,
+      .ht-home-activity-list > a,
+      .ht-home-quick-list > a,
+      .ht-home-priority,
+      .ht-operation-list article,
+      .ht-dlq-list article,
+      .ht-alert-audit-list article
+    ) {
+    transition: none;
+  }
+}

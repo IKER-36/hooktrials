@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   Bar,
   BarChart,
@@ -64,22 +65,8 @@ function shortLabel(value: string): string {
   return value.length > 17 ? `${value.slice(0, 15)}…` : value;
 }
 
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReduced(media.matches);
-    update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
-
-  return reduced;
-}
-
 export function HomeTelemetry({ routes, monitors, operations, reliability }: HomeTelemetryProps) {
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useReducedMotion() ?? false;
   const healthMix = useMemo<HealthPoint[]>(() => {
     const counts: Record<HealthTone, number> = { healthy: 0, degraded: 0, down: 0, new: 0 };
     routes.forEach((route) => {
@@ -117,7 +104,12 @@ export function HomeTelemetry({ routes, monitors, operations, reliability }: Hom
 
   return (
     <section className="ht-home-telemetry" aria-label="Workspace telemetry">
-      <article className="ht-home-chart-panel ht-home-health-chart">
+      <motion.article
+        className="ht-home-chart-panel ht-home-health-chart"
+        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={reducedMotion ? { duration: 0 } : { duration: 0.22, ease: 'easeOut' }}
+      >
         <header>
           <div>
             <p className="ht-kicker">RESOURCE HEALTH</p>
@@ -177,9 +169,16 @@ export function HomeTelemetry({ routes, monitors, operations, reliability }: Hom
             <p>Connect a route or add a monitor to see the workspace surface here.</p>
           </div>
         )}
-      </article>
+      </motion.article>
 
-      <article className="ht-home-chart-panel ht-home-coverage-chart">
+      <motion.article
+        className="ht-home-chart-panel ht-home-coverage-chart"
+        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={
+          reducedMotion ? { duration: 0 } : { duration: 0.22, delay: 0.05, ease: 'easeOut' }
+        }
+      >
         <header>
           <div>
             <p className="ht-kicker">MONITOR COVERAGE</p>
@@ -251,7 +250,7 @@ export function HomeTelemetry({ routes, monitors, operations, reliability }: Hom
             <ShieldCheck aria-hidden="true" /> {recovered} recoveries in 24h
           </span>
         </footer>
-      </article>
+      </motion.article>
     </section>
   );
 }

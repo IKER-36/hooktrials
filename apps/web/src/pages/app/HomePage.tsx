@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { MetricCard } from '../../components/ui/MetricCard';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { timeAgo } from '../../lib/format';
@@ -393,31 +394,40 @@ export function HomePage() {
           </section>
 
           <section className="ht-home-metrics" aria-label="Workspace metrics">
-            <article>
-              <span>Live routes</span>
-              <strong>{liveEndpoints.length}</strong>
-              <small>Webhook Hub</small>
-            </article>
-            <article>
-              <span>Trial endpoints</span>
-              <strong>{trialEndpoints.length}</strong>
-              <small>Safe synthetic paths</small>
-            </article>
-            <article>
-              <span>Monitors</span>
-              <strong>{monitors.length}</strong>
-              <small>{data?.reliability?.aggregate.checks ?? 0} checks in 24h</small>
-            </article>
-            <article className={openIncidents ? 'danger' : 'healthy'}>
-              <span>Open incidents</span>
-              <strong>{openIncidents}</strong>
-              <small>{unresolvedDeadLetters} unresolved deliveries</small>
-            </article>
-            <article className="healthy">
-              <span>Recoveries 24h</span>
-              <strong>{operations?.summary.protectedRecoveries24h ?? 0}</strong>
-              <small>Protected delivery paths</small>
-            </article>
+            <MetricCard
+              label="Live routes"
+              value={liveEndpoints.length}
+              detail="Webhook Hub"
+              icon={RadioTower}
+              tone={liveEndpoints.length ? 'healthy' : 'neutral'}
+            />
+            <MetricCard
+              label="Trial endpoints"
+              value={trialEndpoints.length}
+              detail="Safe synthetic paths"
+              icon={FlaskConical}
+            />
+            <MetricCard
+              label="Monitors"
+              value={monitors.length}
+              detail={`${data?.reliability?.aggregate.checks ?? 0} checks in 24h`}
+              icon={Radar}
+              tone={monitors.length ? 'healthy' : 'neutral'}
+            />
+            <MetricCard
+              label="Open incidents"
+              value={openIncidents}
+              detail={`${unresolvedDeadLetters} unresolved deliveries`}
+              icon={CircleAlert}
+              tone={openIncidents ? 'danger' : 'healthy'}
+            />
+            <MetricCard
+              label="Recoveries 24h"
+              value={operations?.summary.protectedRecoveries24h ?? 0}
+              detail="Protected delivery paths"
+              icon={ShieldCheck}
+              tone="healthy"
+            />
           </section>
 
           <Suspense fallback={<div className="ht-home-telemetry-loading" aria-hidden="true" />}>
