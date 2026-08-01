@@ -2,6 +2,28 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.6` — Unified operational timeline
+
+Released 1 August 2026. Operations now starts with one chronological view of the signals that need
+attention, while the existing incident, recovery and alert workspaces remain available below it.
+
+### Added
+
+- A **What changed recently** timeline combines incidents, dead-letter recovery and alert delivery
+  evidence in one view.
+- Activity can be filtered by incidents, recovery queue or alert delivery without losing the
+  surrounding operational context.
+- Each timeline item links directly to the queue where it can be investigated or resolved.
+
+### Improved
+
+- The removed standalone Audit History destination is now represented by contextual operational
+  evidence instead of a duplicate navigation surface.
+- Timeline rows use the same state, focus and responsive treatment as the rest of Operations.
+- Empty activity states explain what will appear when the workspace starts receiving signals.
+
+No database migration or user action is required.
+
 ## Release `v0.33.5` — Operational surface coherence
 
 Released 1 August 2026. Webhook Hub, Monitoring, Operations and account workspaces now share a

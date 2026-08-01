@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight, BellRing, CircleAlert, RotateCcw } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { AlertChannelPanel } from '../../components/app/AlertChannelPanel';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -17,6 +19,21 @@ import type {
 
 type DeliveryAction = { delivery: OperationalDeadLetter; kind: 'retry' | 'replay' };
 
+type TimelineFilter = 'all' | 'incidents' | 'recovery' | 'alerts';
+
+interface OperationalTimelineItem {
+  id: string;
+  kind: Exclude<TimelineFilter, 'all'>;
+  title: string;
+  detail: string;
+  status: string;
+  timestamp: string;
+  href: string;
+  tone: 'danger' | 'warning' | 'positive';
+  icon: LucideIcon;
+  endpointId?: string;
+}
+
 export function OperationsPage() {
   const { selectEndpoint } = useDashboard();
   const [data, setData] = useState<OperationsResponse | null>(null);
@@ -27,6 +44,7 @@ export function OperationsPage() {
   const [incidentFilter, setIncidentFilter] = useState<
     'all' | 'open' | 'unacknowledged' | 'recovered'
   >('all');
+  const [timelineFilter, setTimelineFilter] = useState<TimelineFilter>('all');
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [triageBusy, setTriageBusy] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<DeliveryAction | null>(null);
@@ -69,6 +87,65 @@ export function OperationsPage() {
     }
     return rows;
   }, [data, incidentFilter]);
+
+  const timeline = useMemo<OperationalTimelineItem[]>(() => {
+    const items: OperationalTimelineItem[] = [];
+    for (const incident of data?.incidents ?? []) {
+      items.push({
+        id: `incident-${incident.id}`,
+        kind: 'incidents',
+        title: incident.status === 'open' ? 'Incident opened' : 'Incident recovered',
+        detail: `${incident.resourceName ?? 'Resource'} · ${incident.summary}`,
+        status: incident.acknowledgedAt ? 'acknowledged' : incident.status,
+        timestamp:
+          incident.status === 'open'
+            ? incident.openedAt
+            : (incident.recoveredAt ?? incident.openedAt),
+        href: '#incident-timeline',
+        tone: incident.status === 'open' ? 'danger' : 'positive',
+        icon: CircleAlert,
+      });
+    }
+    for (const delivery of data?.deadLetters ?? []) {
+      items.push({
+        id: `delivery-${delivery.id}`,
+        kind: 'recovery',
+        title: delivery.resolved
+          ? 'Delivery recovered'
+          : delivery.recoveryPending
+            ? 'Recovery in progress'
+            : 'Delivery needs recovery',
+        detail: `${delivery.resourceName} · ${delivery.correlationKey}`,
+        status: delivery.resolved
+          ? 'recovered'
+          : delivery.recoveryPending
+            ? 'retrying'
+            : 'dead letter',
+        timestamp: delivery.createdAt,
+        href: '#recovery-queue',
+        tone: delivery.resolved ? 'positive' : delivery.recoveryPending ? 'warning' : 'danger',
+        icon: RotateCcw,
+        endpointId: delivery.endpointId,
+      });
+    }
+    for (const alert of data?.alerts ?? []) {
+      items.push({
+        id: `alert-${alert.id}`,
+        kind: 'alerts',
+        title: `Alert ${alert.event}`,
+        detail: `${alert.resourceName} · ${alert.errorCategory ?? (alert.statusCode ? `HTTP ${alert.statusCode}` : 'delivery evidence')}`,
+        status: alert.state,
+        timestamp: alert.createdAt,
+        href: '#alert-audit',
+        tone: alert.state === 'sent' ? 'positive' : alert.state === 'failed' ? 'danger' : 'warning',
+        icon: BellRing,
+      });
+    }
+    return items
+      .filter((item) => timelineFilter === 'all' || item.kind === timelineFilter)
+      .sort((left, right) => Date.parse(right.timestamp) - Date.parse(left.timestamp))
+      .slice(0, 12);
+  }, [data, timelineFilter]);
 
   async function runDeliveryAction() {
     if (!pendingAction) return;
@@ -181,6 +258,71 @@ export function OperationsPage() {
               <span>Protected recoveries</span>
               <strong>{data.summary.protectedRecoveries24h}</strong>
             </article>
+          </section>
+
+          <section
+            className="ht-operation-panel ht-operation-timeline"
+            aria-labelledby="operations-timeline-title"
+          >
+            <header>
+              <div>
+                <p className="ht-kicker">LIVE OPERATIONS</p>
+                <h2 id="operations-timeline-title">What changed recently</h2>
+                <p className="ht-operation-panel-description">
+                  Incidents, delivery recovery and alert evidence in one chronological view.
+                </p>
+              </div>
+              <label className="ht-operation-filter">
+                <span className="sr-only">Operational activity filter</span>
+                <select
+                  value={timelineFilter}
+                  onChange={(event) => setTimelineFilter(event.target.value as TimelineFilter)}
+                >
+                  <option value="all">All activity</option>
+                  <option value="incidents">Incidents</option>
+                  <option value="recovery">Recovery queue</option>
+                  <option value="alerts">Alert delivery</option>
+                </select>
+              </label>
+            </header>
+            {timeline.length === 0 ? (
+              <ProductState
+                compact
+                tone="positive"
+                eyebrow="No recent activity"
+                title="Operations are quiet."
+                description="New incidents, recovery attempts and alert deliveries will appear here as they happen."
+              />
+            ) : (
+              <div className="ht-operation-timeline-list">
+                {timeline.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.id}
+                      className={`ht-operation-timeline-row ${item.tone}`}
+                      to={item.href}
+                      onClick={() => {
+                        if (item.endpointId) selectEndpoint(item.endpointId);
+                      }}
+                    >
+                      <span className="ht-operation-timeline-icon" aria-hidden="true">
+                        <Icon />
+                      </span>
+                      <span className="ht-operation-timeline-copy">
+                        <strong>{item.title}</strong>
+                        <small>{item.detail}</small>
+                      </span>
+                      <span className="ht-operation-timeline-meta">
+                        <b>{item.status}</b>
+                        <small>{timeAgo(item.timestamp)}</small>
+                      </span>
+                      <ArrowRight aria-hidden="true" />
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           <section id="incident-timeline" className="ht-operation-panel">
@@ -412,7 +554,7 @@ export function OperationsPage() {
             )}
           </section>
 
-          <section className="ht-operation-panel">
+          <section id="alert-audit" className="ht-operation-panel">
             <header>
               <div>
                 <h2>Alert audit</h2>

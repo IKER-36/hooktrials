@@ -492,6 +492,180 @@ html[data-theme] .ht-shell .ht-main .ht-settings > .ht-page-head-actions > svg {
   }
 }
 
+/* Phase 17A — Operations is the single operational timeline. The audit
+ * signal stays contextual: one row links to the exact queue that can resolve
+ * it instead of sending users to a duplicate destination. */
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline > header {
+  align-items: flex-start;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-panel-description {
+  max-width: 640px;
+  margin: 6px 0 0;
+  color: var(--ht-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-list {
+  display: grid;
+  gap: 1px;
+  background: var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) minmax(140px, 0.35fr) 18px;
+  gap: 13px;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 16px;
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+  text-decoration: none;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row:hover {
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row:focus-visible {
+  outline: 2px solid var(--ht-focus);
+  outline-offset: -2px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 8px;
+  color: var(--ht-muted);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row.danger .ht-operation-timeline-icon {
+  color: var(--ht-red);
+  border-color: color-mix(in srgb, var(--ht-red) 45%, var(--ht-hairline-bright));
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row.warning .ht-operation-timeline-icon {
+  color: var(--ht-amber);
+  border-color: color-mix(in srgb, var(--ht-amber) 45%, var(--ht-hairline-bright));
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  .ht-operation-timeline-row.positive
+  .ht-operation-timeline-icon {
+  color: var(--ht-green);
+  border-color: color-mix(in srgb, var(--ht-green) 45%, var(--ht-hairline-bright));
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-copy,
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-meta {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-copy small,
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-meta small {
+  overflow: hidden;
+  color: var(--ht-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-copy strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-meta {
+  justify-items: end;
+  text-align: right;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-meta b {
+  color: var(--ht-green-dim);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  .ht-operation-timeline-row.danger
+  .ht-operation-timeline-meta
+  b {
+  color: var(--ht-red);
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  .ht-operation-timeline-row.warning
+  .ht-operation-timeline-meta
+  b {
+  color: var(--ht-amber);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row > svg {
+  width: 15px;
+  height: 15px;
+  color: var(--ht-faint);
+}
+
+@media (max-width: 760px) {
+  html[data-theme] .ht-shell .ht-main .ht-operation-timeline > header {
+    display: grid;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-operation-timeline > header .ht-operation-filter,
+  html[data-theme] .ht-shell .ht-main .ht-operation-timeline > header select {
+    width: 100%;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row {
+    grid-template-columns: 28px minmax(0, 1fr) 16px;
+    gap: 10px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-operation-timeline-meta {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row > svg {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row {
+    transition: none;
+  }
+}
+
 /* Phase 16A: the reliability and lab surfaces now share the same instrument
  * language as Webhook Hub. Detail work stays dense, but hierarchy comes from
  * dividers, action affordances and state colour rather than stacked cards. */

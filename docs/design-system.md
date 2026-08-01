@@ -73,6 +73,9 @@ colors.
 12. Audit history is not a standalone navigation destination. Redacted operational activity remains
     available where it is actionable in Operations, and `/app/audit` is retained only as a
     compatibility redirect.
+13. Operations begins with a unified chronological activity timeline. Timeline rows expose state,
+    resource context, relative time and a direct link to the actionable queue; filters preserve the
+    same layout on desktop and mobile.
 
 ## Accessibility and verification
 
