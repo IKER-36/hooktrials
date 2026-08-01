@@ -36,7 +36,7 @@ import {
 } from '@hooktrials/monitor-engine';
 import { NetworkPolicyError, safeIcmpProbe, safeRequest } from '@hooktrials/network-policy';
 import { Queue, Worker } from 'bullmq';
-import { and, asc, eq, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
+import { and, asc, eq, gte, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
 import { Redis } from 'ioredis';
 
 const config = readRuntimeConfig();
@@ -840,6 +840,8 @@ function incidentSummary(name: string, cause: string, failures: number): string 
   return `${name} is down after ${failures} consecutive failed checks. Cause: ${cause}.`;
 }
 
+const SLO_MIN_CHECKS = 5;
+
 async function performMonitorCheck(monitorId: string) {
   const row = (
     await database.db
@@ -916,13 +918,16 @@ async function performMonitorCheck(monitorId: string) {
     row.monitor.consecutiveFailures,
     row.monitor.consecutiveFailuresToOpen,
   );
-  const monitorAlert = await database.db.transaction(
+  const monitorAlerts = await database.db.transaction(
     async (
       tx,
-    ): Promise<{
-      incidentId: string;
-      event: 'opened' | 'recovered';
-    } | null> => {
+    ): Promise<
+      Array<{
+        incidentId: string;
+        event: 'opened' | 'recovered';
+      }>
+    > => {
+      const alerts: Array<{ incidentId: string; event: 'opened' | 'recovered' }> = [];
       await tx.insert(monitorChecks).values({
         monitorId,
         startedAt,
@@ -948,7 +953,13 @@ async function performMonitorCheck(monitorId: string) {
         await tx
           .select({ id: incidents.id })
           .from(incidents)
-          .where(and(eq(incidents.resourceId, row.resourceId), eq(incidents.status, 'open')))
+          .where(
+            and(
+              eq(incidents.resourceId, row.resourceId),
+              eq(incidents.status, 'open'),
+              ne(incidents.cause, 'slo_budget'),
+            ),
+          )
           .limit(1)
       )[0];
       if (transition.state === 'down' && !openIncident) {
@@ -964,19 +975,72 @@ async function performMonitorCheck(monitorId: string) {
             })
             .returning({ id: incidents.id })
         )[0];
-        if (created) return { incidentId: created.id, event: 'opened' };
+        if (created) alerts.push({ incidentId: created.id, event: 'opened' });
       } else if (transition.state === 'healthy' && openIncident) {
         await tx
           .update(incidents)
           .set({ status: 'recovered', recoveredAt: completedAt, updatedAt: completedAt })
           .where(eq(incidents.id, openIncident.id));
-        return { incidentId: openIncident.id, event: 'recovered' };
+        alerts.push({ incidentId: openIncident.id, event: 'recovered' });
       }
-      return null;
+
+      const sloSince = new Date(
+        completedAt.getTime() - row.monitor.sloWindowDays * 24 * 60 * 60 * 1_000,
+      );
+      const sloChecks = await tx
+        .select({ outcome: monitorChecks.outcome })
+        .from(monitorChecks)
+        .where(and(eq(monitorChecks.monitorId, monitorId), gte(monitorChecks.startedAt, sloSince)));
+      if (sloChecks.length >= SLO_MIN_CHECKS) {
+        const failed = sloChecks.filter((check) => check.outcome !== 'healthy').length;
+        const budget = sloChecks.length * Math.max(0, 1 - row.monitor.sloTargetBps / 10_000);
+        const breached = failed > 0 && failed >= budget;
+        const sloIncident = (
+          await tx
+            .select({ id: incidents.id })
+            .from(incidents)
+            .where(
+              and(
+                eq(incidents.resourceId, row.resourceId),
+                eq(incidents.cause, 'slo_budget'),
+                eq(incidents.status, 'open'),
+              ),
+            )
+            .limit(1)
+        )[0];
+        if (breached && !sloIncident) {
+          const created = (
+            await tx
+              .insert(incidents)
+              .values({
+                resourceId: row.resourceId,
+                cause: 'slo_budget',
+                summary: `${row.resourceName} has exhausted its ${row.monitor.sloTargetBps / 100}% availability budget.`,
+                evidence: {
+                  monitorId,
+                  windowDays: row.monitor.sloWindowDays,
+                  target: row.monitor.sloTargetBps / 100,
+                  checks: sloChecks.length,
+                  failed,
+                  budget,
+                },
+              })
+              .returning({ id: incidents.id })
+          )[0];
+          if (created) alerts.push({ incidentId: created.id, event: 'opened' });
+        } else if (!breached && sloIncident) {
+          await tx
+            .update(incidents)
+            .set({ status: 'recovered', recoveredAt: completedAt, updatedAt: completedAt })
+            .where(eq(incidents.id, sloIncident.id));
+          alerts.push({ incidentId: sloIncident.id, event: 'recovered' });
+        }
+      }
+      return alerts;
     },
   );
 
-  if (monitorAlert) await enqueueIncidentAlert(monitorAlert.incidentId, monitorAlert.event);
+  for (const alert of monitorAlerts) await enqueueIncidentAlert(alert.incidentId, alert.event);
 
   await redis.publish(
     `hooktrials:monitors:user:${row.userId}`,

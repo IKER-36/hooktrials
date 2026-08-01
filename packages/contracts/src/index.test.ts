@@ -236,7 +236,7 @@ describe('evidenceListQuerySchema', () => {
 describe('operational evidence queries', () => {
   it('bounds audit history and defaults the reliability window', () => {
     expect(auditQuerySchema.parse({})).toMatchObject({ limit: 100 });
-    expect(reliabilityQuerySchema.parse({})).toMatchObject({ windowDays: 7, target: 99.9 });
+    expect(reliabilityQuerySchema.parse({})).toMatchObject({ windowDays: 7 });
   });
 
   it('rejects unbounded reliability requests', () => {

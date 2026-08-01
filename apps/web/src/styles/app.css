@@ -127,6 +127,9 @@
 .ht-status-bad {
   color: var(--ht-red);
 }
+.ht-status-warning {
+  color: var(--ht-amber, #d69e2e);
+}
 .ht-operation-panel > header > svg,
 .ht-page-head-actions > svg {
   color: var(--ht-green);
@@ -203,7 +206,7 @@
 }
 
 .ht-operation-summary {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 .ht-operation-summary article.danger strong {
   color: var(--ht-red);

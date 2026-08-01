@@ -9,6 +9,15 @@ function percentage(value: number | null) {
   return value === null ? '—' : `${value.toFixed(2)}%`;
 }
 
+function sloLabel(status: 'no_data' | 'healthy' | 'at_risk' | 'breached') {
+  return {
+    no_data: 'Collecting evidence',
+    healthy: 'Within objective',
+    at_risk: 'Budget at risk',
+    breached: 'Objective breached',
+  }[status];
+}
+
 export function ReliabilityPage() {
   const [data, setData] = useState<ReliabilitySummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,7 +82,7 @@ export function ReliabilityPage() {
             <article className={data.aggregate.onTarget ? 'healthy' : 'danger'}>
               <span>Availability</span>
               <strong>{percentage(data.aggregate.availability)}</strong>
-              <small>Target {data.target.toFixed(2)}%</small>
+              <small>Objectives per monitor · avg {data.target.toFixed(2)}%</small>
             </article>
             <article>
               <span>Checks recorded</span>
@@ -91,6 +100,23 @@ export function ReliabilityPage() {
               <span>Incidents</span>
               <strong>{data.aggregate.incidents}</strong>
               <small>Opened in this window</small>
+            </article>
+            <article
+              className={
+                data.aggregate.sloStatus === 'breached'
+                  ? 'danger'
+                  : data.aggregate.sloStatus === 'at_risk'
+                    ? 'degraded'
+                    : 'healthy'
+              }
+            >
+              <span>Error budget</span>
+              <strong>
+                {data.aggregate.sloStatus === 'no_data'
+                  ? '—'
+                  : `${data.aggregate.budgetRemainingPercent.toFixed(0)}%`}
+              </strong>
+              <small>{sloLabel(data.aggregate.sloStatus)}</small>
             </article>
           </section>
 
@@ -120,7 +146,7 @@ export function ReliabilityPage() {
                       <h3>{monitor.name}</h3>
                       <p>
                         {monitor.protocol.toUpperCase()} · {monitor.environment} ·{' '}
-                        {monitor.metrics.checks} checks
+                        {monitor.metrics.checks} checks · {monitor.windowDays}d window
                       </p>
                     </div>
                     <strong
@@ -140,6 +166,19 @@ export function ReliabilityPage() {
                         : `${monitor.metrics.p95LatencyMs} ms`}
                     </span>
                     <span>{monitor.metrics.incidents} incidents</span>
+                    <span
+                      className={
+                        monitor.metrics.sloStatus === 'breached'
+                          ? 'ht-status-bad'
+                          : monitor.metrics.sloStatus === 'at_risk'
+                            ? 'ht-status-warning'
+                            : 'ht-status-good'
+                      }
+                    >
+                      {monitor.metrics.sloStatus === 'no_data'
+                        ? 'Collecting budget'
+                        : `${sloLabel(monitor.metrics.sloStatus)} · ${monitor.metrics.budgetRemainingPercent.toFixed(0)}% left`}
+                    </span>
                   </article>
                 ))}
               </div>

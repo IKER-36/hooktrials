@@ -29,6 +29,9 @@ after its configured consecutive failure threshold and automatically recovers af
 - **Score:** explainable deductions for availability, latency, contract failures and incidents.
 - **Incident:** start time, current cause, duration and recovery summary.
 
+Each monitor also has an availability objective and rolling error budget. See [SLOs, error budgets
+and alerts](slo-and-alerts.md) for the budget states and notification behavior.
+
 ## Network and ICMP requirements
 
 Cloud blocks private, loopback, link-local, metadata and special-use targets for both protocols.

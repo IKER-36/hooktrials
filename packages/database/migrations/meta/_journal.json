@@ -148,6 +148,13 @@
       "when": 1785546064256,
       "tag": "0020_mighty_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1785548104691,
+      "tag": "0021_exotic_ultimo",
+      "breakpoints": true
     }
   ]
 }

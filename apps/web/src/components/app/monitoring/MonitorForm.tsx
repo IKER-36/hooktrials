@@ -32,6 +32,8 @@ export function MonitorForm({
   const [failureThreshold, setFailureThreshold] = useState(
     String(monitor?.consecutiveFailuresToOpen ?? 2),
   );
+  const [sloTarget, setSloTarget] = useState(String(monitor?.sloTarget ?? 99.9));
+  const [sloWindowDays, setSloWindowDays] = useState(String(monitor?.sloWindowDays ?? 7));
   const [allowPrivate, setAllowPrivate] = useState(monitor?.allowPrivateNetworks ?? false);
   const [privateCidrs, setPrivateCidrs] = useState(monitor?.allowedPrivateCidrs.join(', ') ?? '');
   const [submitting, setSubmitting] = useState(false);
@@ -64,6 +66,8 @@ export function MonitorForm({
         expectedJsonPath: expectedJsonPath || undefined,
         ...(!monitor || headers.trim() || clearHeaders ? { headers: parsedHeaders } : {}),
         consecutiveFailuresToOpen: Number(failureThreshold),
+        sloTarget: Number(sloTarget),
+        sloWindowDays: Number(sloWindowDays),
         allowPrivateNetworks: allowPrivate,
         allowedPrivateCidrs: allowPrivate
           ? privateCidrs
@@ -214,6 +218,28 @@ export function MonitorForm({
             value={failureThreshold}
             onChange={(event) => setFailureThreshold(event.target.value)}
           />
+        </label>
+        <label className="ht-field">
+          Availability objective (%)
+          <input
+            type="number"
+            min="90"
+            max="100"
+            step="0.01"
+            value={sloTarget}
+            onChange={(event) => setSloTarget(event.target.value)}
+          />
+          <small>Used to calculate the rolling error budget.</small>
+        </label>
+        <label className="ht-field">
+          Objective window
+          <select value={sloWindowDays} onChange={(event) => setSloWindowDays(event.target.value)}>
+            <option value="1">24 hours</option>
+            <option value="7">7 days</option>
+            <option value="14">14 days</option>
+            <option value="30">30 days</option>
+          </select>
+          <small>Alerts start after five recorded checks.</small>
         </label>
         {protocol === 'http' ? (
           <>

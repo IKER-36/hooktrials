@@ -2,6 +2,19 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.32.0` — SLOs and error-budget alerts
+
+Released 1 August 2026. This release adds configurable reliability objectives, explainable error budgets and alert events when a rolling objective is breached.
+
+### Added
+
+- Configure a 90–100% availability objective and a 1–30 day rolling window per monitor.
+- Review budget remaining, burn rate and objective state alongside availability, latency and incidents.
+- Route budget-breach and recovery events to the existing Discord or generic HTTPS alert channel.
+- Existing monitors receive a 99.90% / seven-day baseline and continue using their existing credentials and checks.
+
+Read the [v0.32.0 release notes](releases/v0.32.0.md) and the [SLO guide](slo-and-alerts.md).
+
 ## Release `v0.31.0` — Delivery policies for resilient routes
 
 Protect routes can now send one event to one destination, every destination or an ordered fallback

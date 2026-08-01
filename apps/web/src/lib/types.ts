@@ -313,6 +313,8 @@ export interface MonitorSummary {
   expectedText: string | null;
   expectedJsonPath: string | null;
   consecutiveFailuresToOpen: number;
+  sloTarget: number;
+  sloWindowDays: number;
   allowPrivateNetworks: boolean;
   allowedPrivateCidrs: string[];
   hasAuthenticationHeaders: boolean;
@@ -469,6 +471,12 @@ export interface ReliabilitySummary {
     p95LatencyMs: number | null;
     incidents: number;
     onTarget: boolean;
+    budgetTotal: number;
+    budgetConsumed: number;
+    budgetRemaining: number;
+    budgetRemainingPercent: number;
+    burnRate: number | null;
+    sloStatus: 'no_data' | 'healthy' | 'at_risk' | 'breached';
   };
   monitors: Array<{
     id: string;
@@ -478,6 +486,7 @@ export interface ReliabilitySummary {
     protocol: string;
     state: MonitorState;
     target: number;
+    windowDays: number;
     metrics: {
       checks: number;
       healthy: number;
@@ -485,6 +494,12 @@ export interface ReliabilitySummary {
       averageLatencyMs: number | null;
       p95LatencyMs: number | null;
       incidents: number;
+      budgetTotal: number;
+      budgetConsumed: number;
+      budgetRemaining: number;
+      budgetRemainingPercent: number;
+      burnRate: number | null;
+      sloStatus: 'no_data' | 'healthy' | 'at_risk' | 'breached';
     };
   }>;
 }

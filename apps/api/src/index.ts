@@ -1574,13 +1574,30 @@ app.get('/v1/reliability/summary', async (request, reply) => {
           .from(incidents)
           .where(and(inArray(incidents.resourceId, resourceIds), gte(incidents.openedAt, since)));
 
-  function metricsFor(monitorId: string) {
+  function metricsFor(monitorId: string, target: number) {
     const items = checks.filter((check) => check.monitorId === monitorId);
     const latency = items
       .map((check) => check.latencyMs)
       .filter((value): value is number => value !== null);
     const healthy = items.filter((check) => check.outcome === 'healthy').length;
     const availability = items.length === 0 ? null : (healthy / items.length) * 100;
+    const failed = items.length - healthy;
+    const budgetTotal = items.length * Math.max(0, 1 - target / 100);
+    const budgetRemaining = Math.max(0, budgetTotal - failed);
+    const budgetRemainingPercent =
+      budgetTotal === 0 ? (failed === 0 ? 100 : 0) : (budgetRemaining / budgetTotal) * 100;
+    const burnRate =
+      items.length === 0 || target >= 100
+        ? null
+        : failed / items.length / Math.max(0.0001, 1 - target / 100);
+    const sloStatus =
+      items.length < 5
+        ? 'no_data'
+        : budgetRemaining <= 0
+          ? 'breached'
+          : budgetRemainingPercent <= 20
+            ? 'at_risk'
+            : 'healthy';
     return {
       checks: items.length,
       healthy,
@@ -1595,29 +1612,67 @@ app.get('/v1/reliability/summary', async (request, reply) => {
           incident.resourceId ===
           monitorRows.find((row) => row.monitor.id === monitorId)?.monitor.resourceId,
       ).length,
+      budgetTotal,
+      budgetConsumed: failed,
+      budgetRemaining,
+      budgetRemainingPercent,
+      burnRate,
+      sloStatus,
     };
   }
 
-  const monitorSummaries = monitorRows.map((row) => ({
-    id: row.monitor.id,
-    name: row.resourceName,
-    resourceType: row.resourceType,
-    environment: row.environment,
-    protocol: row.monitor.protocol,
-    state: row.monitor.state,
-    target: query.target,
-    metrics: metricsFor(row.monitor.id),
-  }));
+  const monitorSummaries = monitorRows.map((row) => {
+    const target = query.target ?? row.monitor.sloTargetBps / 100;
+    return {
+      id: row.monitor.id,
+      name: row.resourceName,
+      resourceType: row.resourceType,
+      environment: row.environment,
+      protocol: row.monitor.protocol,
+      state: row.monitor.state,
+      target,
+      windowDays: row.monitor.sloWindowDays,
+      metrics: metricsFor(row.monitor.id, target),
+    };
+  });
   const aggregateLatency = checks
     .map((check) => check.latencyMs)
     .filter((value): value is number => value !== null);
   const aggregateHealthy = checks.filter((check) => check.outcome === 'healthy').length;
   const aggregateAvailability =
     checks.length === 0 ? null : (aggregateHealthy / checks.length) * 100;
+  const aggregateBudget = monitorSummaries.reduce(
+    (total, monitor) => ({
+      total: total.total + monitor.metrics.budgetTotal,
+      consumed: total.consumed + monitor.metrics.budgetConsumed,
+      remaining: total.remaining + monitor.metrics.budgetRemaining,
+    }),
+    { total: 0, consumed: 0, remaining: 0 },
+  );
+  const aggregateBudgetRemainingPercent =
+    aggregateBudget.total === 0
+      ? aggregateBudget.consumed === 0
+        ? 100
+        : 0
+      : (aggregateBudget.remaining / aggregateBudget.total) * 100;
+  const aggregateBurnRate =
+    aggregateBudget.total === 0 ? null : aggregateBudget.consumed / aggregateBudget.total;
+  const aggregateStatus =
+    checks.length < 5
+      ? 'no_data'
+      : aggregateBudget.remaining <= 0
+        ? 'breached'
+        : aggregateBudgetRemainingPercent <= 20
+          ? 'at_risk'
+          : 'healthy';
+  const configuredTargets = monitorRows.map((row) => row.monitor.sloTargetBps / 100);
+  const averageTarget = configuredTargets.length
+    ? configuredTargets.reduce((sum, target) => sum + target, 0) / configuredTargets.length
+    : 99.9;
   return {
     windowDays: query.windowDays,
     windowStartedAt: since.toISOString(),
-    target: query.target,
+    target: query.target ?? averageTarget,
     aggregate: {
       monitors: monitorRows.length,
       checks: checks.length,
@@ -1631,7 +1686,13 @@ app.get('/v1/reliability/summary', async (request, reply) => {
             ),
       p95LatencyMs: percentile(aggregateLatency, 0.95),
       incidents: incidentRows.length,
-      onTarget: aggregateAvailability === null || aggregateAvailability >= query.target,
+      onTarget: aggregateStatus !== 'breached',
+      budgetTotal: aggregateBudget.total,
+      budgetConsumed: aggregateBudget.consumed,
+      budgetRemaining: aggregateBudget.remaining,
+      budgetRemainingPercent: aggregateBudgetRemainingPercent,
+      burnRate: aggregateBurnRate,
+      sloStatus: aggregateStatus,
     },
     monitors: monitorSummaries,
   };
@@ -2170,6 +2231,8 @@ app.get('/v1/monitors', async (request, reply) => {
         expectedText: monitor.expectedText,
         expectedJsonPath: monitor.expectedJsonPath,
         consecutiveFailuresToOpen: monitor.consecutiveFailuresToOpen,
+        sloTarget: monitor.sloTargetBps / 100,
+        sloWindowDays: monitor.sloWindowDays,
         allowPrivateNetworks: monitor.allowPrivateNetworks,
         allowedPrivateCidrs: monitor.allowedPrivateCidrs,
         hasAuthenticationHeaders: Boolean(monitor.encryptedHeaders),
@@ -2254,6 +2317,8 @@ app.post(
             expectedText: input.expectedText,
             expectedJsonPath: input.expectedJsonPath,
             consecutiveFailuresToOpen: input.consecutiveFailuresToOpen,
+            sloTargetBps: Math.round(input.sloTarget * 100),
+            sloWindowDays: input.sloWindowDays,
             allowPrivateNetworks: input.allowPrivateNetworks,
             allowedPrivateCidrs: input.allowedPrivateCidrs,
           })
@@ -2310,6 +2375,8 @@ app.get('/v1/monitors/:id', async (request, reply) => {
       expectedText: owned.monitor.expectedText,
       expectedJsonPath: owned.monitor.expectedJsonPath,
       consecutiveFailuresToOpen: owned.monitor.consecutiveFailuresToOpen,
+      sloTarget: owned.monitor.sloTargetBps / 100,
+      sloWindowDays: owned.monitor.sloWindowDays,
       allowPrivateNetworks: owned.monitor.allowPrivateNetworks,
       allowedPrivateCidrs: owned.monitor.allowedPrivateCidrs,
       hasAuthenticationHeaders: Boolean(owned.monitor.encryptedHeaders),
@@ -2352,6 +2419,8 @@ app.put('/v1/monitors/:id', async (request, reply) => {
     expectedJsonPath: owned.monitor.expectedJsonPath ?? undefined,
     headers: decryptedMonitorHeaders(owned.monitor.encryptedHeaders),
     consecutiveFailuresToOpen: owned.monitor.consecutiveFailuresToOpen,
+    sloTarget: owned.monitor.sloTargetBps / 100,
+    sloWindowDays: owned.monitor.sloWindowDays,
     allowPrivateNetworks: owned.monitor.allowPrivateNetworks,
     allowedPrivateCidrs: owned.monitor.allowedPrivateCidrs,
     ...patch,
@@ -2385,6 +2454,8 @@ app.put('/v1/monitors/:id', async (request, reply) => {
         expectedText: input.expectedText,
         expectedJsonPath: input.expectedJsonPath,
         consecutiveFailuresToOpen: input.consecutiveFailuresToOpen,
+        sloTargetBps: Math.round(input.sloTarget * 100),
+        sloWindowDays: input.sloWindowDays,
         allowPrivateNetworks: input.allowPrivateNetworks,
         allowedPrivateCidrs: input.allowedPrivateCidrs,
         nextCheckAt: new Date(),

@@ -39,7 +39,7 @@ export const auditQuerySchema = z.object({
 
 export const reliabilityQuerySchema = z.object({
   windowDays: z.coerce.number().int().min(1).max(30).default(7),
-  target: z.coerce.number().min(90).max(100).default(99.9),
+  target: z.coerce.number().min(90).max(100).optional(),
 });
 
 export const evidenceListQuerySchema = z.object({
@@ -375,6 +375,8 @@ const monitorInputBaseSchema = z.object({
     .optional(),
   headers: outboundHeadersSchema.default({}),
   consecutiveFailuresToOpen: z.number().int().min(1).max(10).default(2),
+  sloTarget: z.number().min(90).max(100).default(99.9),
+  sloWindowDays: z.number().int().min(1).max(30).default(7),
   allowPrivateNetworks: z.boolean().default(false),
   allowedPrivateCidrs: z.array(z.string().max(64)).max(16).default([]),
 });

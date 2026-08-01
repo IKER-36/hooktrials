@@ -384,6 +384,9 @@ export const monitors = pgTable(
     expectedJsonPath: varchar('expected_json_path', { length: 255 }),
     consecutiveFailuresToOpen: integer('consecutive_failures_to_open').notNull().default(2),
     consecutiveFailures: integer('consecutive_failures').notNull().default(0),
+    // Stored as basis points: 9990 represents a 99.90% availability objective.
+    sloTargetBps: integer('slo_target_bps').notNull().default(9990),
+    sloWindowDays: integer('slo_window_days').notNull().default(7),
     allowPrivateNetworks: boolean('allow_private_networks').notNull().default(false),
     allowedPrivateCidrs: jsonb('allowed_private_cidrs').notNull().default([]),
     state: monitorStateEnum('state').notNull().default('new'),
