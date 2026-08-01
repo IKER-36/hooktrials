@@ -78,7 +78,7 @@ Preview a tagged update without changing containers, volumes or application data
 
 ```bash
 git fetch --tags origin
-./hooktrials update --release v0.33.9 --check
+./hooktrials update --release v0.33.10 --check
 ```
 
 Update to a tagged release:
@@ -86,7 +86,7 @@ Update to a tagged release:
 ```bash
 git status --short                 # keep local changes out of production
 git fetch --tags origin
-./hooktrials update --release v0.33.9
+./hooktrials update --release v0.33.10
 ./hooktrials doctor --external     # omit --external for local-only mode
 ```
 

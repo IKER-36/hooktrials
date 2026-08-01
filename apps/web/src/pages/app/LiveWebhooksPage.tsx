@@ -15,7 +15,7 @@ import {
   Webhook,
   type LucideIcon,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -51,6 +51,10 @@ type TestEventResult = {
 };
 
 type RouteFilter = 'all' | 'attention' | 'paused';
+
+function readRouteFilter(value: string | null): RouteFilter {
+  return value === 'attention' || value === 'paused' ? value : 'all';
+}
 
 // Lucide carries no brand marks, so each provider gets the line icon that best
 // describes what it sends. Icons support the label; they never replace it.
@@ -182,7 +186,22 @@ export function LiveWebhooksPage() {
   const [integrationRows, setIntegrationRows] = useState<IntegrationSummary[]>([]);
   const [integrationLoading, setIntegrationLoading] = useState(true);
   const [integrationError, setIntegrationError] = useState('');
-  const [routeFilter, setRouteFilter] = useState<RouteFilter>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const routeFilter = readRouteFilter(searchParams.get('view'));
+  const setRouteFilter = useCallback(
+    (filter: RouteFilter) => {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          if (filter === 'all') next.delete('view');
+          else next.set('view', filter);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const liveRoutes = useMemo(
     () => endpoints.filter((endpoint) => endpoint.mode !== 'trial'),

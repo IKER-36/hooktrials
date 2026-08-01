@@ -17,6 +17,11 @@ Both types accept environment, interval and consecutive-failure threshold. Selec
 preserved unless a replacement is entered; secrets and complete target URLs are not returned to the
 browser.
 
+The selected monitor is represented by a non-sensitive `monitor` query parameter. This means a
+browser refresh or a shared link can reopen the same monitor detail without exposing its credentials
+or full target URL. If the monitor was deleted or is no longer available, Monitoring selects the
+first available resource instead.
+
 HTTP failures are classified as DNS, connection, TLS, timeout, blocked target, HTTP or contract.
 ICMP failures are classified as blocked target, DNS, timeout or unreachable. A monitor becomes down
 after its configured consecutive failure threshold and automatically recovers after a passing check.

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { ProductState } from '../../components/ui/ProductState';
@@ -17,11 +17,14 @@ import type { IntegrationSummary, MonitorSummary, StatusPageConfig } from '../..
 
 export function MonitorPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { setup } = useAuth();
   const { selectEndpoint } = useDashboard();
   const [monitors, setMonitors] = useState<MonitorSummary[]>([]);
   const [routes, setRoutes] = useState<IntegrationSummary[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get('monitor'),
+  );
   const [detail, setDetail] = useState<MonitorDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -33,6 +36,27 @@ export function MonitorPage() {
   const editDialogRef = useRef<HTMLDivElement>(null);
   const editCloseRef = useRef<HTMLButtonElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+
+  const selectMonitor = useCallback(
+    (id: string | null) => {
+      setSelectedId(id);
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          if (id) next.set('monitor', id);
+          else next.delete('monitor');
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  useEffect(() => {
+    const requestedId = searchParams.get('monitor');
+    if (requestedId !== selectedId) setSelectedId(requestedId);
+  }, [searchParams, selectedId]);
 
   useFocusTrap(editDialogRef, editing !== null);
 
@@ -53,12 +77,14 @@ export function MonitorPage() {
     setRoutes(integrationResponse.integrations);
     setStatusPages(statusPageResponse.pages);
     setError('');
-    setSelectedId((current) =>
-      response.monitors.some((monitor) => monitor.id === current)
-        ? current
-        : (response.monitors[0]?.id ?? null),
-    );
-  }, []);
+    const requestedId = searchParams.get('monitor');
+    const nextId =
+      requestedId && response.monitors.some((monitor) => monitor.id === requestedId)
+        ? requestedId
+        : (response.monitors[0]?.id ?? null);
+    setSelectedId(nextId);
+    if (nextId !== requestedId) selectMonitor(nextId);
+  }, [searchParams, selectMonitor]);
 
   const loadDetail = useCallback(async (id: string) => {
     const response = await apiRequest<MonitorDetailResponse>(`/v1/monitors/${id}`);
@@ -182,7 +208,7 @@ export function MonitorPage() {
       <IntegrationTable
         monitors={monitors}
         routes={routes}
-        onSelectMonitor={setSelectedId}
+        onSelectMonitor={selectMonitor}
         onSelectRoute={(id) => {
           selectEndpoint(id);
           navigate(`/app/control-center/${id}`);
@@ -219,7 +245,7 @@ export function MonitorPage() {
           onSaved={async (id) => {
             setShowCreate(false);
             await loadMonitors();
-            setSelectedId(id);
+            selectMonitor(id);
           }}
         />
       ) : null}
@@ -248,7 +274,7 @@ export function MonitorPage() {
                 className={`ht-monitor-row ${monitor.id === selectedId ? 'selected' : ''}`}
                 aria-pressed={monitor.id === selectedId}
                 aria-label={`Select ${monitor.name}, ${STATE_LABEL[monitor.state]}`}
-                onClick={() => setSelectedId(monitor.id)}
+                onClick={() => selectMonitor(monitor.id)}
               >
                 <span className={`ht-monitor-state ${monitor.state}`}>
                   {STATE_LABEL[monitor.state]}

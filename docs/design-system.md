@@ -82,9 +82,10 @@ colors.
 15. Primary workspaces may expose a compact contextual journey when a workflow spans several
     modules. It must complement the global rail rather than duplicate it, link each step to its
     owning route, expose the current step, and collapse without horizontal scrolling on mobile.
-16. Actionable list links should preserve non-sensitive view state in the URL when it improves
-    hand-off or triage. A deep-linked row must expose a visible target state, keep its semantic
-    status contrast, and remain reachable after asynchronous data loads.
+16. Actionable list links and inventory views should preserve non-sensitive view state in the URL
+    when it improves hand-off or triage. A deep-linked row or selected resource must expose a visible
+    target state, keep its semantic status contrast, and remain reachable after asynchronous data
+    loads. Invalid selections must fall back without trapping the user in an empty view.
 
 ## Accessibility and verification
 

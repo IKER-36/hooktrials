@@ -43,6 +43,11 @@ generic page:
 - `/app/endpoints`, `/app/scenarios` and `/app/demo` open the Lab modules.
 - `/app/evidence` opens the redacted event reports and recovery timelines.
 
+Webhook Hub accepts `?view=attention` or `?view=paused` to open a shared route inventory in that
+state; omitting `view` shows all live connections. Monitoring accepts `?monitor=<id>` to reopen one
+selected monitor. These parameters contain navigation state only and are safe to share; they never
+include payloads, credentials or destination URLs.
+
 Links from endpoint, webhook, monitor and recovery views preserve the selected route when moving
 between modules. Use Home for workspace orientation and Control Center when you need the complete
 evidence and retry timeline for one route.

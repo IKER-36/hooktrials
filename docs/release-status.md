@@ -2,6 +2,28 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.10` — Shareable workspace views
+
+Released 1 August 2026. Webhook Hub and Monitoring now keep the useful part of your current view
+in the address, making handoffs and refreshes predictable without exposing operational secrets.
+
+### Added
+
+- Webhook Hub route filters can be shared with `All`, `Attention` or `Paused` already selected.
+- Monitoring keeps the selected monitor in the address so a direct link opens the same resource
+  after a refresh or when it is handed to another operator.
+- Invalid or removed monitor selections fall back safely to the first available monitor.
+
+### Improved
+
+- Filter and selection changes use browser history-friendly updates without reloading the page.
+- Shared views preserve only non-sensitive navigation state; payloads, credentials and destination
+  URLs never enter the link.
+- The existing responsive inventory/detail layout remains usable when a view is opened directly on
+  a small screen.
+
+No database migration or user action is required.
+
 ## Release `v0.33.9` — Actionable Operations hand-offs
 
 Released 1 August 2026. Operations links now carry the context needed to investigate one signal
