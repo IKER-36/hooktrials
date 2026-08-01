@@ -2,6 +2,30 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.0` — Account session controls
+
+Released 1 August 2026. Account settings now shows active browser sessions and lets users sign out
+other sessions without changing their password.
+
+### Added
+
+- Session inventory with created, last-used and expiry times.
+- One-click sign-out for every other active browser session.
+- Public [account security guidance](account-security.md) covering sessions, team roles and API-key
+  hygiene.
+
+### Improved
+
+- Self-service profile, password, email and session actions are available to every workspace role.
+- Password rotation and recovery continue to invalidate older sessions.
+
+### Fixed
+
+- Viewer and operator accounts no longer hit workspace-role gates when changing their own account
+  security settings.
+
+Read the [v0.33.0 release notes](releases/v0.33.0.md).
+
 ## Release `v0.32.0` — SLOs and error-budget alerts
 
 Released 1 August 2026. This release adds configurable reliability objectives, explainable error budgets and alert events when a rolling objective is breached.

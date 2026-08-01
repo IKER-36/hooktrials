@@ -1,8 +1,19 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Camera, KeyRound, LockKeyhole, Mail, Save, ShieldCheck, UserRound } from 'lucide-react';
+import {
+  Camera,
+  KeyRound,
+  LockKeyhole,
+  LogOut,
+  Mail,
+  RefreshCw,
+  Save,
+  ShieldCheck,
+  UserRound,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { apiRequest, readableError } from '../../lib/api';
+import type { AccountSession } from '../../lib/types';
 
 function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
   if (avatarUrl) {
@@ -29,11 +40,23 @@ export function AccountSettingsPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState<'profile' | 'email' | 'password' | null>(null);
+  const [sessions, setSessions] = useState<AccountSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionsBusy, setSessionsBusy] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     setDisplayName(user.displayName);
     setAvatarUrl(user.avatarUrl ?? '');
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    setSessionsLoading(true);
+    void apiRequest<{ sessions: AccountSession[] }>('/v1/me/sessions')
+      .then((response) => setSessions(response.sessions))
+      .catch((cause) => setError(readableError(cause)))
+      .finally(() => setSessionsLoading(false));
   }, [user]);
 
   function startSave(kind: typeof saving) {
@@ -98,6 +121,21 @@ export function AccountSettingsPage() {
       setError(readableError(cause));
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function revokeOtherSessions() {
+    setSessionsBusy(true);
+    startSave(null);
+    try {
+      await apiRequest('/v1/me/sessions/revoke-others', { method: 'POST' });
+      const response = await apiRequest<{ sessions: AccountSession[] }>('/v1/me/sessions');
+      setSessions(response.sessions);
+      setNotice('Other active sessions were signed out.');
+    } catch (cause) {
+      setError(readableError(cause));
+    } finally {
+      setSessionsBusy(false);
     }
   }
 
@@ -266,6 +304,70 @@ export function AccountSettingsPage() {
             {saving === 'password' ? 'Updating…' : 'Update password'}
           </button>
         </form>
+
+        <section className="ht-settings-section">
+          <header>
+            <div className="ht-settings-title">
+              <ShieldCheck aria-hidden="true" />
+              <div>
+                <p className="ht-kicker">ACTIVE SESSIONS</p>
+                <h2>Where you are signed in</h2>
+              </div>
+            </div>
+            <button
+              className="button secondary compact"
+              type="button"
+              onClick={() => {
+                setSessionsLoading(true);
+                void apiRequest<{ sessions: AccountSession[] }>('/v1/me/sessions')
+                  .then((response) => setSessions(response.sessions))
+                  .catch((cause) => setError(readableError(cause)))
+                  .finally(() => setSessionsLoading(false));
+              }}
+              disabled={sessionsLoading}
+              aria-label="Refresh active sessions"
+            >
+              <RefreshCw aria-hidden="true" />
+            </button>
+          </header>
+          <p className="ht-settings-copy">
+            Review the browser sessions attached to your account. Password changes already sign out
+            every other session.
+          </p>
+          {sessionsLoading ? (
+            <p className="ht-muted-line">Loading sessions…</p>
+          ) : sessions.length === 0 ? (
+            <p className="ht-muted-line">No active session records were found.</p>
+          ) : (
+            <div className="ht-session-list">
+              {sessions.map((session) => (
+                <div className="ht-session-row" key={session.id}>
+                  <div>
+                    <strong>{session.current ? 'This browser' : 'Active browser session'}</strong>
+                    <small>
+                      Last used {new Date(session.lastSeenAt).toLocaleString()} · expires{' '}
+                      {new Date(session.expiresAt).toLocaleDateString()}
+                    </small>
+                  </div>
+                  {session.current ? (
+                    <span className="ht-settings-status verified">Current</span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+          {sessions.some((session) => !session.current) ? (
+            <button
+              className="button secondary"
+              type="button"
+              onClick={() => void revokeOtherSessions()}
+              disabled={sessionsBusy}
+            >
+              <LogOut aria-hidden="true" />
+              {sessionsBusy ? 'Signing out…' : 'Sign out other sessions'}
+            </button>
+          ) : null}
+        </section>
 
         <section className="ht-settings-section ht-settings-api">
           <header>

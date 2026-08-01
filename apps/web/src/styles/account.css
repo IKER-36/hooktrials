@@ -111,6 +111,36 @@
   justify-self: start;
 }
 
+.ht-session-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ht-session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 12px;
+  border: 1px solid var(--ht-hairline);
+  background: var(--ht-surface-2, transparent);
+}
+
+.ht-session-row > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ht-session-row strong {
+  font-size: 12px;
+}
+
+.ht-session-row small {
+  color: var(--ht-muted);
+  font-size: 10px;
+}
+
 .ht-settings-api {
   align-content: space-between;
 }

@@ -81,7 +81,7 @@ import {
 import { builtInScenarios } from '@hooktrials/scenario-engine';
 import argon2 from 'argon2';
 import { Queue } from 'bullmq';
-import { and, asc, count, desc, eq, gt, gte, inArray, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, inArray, isNull, lt, ne, or, sql } from 'drizzle-orm';
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import { Redis } from 'ioredis';
 import { nanoid } from 'nanoid';
@@ -90,6 +90,7 @@ import {
   clearSession,
   createSession,
   getAuthenticatedPrincipal,
+  hashToken,
   setSessionCookie,
 } from './auth.js';
 import { hashAuthToken, issueAuthToken } from './email/tokens.js';
@@ -251,6 +252,7 @@ function operatorMutationAllowed(path: string) {
     /^\/v1\/alert-channel\/test$/.test(path) ||
     /^\/v1\/events\/[^/]+\/(share)$/.test(path) ||
     /^\/v1\/me\/onboarding$/.test(path) ||
+    /^\/v1\/me\/(profile|email|password|sessions(?:\/|$))/.test(path) ||
     /^\/v1\/workspace\/invites\/accept$/.test(path)
   );
 }
@@ -1065,6 +1067,75 @@ app.get('/v1/me', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
   return { user };
+});
+
+app.get('/v1/me/sessions', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const token = request.cookies.hooktrials_session;
+  if (!token) return reply.code(403).send({ error: 'session_auth_required' });
+  const current = (
+    await database.db
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.userId, user.id),
+          eq(sessions.tokenHash, hashToken(token)),
+          gt(sessions.expiresAt, new Date()),
+        ),
+      )
+      .limit(1)
+  )[0];
+  if (!current) return reply.code(403).send({ error: 'session_auth_required' });
+  const items = await database.db
+    .select({
+      id: sessions.id,
+      createdAt: sessions.createdAt,
+      lastSeenAt: sessions.lastSeenAt,
+      expiresAt: sessions.expiresAt,
+    })
+    .from(sessions)
+    .where(eq(sessions.userId, user.id))
+    .orderBy(desc(sessions.lastSeenAt));
+  return { sessions: items.map((item) => ({ ...item, current: item.id === current.id })) };
+});
+
+app.delete('/v1/me/sessions/:id', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const token = request.cookies.hooktrials_session;
+  if (!token) return reply.code(403).send({ error: 'session_auth_required' });
+  const { id } = request.params as { id: string };
+  const removed = await database.db
+    .delete(sessions)
+    .where(and(eq(sessions.id, id), eq(sessions.userId, user.id)))
+    .returning({ id: sessions.id, tokenHash: sessions.tokenHash });
+  const session = removed[0];
+  if (!session) return reply.code(404).send({ error: 'session_not_found' });
+  if (session.tokenHash === hashToken(token))
+    reply.clearCookie('hooktrials_session', { path: '/' });
+  return reply.code(204).send();
+});
+
+app.post('/v1/me/sessions/revoke-others', async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return;
+  const token = request.cookies.hooktrials_session;
+  if (!token) return reply.code(403).send({ error: 'session_auth_required' });
+  const current = (
+    await database.db
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(and(eq(sessions.userId, user.id), eq(sessions.tokenHash, hashToken(token))))
+      .limit(1)
+  )[0];
+  if (!current) return reply.code(403).send({ error: 'session_auth_required' });
+  const removed = await database.db
+    .delete(sessions)
+    .where(and(eq(sessions.userId, user.id), ne(sessions.id, current.id)))
+    .returning({ id: sessions.id });
+  return { revoked: removed.length };
 });
 
 app.patch('/v1/me/profile', async (request, reply) => {

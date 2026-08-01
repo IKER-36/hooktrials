@@ -19,37 +19,39 @@
 - [Evidence and reports](evidence-reports.md)
 - [Audit history via Operations](audit-history.md)
 - [Workspaces and roles](workspaces-and-roles.md)
+- [Account security](account-security.md)
 
 This directory contains documentation intended to be published with the source code.
 
-| Document                                               | Purpose                                         |
-| ------------------------------------------------------ | ----------------------------------------------- |
-| [Architecture](architecture.md)                        | Services, data flow and trust boundaries        |
-| [Configuration](configuration.md)                      | Runtime variable names and secret injection     |
-| [Development](development.md)                          | Local workspace workflow                        |
-| [Product design system](design-system.md)              | Visual language, tokens and UI conventions      |
-| [External access](external-access.md)                  | Public domains, HTTPS and tunnel options        |
-| [Guided demo](guided-demo.md)                          | Templates and complete retry demonstration      |
-| [Guided Demo](demo-lab.md)                             | Complete product control-loop demonstration     |
-| [CLI and CI](cli-and-ci.md)                            | Terminal and GitHub Action reliability gates    |
-| [API catalogue](api-catalogue.md)                      | OpenAPI discovery and CLI contract checks       |
-| [OpenAPI import](openapi-import.md)                    | Generate safe test/staging monitors from a spec |
-| [API keys and automation](api-keys.md)                 | Scoped CI runs and redacted evidence export     |
-| [Competition demo](competition-demo.md)                | Reproducible three-minute judging script        |
-| [Failure scenarios](scenario-studio.md)                | Custom response-sequence authoring              |
-| [Deployment](deployment.md)                            | Production deployment with Docker Compose       |
-| [VPS bootstrap](vps-bootstrap.md)                      | Prepare a clean Ubuntu server                   |
-| [Security](security.md)                                | Threat model and security controls              |
-| [Self-hosting](self-hosting.md)                        | Operator-oriented installation guide            |
-| [Release status](release-status.md)                    | Current version, validation and known issues    |
-| [Reliability Replay](reliability-replay.md)            | Causal diagnosis, impact and operator runbook   |
-| [Evidence and reports](evidence-reports.md)            | Explainable reports, timelines and safe sharing |
-| [Production readiness](production-readiness.md)        | Explainable route controls and next actions     |
-| [Public status pages](public-status-pages.md)          | Revocable monitor health sharing                |
-| [Internationalization](internationalization.md)        | English and Spanish interface behavior          |
-| [SLO and reliability views](reliability-objectives.md) | Availability, latency and objective evidence    |
-| [Audit history via Operations](audit-history.md)       | Redacted operational change record              |
-| [Workspaces and roles](workspaces-and-roles.md)        | Team access, invitations and incident ownership |
+| Document                                               | Purpose                                            |
+| ------------------------------------------------------ | -------------------------------------------------- |
+| [Architecture](architecture.md)                        | Services, data flow and trust boundaries           |
+| [Configuration](configuration.md)                      | Runtime variable names and secret injection        |
+| [Development](development.md)                          | Local workspace workflow                           |
+| [Product design system](design-system.md)              | Visual language, tokens and UI conventions         |
+| [External access](external-access.md)                  | Public domains, HTTPS and tunnel options           |
+| [Guided demo](guided-demo.md)                          | Templates and complete retry demonstration         |
+| [Guided Demo](demo-lab.md)                             | Complete product control-loop demonstration        |
+| [CLI and CI](cli-and-ci.md)                            | Terminal and GitHub Action reliability gates       |
+| [API catalogue](api-catalogue.md)                      | OpenAPI discovery and CLI contract checks          |
+| [OpenAPI import](openapi-import.md)                    | Generate safe test/staging monitors from a spec    |
+| [API keys and automation](api-keys.md)                 | Scoped CI runs and redacted evidence export        |
+| [Competition demo](competition-demo.md)                | Reproducible three-minute judging script           |
+| [Failure scenarios](scenario-studio.md)                | Custom response-sequence authoring                 |
+| [Deployment](deployment.md)                            | Production deployment with Docker Compose          |
+| [VPS bootstrap](vps-bootstrap.md)                      | Prepare a clean Ubuntu server                      |
+| [Security](security.md)                                | Threat model and security controls                 |
+| [Self-hosting](self-hosting.md)                        | Operator-oriented installation guide               |
+| [Release status](release-status.md)                    | Current version, validation and known issues       |
+| [Reliability Replay](reliability-replay.md)            | Causal diagnosis, impact and operator runbook      |
+| [Evidence and reports](evidence-reports.md)            | Explainable reports, timelines and safe sharing    |
+| [Production readiness](production-readiness.md)        | Explainable route controls and next actions        |
+| [Public status pages](public-status-pages.md)          | Revocable monitor health sharing                   |
+| [Internationalization](internationalization.md)        | English and Spanish interface behavior             |
+| [SLO and reliability views](reliability-objectives.md) | Availability, latency and objective evidence       |
+| [Audit history via Operations](audit-history.md)       | Redacted operational change record                 |
+| [Workspaces and roles](workspaces-and-roles.md)        | Team access, invitations and incident ownership    |
+| [Account security](account-security.md)                | Sessions, password recovery and credential hygiene |
 
 Private notes, credentials, provider identifiers and internal planning never belong here. Local
 internal context lives under the ignored .pdocs directory.

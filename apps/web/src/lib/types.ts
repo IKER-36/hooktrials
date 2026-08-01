@@ -9,6 +9,13 @@ export interface User {
   avatarUrl?: string | null;
   onboardingCompletedAt?: string | null;
 }
+export interface AccountSession {
+  id: string;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  current: boolean;
+}
 export interface ScenarioStep {
   statusCode: number;
   delayMs: number;

@@ -26,7 +26,7 @@ export interface AuthenticatedPrincipal {
   scopes: ApiKeyScope[];
 }
 
-function hashToken(token: string): string {
+export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
@@ -64,6 +64,8 @@ async function getSessionPrincipal(db: Database, request: FastifyRequest) {
 
   const result = await db
     .select({
+      sessionId: sessions.id,
+      sessionLastSeenAt: sessions.lastSeenAt,
       id: users.id,
       email: users.email,
       displayName: users.displayName,
@@ -80,9 +82,19 @@ async function getSessionPrincipal(db: Database, request: FastifyRequest) {
     .limit(1);
 
   const user = result[0];
-  return user
-    ? ({ user, authType: 'session', scopes: ['read', 'write'] } satisfies AuthenticatedPrincipal)
-    : null;
+  if (!user) return null;
+  if (user.sessionLastSeenAt.getTime() < Date.now() - 5 * 60 * 1_000) {
+    await db
+      .update(sessions)
+      .set({ lastSeenAt: new Date() })
+      .where(eq(sessions.id, user.sessionId));
+  }
+  const { sessionId: _sessionId, sessionLastSeenAt: _sessionLastSeenAt, ...sessionUser } = user;
+  return {
+    user: sessionUser,
+    authType: 'session',
+    scopes: ['read', 'write'],
+  } satisfies AuthenticatedPrincipal;
 }
 
 async function getApiKeyPrincipal(db: Database, request: FastifyRequest) {
