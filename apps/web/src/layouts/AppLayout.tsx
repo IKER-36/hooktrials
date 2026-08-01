@@ -638,7 +638,12 @@ export function AppLayout() {
         {banner ? (
           <div className="ht-banner" role="alert">
             <span>{banner}</span>
-            <button type="button" aria-label="Dismiss error" onClick={() => setBanner('')}>
+            <button
+              type="button"
+              className="button ghost compact"
+              aria-label="Dismiss error"
+              onClick={() => setBanner('')}
+            >
               ×
             </button>
           </div>

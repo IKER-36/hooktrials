@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -8,6 +8,7 @@ import { MonitorDetail } from '../../components/app/monitoring/MonitorDetail';
 import { MonitorForm } from '../../components/app/monitoring/MonitorForm';
 import { StatusPagesPanel } from '../../components/app/monitoring/StatusPagesPanel';
 import { STATE_LABEL, type MonitorDetailResponse } from '../../components/app/monitoring/shared';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -28,6 +29,18 @@ export function MonitorPage() {
   const [deleting, setDeleting] = useState<MonitorSummary | null>(null);
   const [editing, setEditing] = useState<MonitorSummary | null>(null);
   const [statusPages, setStatusPages] = useState<StatusPageConfig[]>([]);
+  const editDialogRef = useRef<HTMLDivElement>(null);
+  const editCloseRef = useRef<HTMLButtonElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+
+  useFocusTrap(editDialogRef, editing !== null);
+
+  useEffect(() => {
+    if (!editing) return;
+    previousFocus.current = document.activeElement as HTMLElement | null;
+    requestAnimationFrame(() => editCloseRef.current?.focus());
+    return () => previousFocus.current?.focus();
+  }, [editing]);
 
   const loadMonitors = useCallback(async () => {
     const [response, integrationResponse, statusPageResponse] = await Promise.all([
@@ -228,7 +241,9 @@ export function MonitorPage() {
               <button
                 key={monitor.id}
                 type="button"
-                className={monitor.id === selectedId ? 'selected' : ''}
+                className={`ht-monitor-row ${monitor.id === selectedId ? 'selected' : ''}`}
+                aria-pressed={monitor.id === selectedId}
+                aria-label={`Select ${monitor.name}, ${STATE_LABEL[monitor.state]}`}
                 onClick={() => setSelectedId(monitor.id)}
               >
                 <span className={`ht-monitor-state ${monitor.state}`}>
@@ -275,12 +290,20 @@ export function MonitorPage() {
         <div className="ht-backdrop" role="presentation" onMouseDown={() => setEditing(null)}>
           <div
             className="ht-monitor-edit-modal"
+            ref={editDialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-monitor-title"
+            tabIndex={-1}
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <button type="button" className="ht-modal-close" onClick={() => setEditing(null)}>
+            <button
+              ref={editCloseRef}
+              type="button"
+              className="button ghost compact ht-modal-close"
+              aria-label="Close monitor editor"
+              onClick={() => setEditing(null)}
+            >
               ×
             </button>
             <MonitorForm

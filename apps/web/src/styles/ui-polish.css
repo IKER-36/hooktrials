@@ -257,3 +257,242 @@ html[data-theme] .ht-shell .ht-main .ht-home-chart-panel .recharts-surface {
     transition: none;
   }
 }
+
+/* Phase 15B: operational surfaces share one action and selection contract.
+ * Rows are buttons on purpose, but they must look like navigable rows rather
+ * than unstyled text. The last column gives a sighted user the same cue that
+ * the accessible name gives a screen-reader user. */
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-table-head {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(80px, 0.7fr)
+    74px 86px 72px 82px minmax(110px, 1fr) 72px;
+  gap: 12px;
+  align-items: center;
+  min-width: 980px;
+  padding: 11px 16px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(80px, 0.7fr)
+    74px 86px 72px 82px minmax(110px, 1fr) 72px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 62px;
+  padding: 12px 16px;
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+  border: 0;
+  border-top: 1px solid var(--ht-hairline);
+  border-radius: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row:hover {
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row:focus-visible {
+  z-index: var(--ht-z-raised);
+  outline: 2px solid var(--ht-focus);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 1px var(--ht-focus);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row strong,
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row span,
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row small,
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row .ht-table-action {
+  justify-self: end;
+  color: var(--ht-green-dim);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > .ht-monitor-row {
+  width: 100%;
+  color: var(--ht-ink);
+  background: var(--ht-surface-1);
+  border: 0;
+  border-bottom: 1px solid var(--ht-hairline);
+  border-radius: 0;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > .ht-monitor-row:hover,
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > .ht-monitor-row.selected {
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-monitor-list > .ht-monitor-row:focus-visible {
+  position: relative;
+  z-index: var(--ht-z-raised);
+  outline: 2px solid var(--ht-focus);
+  outline-offset: -2px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 72px;
+  padding: 16px 20px;
+  background: var(--ht-surface-1);
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > header h2 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > header .ht-kicker {
+  margin: 0 0 7px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > footer div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 7px 11px;
+  color: var(--ht-green-dim);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-control-center > footer a:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+  border-color: var(--ht-green-dim);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 4px 20px;
+  align-items: start;
+  padding: 28px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > img {
+  grid-row: 1 / span 5;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty .ht-onboarding-copy {
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty .ht-onboarding-copy .ht-kicker {
+  margin: 0 0 8px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty h2 {
+  margin: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > .button,
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > ol,
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > p {
+  grid-column: 2;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > ol {
+  margin: 6px 0 4px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  min-width: 34px;
+  padding-inline: 8px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  html[data-theme] .ht-shell .ht-main .ht-integration-table {
+    overflow-x: auto;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-table-head,
+  html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row {
+    min-width: 920px;
+  }
+}
+
+@media (max-width: 760px) {
+  html[data-theme] .ht-shell .ht-main .ht-control-center > footer {
+    display: grid;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-onboarding-empty {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > img,
+  html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > .button,
+  html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > ol,
+  html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > p {
+    grid-column: 1;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-onboarding-empty > img {
+    grid-row: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .ht-shell .ht-main .ht-integration-table > .ht-integration-row,
+  html[data-theme] .ht-shell .ht-main .ht-monitor-list > .ht-monitor-row {
+    transition: none;
+  }
+}

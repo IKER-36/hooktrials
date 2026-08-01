@@ -502,6 +502,7 @@ export const es: Record<string, string> = {
   'Selected route:': 'Ruta seleccionada:',
   'Open in Control Center': 'Abrir en el centro de control',
   'Integration reliability, now': 'Fiabilidad de integraciones, ahora',
+  'CURRENT STATE': 'ESTADO ACTUAL',
   'Control surface': 'Superficie de control',
   'Integration readiness': 'Preparación de la integración',
   'Production readiness': 'Preparación para producción',

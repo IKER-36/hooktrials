@@ -166,9 +166,16 @@ export function OverviewPage() {
           </div>
         </header>
         <ControlCenterSummary />
-        <div className="ht-onboarding">
+        <div
+          className="ht-onboarding ht-onboarding-empty"
+          role="region"
+          aria-labelledby="control-center-empty-title"
+        >
           <img src="/logo.png" alt="" width="56" height="56" />
-          <h2>Run your first trial</h2>
+          <div className="ht-onboarding-copy">
+            <p className="ht-kicker">START HERE</p>
+            <h2 id="control-center-empty-title">Run your first trial</h2>
+          </div>
           <p className="ht-muted-line">
             HookTrials receives a webhook and returns controlled responses. The sender performs the
             retries; HookTrials captures every attempt and explains what happened.

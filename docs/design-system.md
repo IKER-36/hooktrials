@@ -34,6 +34,8 @@ The system prioritizes operational clarity, legibility and predictable hierarchy
   chart containment. It is loaded last and uses the semantic tokens above.
 - `apps/web/src/components/ui/MetricCard.tsx` and `RouteTransition.tsx`: shared metric and route
   transition contracts. Telemetry charts use Recharts only where a visual comparison is useful.
+- Inventory and monitor rows must expose a visible open/selection affordance, a keyboard focus
+  ring and an accessible name. Editors and dialogs must trap focus and restore it on close.
 
 Keeping layout and visual overrides separate allows the product to evolve without changing API or
 workflow behavior. New components should use semantic `--ht-*` tokens rather than hard-coded brand

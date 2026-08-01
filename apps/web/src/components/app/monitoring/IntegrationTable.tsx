@@ -34,9 +34,16 @@ export function IntegrationTable({
         <span>Score</span>
         <span>Latency</span>
         <span>Latest issue</span>
+        <span>Open</span>
       </div>
       {routes.map((route) => (
-        <button key={route.id} type="button" onClick={() => onSelectRoute(route.endpointId)}>
+        <button
+          key={route.id}
+          type="button"
+          className="ht-integration-row"
+          onClick={() => onSelectRoute(route.endpointId)}
+          aria-label={`Open ${route.name} in Control Center`}
+        >
           <strong>{route.name}</strong>
           {/* Destination carried over from the removed duplicate route list. */}
           <span>webhook → {route.destinationHost ?? 'no destination'}</span>
@@ -46,10 +53,19 @@ export function IntegrationTable({
           <b>{route.score.score}/100</b>
           <code>{route.latestDelivery?.latencyMs ?? '—'} ms</code>
           <small>{route.incident?.cause ?? route.latestDelivery?.errorCategory ?? 'None'}</small>
+          <span className="ht-table-action" aria-hidden="true">
+            Open →
+          </span>
         </button>
       ))}
       {monitors.map((monitor) => (
-        <button key={monitor.id} type="button" onClick={() => onSelectMonitor(monitor.id)}>
+        <button
+          key={monitor.id}
+          type="button"
+          className="ht-integration-row"
+          onClick={() => onSelectMonitor(monitor.id)}
+          aria-label={`Open ${monitor.name} monitor`}
+        >
           <strong>{monitor.name}</strong>
           <span>{monitor.resourceType.replaceAll('_', ' ')}</span>
           <span>{monitor.environment}</span>
@@ -60,6 +76,9 @@ export function IntegrationTable({
           <small>
             {monitor.incident?.cause ?? monitor.metrics.latest?.errorCategory ?? 'None'}
           </small>
+          <span className="ht-table-action" aria-hidden="true">
+            Open →
+          </span>
         </button>
       ))}
     </section>

@@ -2,6 +2,36 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.3` — Operational workspace polish
+
+Released 1 August 2026. The dashboard now makes module actions, selected resources and empty
+states easier to understand and operate.
+
+### Added
+
+- Integration inventory rows now show an explicit **Open** affordance and expose the same action to
+  assistive technology.
+- The monitor editor traps keyboard focus while open and returns focus to the control that launched
+  it when closed.
+- Control Center’s first-run state now has a clearer start point and a more compact responsive
+  composition.
+
+### Improved
+
+- Selected monitor rows and inventory rows have consistent hover, focus and selected treatments in
+  light and dark themes.
+- Control Center summary actions now look like actionable controls instead of unstyled links.
+- Mobile empty states keep the logo, instructions and primary action in a readable order.
+
+### Fixed
+
+- Unstyled inventory buttons no longer look like inert text rows.
+- The monitor editor no longer allows keyboard focus to escape behind its modal surface.
+- The Control Center summary label is translated with the rest of the workspace instead of being
+  injected as a theme-only decoration.
+
+No database migration or user action is required.
+
 ## Release `v0.33.2` — Workspace visual polish
 
 Released 1 August 2026. The dashboard now uses a more consistent visual rhythm across modules,
