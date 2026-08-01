@@ -6,6 +6,7 @@ import { AlertChannelPanel } from '../../components/app/AlertChannelPanel';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { ProductState } from '../../components/ui/ProductState';
+import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { shortDate, timeAgo } from '../../lib/format';
@@ -196,6 +197,8 @@ export function OperationsPage() {
           </button>
         }
       />
+
+      <WorkspaceJourney />
 
       {error && data ? (
         <ProductState

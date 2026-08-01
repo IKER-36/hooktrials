@@ -79,6 +79,9 @@ colors.
 14. Home metric surfaces are actionable links when they represent a destination. Their hover and
     focus treatment must remain visible in both themes, and any selected telemetry window must be
     repeated in chart headings and supporting counts.
+15. Primary workspaces may expose a compact contextual journey when a workflow spans several
+    modules. It must complement the global rail rather than duplicate it, link each step to its
+    owning route, expose the current step, and collapse without horizontal scrolling on mobile.
 
 ## Accessibility and verification
 

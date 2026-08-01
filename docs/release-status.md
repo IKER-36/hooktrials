@@ -2,6 +2,27 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.8` — Contextual reliability journey
+
+Released 1 August 2026. The workspace now makes the operational path visible while you work,
+so each module points naturally to the next place to connect, inspect, measure, recover and prove.
+
+### Added
+
+- A compact workflow strip is available across Home, Webhook Hub, Control Center, Monitoring,
+  Operations and Evidence.
+- Each step links to its owning workspace and highlights the current destination.
+- The workflow remains usable on small screens, with a three-column layout and clear labels.
+
+### Improved
+
+- Navigation context is visible without duplicating the global sidebar or hiding secondary modules.
+- Keyboard focus, hover states and reduced-motion behavior follow the shared dashboard contract.
+- The sequence keeps the product story concrete: connect traffic, inspect delivery, measure
+  dependencies, recover incidents and retain evidence.
+
+No database migration or user action is required.
+
 ## Release `v0.33.7` — Actionable Home dashboard
 
 Released 1 August 2026. Home now helps you move from a signal to the next useful action without

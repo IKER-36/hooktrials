@@ -10,6 +10,7 @@ import { RouteJourney } from '../../components/app/RouteJourney';
 import { RouteConfiguration } from '../../components/app/RouteConfiguration';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
+import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { useEventStream } from '../../hooks/useEventStream';
@@ -143,6 +144,7 @@ export function OverviewPage() {
             </p>
           </div>
         </header>
+        <WorkspaceJourney />
         <ProductState
           title="Choose another route"
           description="Open the endpoint inventory to select an available Trial or live route."
@@ -165,6 +167,7 @@ export function OverviewPage() {
             <h1>Control Center</h1>
           </div>
         </header>
+        <WorkspaceJourney />
         <ControlCenterSummary />
         <div
           className="ht-onboarding ht-onboarding-empty"
@@ -237,6 +240,8 @@ export function OverviewPage() {
           </Link>
         </div>
       </header>
+
+      <WorkspaceJourney />
 
       <ControlCenterSummary />
       <RouteJourney endpoint={selected} />

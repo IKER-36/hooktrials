@@ -17,6 +17,7 @@ import {
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { MetricCard } from '../../components/ui/MetricCard';
+import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { timeAgo } from '../../lib/format';
@@ -362,6 +363,8 @@ export function HomePage() {
           </>
         }
       />
+
+      <WorkspaceJourney />
 
       {error && data ? (
         <ProductState

@@ -174,6 +174,113 @@ html[data-theme] .ht-shell .ht-main .ht-home-updated {
   white-space: nowrap;
 }
 
+/* Phase 18 — show the product's operational order without duplicating the
+ * global sidebar. The strip is informational navigation: each destination
+ * remains independently usable and the current step is explicit. */
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+  padding: 10px 12px;
+  border-top: 1px solid var(--ht-hairline);
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey-label {
+  color: var(--ht-faint);
+  font: 700 9px/1 var(--ht-mono);
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey ol {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey li > a {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 7px;
+  color: var(--ht-muted);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey li > a:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+  border-color: var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey li > a.active {
+  color: var(--ht-green);
+  background: color-mix(in srgb, var(--ht-green) 9%, var(--ht-surface-1));
+  border-color: color-mix(in srgb, var(--ht-green) 36%, var(--ht-hairline-bright));
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey li > a:focus-visible {
+  outline: 2px solid var(--ht-focus);
+  outline-offset: 1px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey li > a svg {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey li > a > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey-index {
+  color: var(--ht-faint);
+  font: 400 9px/1 var(--ht-mono);
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  .ht-workspace-journey
+  li
+  > a.active
+  .ht-workspace-journey-index {
+  color: var(--ht-green-dim);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-workspace-journey-arrow {
+  flex: 0 0 auto;
+  padding: 0 2px;
+  color: var(--ht-faint);
+  font: 400 12px/1 var(--ht-mono);
+}
+
 html[data-theme] .ht-shell .ht-main .ht-metric-card-topline {
   display: flex;
   align-items: center;
@@ -729,10 +836,30 @@ html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row > svg {
   html[data-theme] .ht-shell .ht-main .ht-home-updated {
     justify-self: flex-start;
   }
+
+  html[data-theme] .ht-shell .ht-main .ht-workspace-journey {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 9px 10px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-workspace-journey ol {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px 2px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-workspace-journey li > a {
+    padding: 7px 6px;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-workspace-journey-arrow {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row {
+  html[data-theme] .ht-shell .ht-main .ht-operation-timeline-row,
+  html[data-theme] .ht-shell .ht-main .ht-workspace-journey li > a {
     transition: none;
   }
 }

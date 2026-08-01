@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -406,6 +407,8 @@ export function LiveWebhooksPage() {
           </div>
         }
       />
+
+      <WorkspaceJourney />
 
       <section className="ht-live-flow" aria-label="Webhook traffic flow">
         <article>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { ProductState } from '../../components/ui/ProductState';
+import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { IntegrationTable } from '../../components/app/monitoring/IntegrationTable';
 import { MonitorDetail } from '../../components/app/monitoring/MonitorDetail';
 import { MonitorForm } from '../../components/app/monitoring/MonitorForm';
@@ -152,6 +153,8 @@ export function MonitorPage() {
           </>
         }
       />
+
+      <WorkspaceJourney />
 
       <section className="ht-monitor-summary" aria-label="Monitor summary">
         <article>

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { API_ORIGIN, apiRequest, readableError } from '../../lib/api';
@@ -148,6 +149,8 @@ export function EvidenceReportsPage() {
           </button>
         }
       />
+
+      <WorkspaceJourney />
 
       {error && reports.length > 0 ? (
         <p className="ht-inline-notice" role="status">
