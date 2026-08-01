@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Activity,
   ArrowRight,
@@ -44,6 +44,10 @@ interface HomeData {
 type HealthTone = 'new' | 'healthy' | 'degraded' | 'down';
 type DashboardWindow = 1 | 7 | 30;
 
+function readDashboardWindow(value: string | null): DashboardWindow {
+  return value === '7' || value === '30' ? (Number(value) as DashboardWindow) : 1;
+}
+
 interface PriorityItem {
   title: string;
   detail: string;
@@ -85,11 +89,27 @@ function monitorState(monitor: MonitorSummary): HealthTone {
 
 export function HomePage() {
   const { endpoints, loading: workspaceLoading, selectEndpoint } = useDashboard();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [windowDays, setWindowDays] = useState<DashboardWindow>(1);
+  const windowDays = readDashboardWindow(searchParams.get('window'));
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+
+  const setWindowDays = useCallback(
+    (days: DashboardWindow) => {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          if (days === 1) next.delete('window');
+          else next.set('window', String(days));
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const load = useCallback(async () => {
     const results = await Promise.allSettled([

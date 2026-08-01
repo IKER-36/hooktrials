@@ -48,6 +48,10 @@ state; omitting `view` shows all live connections. Monitoring accepts `?monitor=
 selected monitor. These parameters contain navigation state only and are safe to share; they never
 include payloads, credentials or destination URLs.
 
+Home accepts `?window=7` or `?window=30` to share the seven- or thirty-day reliability view; omitting
+`window` uses the 24-hour default. The selected period is repeated in the telemetry labels and does
+not expose any account or integration data.
+
 Links from endpoint, webhook, monitor and recovery views preserve the selected route when moving
 between modules. Use Home for workspace orientation and Control Center when you need the complete
 evidence and retry timeline for one route.

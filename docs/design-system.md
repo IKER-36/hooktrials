@@ -86,6 +86,9 @@ colors.
     when it improves hand-off or triage. A deep-linked row or selected resource must expose a visible
     target state, keep its semantic status contrast, and remain reachable after asynchronous data
     loads. Invalid selections must fall back without trapping the user in an empty view.
+17. Dashboard telemetry windows are view state, not data filters: preserve the selected period in
+    the URL, repeat it in headings and counts, and default invalid values to the shortest supported
+    window.
 
 ## Accessibility and verification
 

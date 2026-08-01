@@ -2,6 +2,27 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.11` — Shareable Home windows
+
+Released 1 August 2026. Home now keeps the selected reliability window in the address, so a
+dashboard view can be refreshed or handed off without losing the period being investigated.
+
+### Added
+
+- Home supports shareable `24 hours`, `7 days` and `30 days` views through a non-sensitive URL
+  parameter.
+- A shared Home link opens the same telemetry period before the next refresh cycle runs.
+- The selected window remains visible in the chart heading, supporting counts and reliability
+  summary so the time range is never ambiguous.
+
+### Improved
+
+- Changing the period updates the view without a full page reload or a noisy browser-history entry.
+- Invalid or unsupported window values safely use the default 24-hour view.
+- Existing metric links, responsive layout and reduced-motion chart behavior remain unchanged.
+
+No database migration or user action is required.
+
 ## Release `v0.33.10` — Shareable workspace views
 
 Released 1 August 2026. Webhook Hub and Monitoring now keep the useful part of your current view
