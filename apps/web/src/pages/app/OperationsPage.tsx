@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowRight, BellRing, CircleAlert, RotateCcw } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { AlertChannelPanel } from '../../components/app/AlertChannelPanel';
@@ -21,6 +21,15 @@ import type {
 type DeliveryAction = { delivery: OperationalDeadLetter; kind: 'retry' | 'replay' };
 
 type TimelineFilter = 'all' | 'incidents' | 'recovery' | 'alerts';
+type IncidentFilter = 'all' | 'open' | 'unacknowledged' | 'recovered';
+
+function readTimelineFilter(value: string | null): TimelineFilter {
+  return value === 'incidents' || value === 'recovery' || value === 'alerts' ? value : 'all';
+}
+
+function readIncidentFilter(value: string | null): IncidentFilter {
+  return value === 'open' || value === 'unacknowledged' || value === 'recovered' ? value : 'all';
+}
 
 interface OperationalTimelineItem {
   id: string;
@@ -37,19 +46,26 @@ interface OperationalTimelineItem {
 
 export function OperationsPage() {
   const { selectEndpoint } = useDashboard();
+  const location = useLocation();
   const [data, setData] = useState<OperationsResponse | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showResolved, setShowResolved] = useState(false);
-  const [incidentFilter, setIncidentFilter] = useState<
-    'all' | 'open' | 'unacknowledged' | 'recovered'
-  >('all');
-  const [timelineFilter, setTimelineFilter] = useState<TimelineFilter>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const showResolved = searchParams.get('resolved') === '1';
+  const incidentFilter = readIncidentFilter(searchParams.get('incidents'));
+  const timelineFilter = readTimelineFilter(searchParams.get('view'));
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [triageBusy, setTriageBusy] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<DeliveryAction | null>(null);
   const [busy, setBusy] = useState(false);
+
+  function setViewParam(key: 'view' | 'incidents' | 'resolved', value: string | null) {
+    const next = new URLSearchParams(searchParams);
+    if (!value) next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next, { replace: true });
+  }
 
   const load = useCallback(async () => {
     const [response, workspace] = await Promise.all([
@@ -71,6 +87,13 @@ export function OperationsPage() {
     );
     return () => window.clearInterval(timer);
   }, [load]);
+
+  useEffect(() => {
+    if (!data || !location.hash) return;
+    const target = document.getElementById(location.hash.slice(1));
+    if (!target) return;
+    window.requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+  }, [data, incidentFilter, location.hash, showResolved, timelineFilter]);
 
   const deadLetters = useMemo(
     () => data?.deadLetters.filter((delivery) => showResolved || !delivery.resolved) ?? [],
@@ -102,7 +125,7 @@ export function OperationsPage() {
           incident.status === 'open'
             ? incident.openedAt
             : (incident.recoveredAt ?? incident.openedAt),
-        href: '#incident-timeline',
+        href: `/app/operations?view=incidents#incident-${incident.id}`,
         tone: incident.status === 'open' ? 'danger' : 'positive',
         icon: CircleAlert,
       });
@@ -123,7 +146,7 @@ export function OperationsPage() {
             ? 'retrying'
             : 'dead letter',
         timestamp: delivery.createdAt,
-        href: '#recovery-queue',
+        href: `/app/operations?view=recovery${delivery.resolved ? '&resolved=1' : ''}#recovery-${delivery.id}`,
         tone: delivery.resolved ? 'positive' : delivery.recoveryPending ? 'warning' : 'danger',
         icon: RotateCcw,
         endpointId: delivery.endpointId,
@@ -137,7 +160,7 @@ export function OperationsPage() {
         detail: `${alert.resourceName} · ${alert.errorCategory ?? (alert.statusCode ? `HTTP ${alert.statusCode}` : 'delivery evidence')}`,
         status: alert.state,
         timestamp: alert.createdAt,
-        href: '#alert-audit',
+        href: `/app/operations?view=alerts#alert-${alert.id}`,
         tone: alert.state === 'sent' ? 'positive' : alert.state === 'failed' ? 'danger' : 'warning',
         icon: BellRing,
       });
@@ -279,7 +302,9 @@ export function OperationsPage() {
                 <span className="sr-only">Operational activity filter</span>
                 <select
                   value={timelineFilter}
-                  onChange={(event) => setTimelineFilter(event.target.value as TimelineFilter)}
+                  onChange={(event) =>
+                    setViewParam('view', event.target.value === 'all' ? null : event.target.value)
+                  }
                 >
                   <option value="all">All activity</option>
                   <option value="incidents">Incidents</option>
@@ -338,8 +363,9 @@ export function OperationsPage() {
                 <select
                   value={incidentFilter}
                   onChange={(event) =>
-                    setIncidentFilter(
-                      event.target.value as 'all' | 'open' | 'unacknowledged' | 'recovered',
+                    setViewParam(
+                      'incidents',
+                      event.target.value === 'all' ? null : event.target.value,
                     )
                   }
                 >
@@ -377,6 +403,7 @@ export function OperationsPage() {
                 {incidents.map((incident) => (
                   <article
                     key={incident.id}
+                    id={`incident-${incident.id}`}
                     className={`ht-incident-row ${incident.acknowledgedAt ? 'acknowledged' : ''} ${incident.status}`}
                     aria-label={`${incident.resourceName} · ${incident.status}`}
                   >
@@ -479,7 +506,7 @@ export function OperationsPage() {
                 <input
                   type="checkbox"
                   checked={showResolved}
-                  onChange={(event) => setShowResolved(event.target.checked)}
+                  onChange={(event) => setViewParam('resolved', event.target.checked ? '1' : null)}
                 />{' '}
                 Show resolved
               </label>
@@ -501,6 +528,7 @@ export function OperationsPage() {
                 {deadLetters.map((delivery) => (
                   <article
                     key={delivery.id}
+                    id={`recovery-${delivery.id}`}
                     className={`ht-dlq-row ${delivery.resolved ? 'resolved' : ''}`}
                     aria-label={`${delivery.resourceName} · ${delivery.resolved ? 'recovered' : 'dead letter'}`}
                   >
@@ -575,6 +603,7 @@ export function OperationsPage() {
                 {data.alerts.map((alert) => (
                   <article
                     key={alert.id}
+                    id={`alert-${alert.id}`}
                     className="ht-alert-row"
                     aria-label={`${alert.resourceName} · ${alert.event}`}
                   >

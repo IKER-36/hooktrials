@@ -159,16 +159,19 @@ export function HomePage() {
       items.push({
         title: `${operations?.summary.openIncidents ?? 0} open incident${operations?.summary.openIncidents === 1 ? '' : 's'}`,
         detail: firstIncident.summary,
-        href: '/app/operations',
+        href: `/app/operations?view=incidents#incident-${firstIncident.id}`,
         tone: 'down',
         icon: CircleAlert,
       });
     }
     if (unresolvedDeadLetters > 0) {
+      const firstDeadLetter = operations?.deadLetters.find((delivery) => !delivery.resolved);
       items.push({
         title: `${unresolvedDeadLetters} delivery${unresolvedDeadLetters === 1 ? '' : 'ies'} waiting`,
         detail: 'Review the recovery queue before replaying or retrying.',
-        href: '/app/operations',
+        href: firstDeadLetter
+          ? `/app/operations?view=recovery#recovery-${firstDeadLetter.id}`
+          : '/app/operations?view=recovery#recovery-queue',
         tone: 'down',
         icon: TriangleAlert,
       });
@@ -275,7 +278,7 @@ export function HomePage() {
         detail: incident.summary,
         timestamp: incident.recoveredAt ?? incident.openedAt,
         tone: incident.status === 'open' ? 'down' : 'healthy',
-        href: '/app/operations',
+        href: `/app/operations?view=incidents#incident-${incident.id}`,
       });
     }
     return items

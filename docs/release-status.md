@@ -2,6 +2,28 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.9` — Actionable Operations hand-offs
+
+Released 1 August 2026. Operations links now carry the context needed to investigate one signal
+without making the operator rebuild the view manually.
+
+### Added
+
+- Home priority items and the activity timeline open the exact incident, delivery or alert that
+  needs attention.
+- Operations filters are preserved in the URL for incidents, recovery and alert delivery views.
+- Resolved recovery links open the resolved view automatically so historical evidence is never
+  hidden behind a default filter.
+
+### Improved
+
+- Deep links wait for asynchronous data and then scroll to the requested row.
+- The destination row receives a clear, theme-safe target highlight while preserving its real
+  healthy, warning or failure state.
+- Handoffs can share a queue view without exposing payloads, credentials or destination data.
+
+No database migration or user action is required.
+
 ## Release `v0.33.8` — Contextual reliability journey
 
 Released 1 August 2026. The workspace now makes the operational path visible while you work,

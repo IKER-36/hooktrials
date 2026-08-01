@@ -491,6 +491,24 @@ html[data-theme] .ht-shell .ht-main .ht-incident-row,
 html[data-theme] .ht-shell .ht-main .ht-dlq-row,
 html[data-theme] .ht-shell .ht-main .ht-alert-row {
   border-radius: 8px;
+  scroll-margin-top: 24px;
+}
+
+/* Phase 19 — queue links can land on one exact item. Keep the destination
+ * obvious without adding a second navigation surface or depending on motion. */
+html[data-theme] .ht-shell .ht-main .ht-incident-row:target,
+html[data-theme] .ht-shell .ht-main .ht-dlq-row:target,
+html[data-theme] .ht-shell .ht-main .ht-alert-row:target {
+  background: color-mix(in srgb, var(--ht-focus) 10%, var(--ht-surface-1));
+  box-shadow: inset 0 0 0 1px var(--ht-focus);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-incident-row.open:target {
+  background: color-mix(in srgb, var(--ht-danger-bg) 72%, var(--ht-surface-1));
+}
+
+html[data-theme] .ht-shell .ht-main .ht-dlq-row:not(.resolved):target {
+  background: color-mix(in srgb, var(--ht-warning-bg) 64%, var(--ht-surface-1));
 }
 
 html[data-theme] .ht-shell .ht-main .ht-incident-row.acknowledged,

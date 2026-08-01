@@ -32,6 +32,12 @@ The Operations page combines open/recovered incidents, unresolved dead letters, 
 and outgoing alert audit. Resolved dead letters remain available as evidence but are hidden by
 default. Every recovery action requires confirmation and records its source and requesting user.
 
+Links from Home and the live activity timeline preserve the queue view in the URL and land on the
+specific incident, delivery or alert that needs attention. This makes a hand-off reproducible:
+opening a link keeps the selected filter and highlights the destination row without exposing any
+payload or credential data. Queue filters can also be changed directly and shared safely because
+they contain only view state, never secrets.
+
 ## Downloadable evidence
 
 Open an event and download either:
