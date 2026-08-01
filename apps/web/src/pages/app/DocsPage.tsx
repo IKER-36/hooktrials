@@ -5,6 +5,7 @@ import {
   BellRing,
   BookOpen,
   Code2,
+  FileUp,
   FlaskConical,
   Gauge,
   GitBranch,
@@ -249,6 +250,9 @@ export function DocsPage() {
           >
             <Code2 aria-hidden="true" /> OpenAPI catalogue
           </a>
+          <Link className="button secondary" to="/app/openapi-import">
+            <FileUp aria-hidden="true" /> Import OpenAPI
+          </Link>
           <a
             className="button secondary"
             href="https://github.com/IKER-36/hooktrials/tree/main/docs"

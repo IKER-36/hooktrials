@@ -1377,6 +1377,76 @@ export const es: Record<string, string> = {
     'Destino recuperado. El evento protegido se entregó correctamente sin pérdida de datos.',
   'mode:': 'modo:',
   'environment:': 'entorno:',
+  'Import OpenAPI': 'Importar OpenAPI',
+  'INTEGRATION TOOLING': 'HERRAMIENTAS DE INTEGRACIÓN',
+  'Import an OpenAPI contract': 'Importa un contrato OpenAPI',
+  'Turn documented read operations into monitored integrations without copying secrets or building each check by hand.':
+    'Convierte operaciones de lectura documentadas en integraciones monitorizadas sin copiar secretos ni crear cada comprobación a mano.',
+  'Open documentation': 'Abrir documentación',
+  'View monitoring': 'Ver monitorización',
+  'Safe by default.': 'Seguro por defecto.',
+  'HookTrials imports operation names, paths and expected success codes. Authentication schemes, headers, request bodies and secrets are never copied.':
+    'HookTrials importa nombres de operaciones, rutas y códigos de éxito esperados. Nunca copia esquemas de autenticación, headers, cuerpos de petición ni secretos.',
+  '01 / SOURCE': '01 / ORIGEN',
+  'Bring your contract': 'Añade tu contrato',
+  'OpenAPI source': 'Origen OpenAPI',
+  'Upload file': 'Subir archivo',
+  'Paste JSON/YAML': 'Pegar JSON/YAML',
+  'Fetch URL': 'Cargar URL',
+  'Choose an OpenAPI file': 'Elige un archivo OpenAPI',
+  'JSON or YAML · maximum 1 MB': 'JSON o YAML · máximo 1 MB',
+  'OpenAPI document': 'Documento OpenAPI',
+  'Read contract': 'Leer contrato',
+  'Public OpenAPI URL': 'URL pública OpenAPI',
+  'Fetch and read': 'Cargar y leer',
+  'The browser fetches the document directly. The source must allow CORS.':
+    'El navegador carga el documento directamente. El origen debe permitir CORS.',
+  'Document loaded. Read it again after changing the base URL.':
+    'Documento cargado. Vuelve a leerlo después de cambiar la URL base.',
+  'Read again': 'Volver a leer',
+  'Concrete server URL': 'URL concreta del servidor',
+  'Overrides the first OpenAPI server and replaces variables with a concrete host.':
+    'Sobrescribe el primer servidor OpenAPI y sustituye sus variables por un host concreto.',
+  'WHAT WILL HAPPEN': 'QUÉ OCURRIRÁ',
+  'Read the contract locally in your browser.': 'Lee el contrato localmente en tu navegador.',
+  'Choose safe operations and review their targets.':
+    'Elige operaciones seguras y revisa sus destinos.',
+  'Create monitors in test or staging.': 'Crea monitores en test o staging.',
+  'Path parameters are skipped until you provide concrete values. POST operations require an explicit opt-in.':
+    'Las rutas con parámetros se omiten hasta que proporciones valores concretos. Las operaciones POST requieren activación explícita.',
+  'No contract loaded yet.': 'Todavía no hay ningún contrato cargado.',
+  'Import an OpenAPI 3.x document to preview monitorable operations.':
+    'Importa un documento OpenAPI 3.x para previsualizar las operaciones monitorizables.',
+  'Read the import guide': 'Leer la guía de importación',
+  '02 / REVIEW': '02 / REVISIÓN',
+  Version: 'Versión',
+  'server URL required': 'URL del servidor necesaria',
+  monitorable: 'monitorizables',
+  skipped: 'omitidas',
+  'Include POST operations': 'Incluir operaciones POST',
+  'Sends an empty request; review side effects first.':
+    'Envía una petición vacía; revisa antes sus efectos.',
+  selected: 'seleccionadas',
+  'Select all safe': 'Seleccionar seguras',
+  Clear: 'Limpiar',
+  'No authentication or request body is imported.':
+    'No se importan autenticación ni cuerpos de petición.',
+  'Create selected monitors': 'Crear monitores seleccionados',
+  '03 / RESULT': '03 / RESULTADO',
+  'monitors created': 'monitores creados',
+  'The OpenAPI document is larger than 1 MB.': 'El documento OpenAPI supera 1 MB.',
+  'Add an OpenAPI JSON or YAML document first.': 'Añade primero un documento OpenAPI JSON o YAML.',
+  'Enter a valid HTTP(S) OpenAPI URL.': 'Introduce una URL OpenAPI HTTP(S) válida.',
+  'Only HTTP(S) OpenAPI URLs are supported.': 'Solo se admiten URLs OpenAPI HTTP(S).',
+  'Select at least one operation to import.': 'Selecciona al menos una operación para importar.',
+  'Import up to 20 monitors at a time.': 'Importa hasta 20 monitores cada vez.',
+  'OpenAPI imports are limited to test or staging until each monitor is reviewed.':
+    'Las importaciones OpenAPI se limitan a test o staging hasta revisar cada monitor.',
+  'Missing target URL.': 'Falta la URL de destino.',
+  'Monitor created.': 'Monitor creado.',
+  'The OpenAPI URL took too long to respond.': 'La URL OpenAPI tardó demasiado en responder.',
+  'The OpenAPI URL could not be loaded.': 'No se pudo cargar la URL OpenAPI.',
+  'The file could not be parsed.': 'No se pudo interpretar el archivo.',
 };
 
 export const phrasePatterns: Array<[RegExp, (match: RegExpMatchArray) => string]> = [

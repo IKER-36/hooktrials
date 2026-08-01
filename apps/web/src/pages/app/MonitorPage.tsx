@@ -122,6 +122,9 @@ export function MonitorPage() {
         description="Know what failed, where it failed and when it recovered."
         actions={
           <>
+            <Link className="button secondary compact" to="/app/openapi-import">
+              Import OpenAPI
+            </Link>
             <Link className="button secondary compact" to="/app/operations#alert-channel">
               Configure alerts
             </Link>

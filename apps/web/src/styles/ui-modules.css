@@ -2146,6 +2146,567 @@ html[data-theme] .ht-shell .ht-main .ht-route-journey small {
   }
 }
 
+/* ---------- OpenAPI import ---------- */
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-import {
+  gap: 18px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-intro {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline);
+  border-left: 2px solid var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-intro svg,
+html[data-theme] .ht-shell .ht-main .ht-openapi-note svg,
+html[data-theme] .ht-shell .ht-main .ht-openapi-warnings svg {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-intro p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-source-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
+  gap: 14px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-panel,
+html[data-theme] .ht-shell .ht-main .ht-openapi-preview,
+html[data-theme] .ht-shell .ht-main .ht-openapi-results {
+  min-width: 0;
+  overflow: hidden;
+  background: var(--ht-surface-1);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-module-radius);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-panel > header,
+html[data-theme] .ht-shell .ht-main .ht-openapi-preview > header,
+html[data-theme] .ht-shell .ht-main .ht-openapi-results > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-panel > header h2,
+html[data-theme] .ht-shell .ht-main .ht-openapi-preview > header h2,
+html[data-theme] .ht-shell .ht-main .ht-openapi-results > header h2 {
+  margin: 0;
+  color: var(--ht-ink);
+  font-size: 18px;
+  letter-spacing: -0.04em;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-panel > header .ht-kicker,
+html[data-theme] .ht-shell .ht-main .ht-openapi-preview > header .ht-kicker,
+html[data-theme] .ht-shell .ht-main .ht-openapi-results > header .ht-kicker {
+  margin-bottom: 7px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-panel > header code,
+html[data-theme] .ht-shell .ht-main .ht-openapi-preview > header p,
+html[data-theme] .ht-shell .ht-main .ht-openapi-results > header p {
+  margin: 7px 0 0;
+  color: var(--ht-faint);
+  font: 10px/1.4 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 12px 20px 0;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-tabs button {
+  padding: 9px 11px 10px;
+  color: var(--ht-muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-tabs button:hover,
+html[data-theme] .ht-shell .ht-main .ht-openapi-tabs button.active {
+  color: var(--ht-ink);
+  border-bottom-color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-dropzone {
+  display: grid;
+  place-items: center;
+  gap: 7px;
+  min-height: 188px;
+  margin: 18px 20px;
+  padding: 24px;
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px dashed var(--ht-hairline-bright);
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-dropzone:hover,
+html[data-theme] .ht-shell .ht-main .ht-openapi-dropzone:focus-within {
+  color: var(--ht-ink);
+  border-color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-dropzone svg {
+  width: 25px;
+  height: 25px;
+  color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-dropzone strong {
+  color: var(--ht-ink);
+  font-size: 14px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-dropzone span,
+html[data-theme] .ht-shell .ht-main .ht-openapi-url-form small,
+html[data-theme] .ht-shell .ht-main .ht-openapi-base-url small {
+  color: var(--ht-faint);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-textarea,
+html[data-theme] .ht-shell .ht-main .ht-openapi-url-form,
+html[data-theme] .ht-shell .ht-main .ht-openapi-base-url {
+  display: grid;
+  gap: 9px;
+  margin: 18px 20px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-textarea textarea {
+  min-height: 190px;
+  font-family: var(--ht-mono);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-textarea .button,
+html[data-theme] .ht-shell .ht-main .ht-openapi-url-form .button {
+  justify-self: start;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-url-form {
+  margin-bottom: 6px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-source-ready {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin: -2px 20px 18px;
+  padding: 10px 12px;
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-source-ready svg {
+  color: var(--ht-green);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-source-ready span {
+  flex: 1;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-base-url {
+  margin-top: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-howto {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 18px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-howto > .ht-kicker {
+  margin: 18px 20px 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-howto ol {
+  display: grid;
+  gap: 0;
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-howto li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  padding: 15px 20px;
+  border-top: 1px solid var(--ht-hairline);
+  color: var(--ht-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-howto li b {
+  color: var(--ht-green);
+  font: 11px/1.4 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-note {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin: 0 20px;
+  padding: 12px;
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-preview > header {
+  align-items: center;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-counts {
+  display: flex;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-counts span {
+  display: grid;
+  gap: 3px;
+  color: var(--ht-faint);
+  font: 9px/1.2 var(--ht-mono);
+  text-align: right;
+  text-transform: uppercase;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-counts b {
+  color: var(--ht-green);
+  font-size: 21px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-warnings {
+  display: grid;
+  gap: 6px;
+  padding: 12px 20px;
+  background: color-mix(in srgb, var(--ht-amber) 10%, var(--ht-surface-1));
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-warnings p {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  color: var(--ht-amber);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-warnings svg {
+  color: var(--ht-amber);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-settings {
+  display: grid;
+  grid-template-columns: 180px 180px minmax(0, 1fr);
+  gap: 12px;
+  align-items: end;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-post-toggle {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  min-height: 43px;
+  padding: 10px 12px;
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-post-toggle span {
+  display: grid;
+  gap: 4px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-post-toggle strong {
+  color: var(--ht-ink);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-post-toggle small {
+  color: var(--ht-faint);
+  font-size: 10px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-selection-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 20px;
+  color: var(--ht-muted);
+  border-bottom: 1px solid var(--ht-hairline);
+  font: 10px/1.3 var(--ht-mono);
+  text-transform: uppercase;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-selection-bar > div {
+  display: flex;
+  gap: 6px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operations {
+  display: grid;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation {
+  display: grid;
+  grid-template-columns: 18px 54px minmax(0, 1fr) minmax(120px, 0.45fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--ht-hairline);
+  cursor: pointer;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation:hover:not(.is-disabled) {
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation.is-disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-method {
+  padding: 4px 5px;
+  color: var(--ht-green);
+  border: 1px solid color-mix(in srgb, var(--ht-green) 45%, transparent);
+  font: 10px/1.2 var(--ht-mono);
+  text-align: center;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-method.method-post {
+  color: var(--ht-amber);
+  border-color: color-mix(in srgb, var(--ht-amber) 45%, transparent);
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  .ht-openapi-method:not(.method-get):not(.method-head):not(.method-post) {
+  color: var(--ht-red);
+  border-color: color-mix(in srgb, var(--ht-red) 45%, transparent);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation-copy strong {
+  overflow: hidden;
+  color: var(--ht-ink);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation-copy code {
+  overflow: hidden;
+  color: var(--ht-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation-copy small,
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation-meta {
+  overflow: hidden;
+  color: var(--ht-faint);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation-meta {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-operation-meta svg {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: var(--ht-red);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-preview > .ht-form-note {
+  margin: 12px 20px 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  color: var(--ht-faint);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-actions .button {
+  flex: 0 0 auto;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-results > header {
+  align-items: center;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-results ul {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-results li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+  align-items: center;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--ht-hairline);
+  font-size: 11px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-results li:last-child {
+  border-bottom: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-results li > span {
+  color: var(--ht-green);
+  font: 700 13px/1 var(--ht-mono);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-results li.failed > span {
+  color: var(--ht-red);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-openapi-results li small {
+  overflow: hidden;
+  color: var(--ht-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ht-spin {
+  animation: ht-openapi-spin 0.85s linear infinite;
+}
+
+@keyframes ht-openapi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 820px) {
+  html[data-theme] .ht-shell .ht-main .ht-openapi-source-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-settings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-post-toggle {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  html[data-theme] .ht-shell .ht-main .ht-openapi-panel > header,
+  html[data-theme] .ht-shell .ht-main .ht-openapi-preview > header,
+  html[data-theme] .ht-shell .ht-main .ht-openapi-results > header,
+  html[data-theme] .ht-shell .ht-main .ht-openapi-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-counts {
+    justify-content: flex-start;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-counts span {
+    text-align: left;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-settings {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-operation {
+    grid-template-columns: 18px 54px minmax(0, 1fr);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-operation-meta {
+    grid-column: 3;
+    justify-content: flex-start;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-results li {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-openapi-results li small {
+    grid-column: 2;
+  }
+}
+
 /* ---------- Command palette ---------- */
 
 .ht-command-trigger {

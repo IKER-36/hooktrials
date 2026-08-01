@@ -2,6 +2,38 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.30.0` — OpenAPI import for monitored integrations
+
+The dashboard can now read an OpenAPI 3.x contract, preview safe operations and create reviewed
+test or staging monitors without copying authentication details or request bodies.
+
+### Added
+
+- **Resources → Import OpenAPI** accepts JSON/YAML files, pasted documents and public CORS-enabled
+  URLs.
+- The review step shows the resolved server, operation method, path and expected success range.
+- Up to 20 selected monitors can be created in one action, with per-operation success and failure
+  results.
+- GET and HEAD operations are selected by default; POST requires an explicit side-effect warning
+  acknowledgement.
+
+### Improved
+
+- Path templates and unsupported write methods remain visible with a reason instead of becoming
+  ambiguous monitors.
+- Import is limited to Test and Staging so every generated check can be reviewed before production.
+- Public and in-product documentation now includes the complete import workflow and safety model.
+
+### Fixed
+
+- Avoided copying authentication schemes, headers, request bodies, examples or secrets from an API
+  specification.
+- Kept the import flow browser-local, preventing the API from becoming an arbitrary specification
+  proxy.
+
+No database migration is required. Existing accounts, resources, events and API keys remain
+compatible.
+
 ## Release `v0.29.0` — API catalogue and CI discovery
 
 This release makes the HookTrials integration surface easier to discover and safer to automate.

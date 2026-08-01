@@ -11,8 +11,8 @@ The dashboard deliberately separates live work from experiments:
   with real integrations, health signals, incidents and recovery.
 - **Lab** contains Trial endpoints, Failure scenarios and Guided Demo. These modules use synthetic
   traffic and deterministic failures without being presented as live connections.
-- **Resources** contains the searchable operator documentation, Evidence & reports, API keys and
-  workspace tools.
+- **Resources** contains the searchable operator documentation, OpenAPI import, Evidence & reports,
+  API keys and workspace tools.
 
 The slim context line above every page always identifies the current workspace and module. The same
 structure is retained when the desktop rail is collapsed and in the horizontally scrollable mobile

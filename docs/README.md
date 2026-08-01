@@ -8,6 +8,7 @@
 - [Observe mode](observe-mode.md)
 - [Protect mode](protect-mode.md)
 - [Monitoring HTTP and ICMP services](monitoring.md)
+- [OpenAPI import](openapi-import.md)
 - [SLO and reliability views](reliability-objectives.md)
 - [English and Spanish interface](internationalization.md)
 - [Reliability Replay](reliability-replay.md)
@@ -32,6 +33,7 @@ This directory contains documentation intended to be published with the source c
 | [Guided Demo](demo-lab.md)                             | Complete product control-loop demonstration     |
 | [CLI and CI](cli-and-ci.md)                            | Terminal and GitHub Action reliability gates    |
 | [API catalogue](api-catalogue.md)                      | OpenAPI discovery and CLI contract checks       |
+| [OpenAPI import](openapi-import.md)                    | Generate safe test/staging monitors from a spec |
 | [API keys and automation](api-keys.md)                 | Scoped CI runs and redacted evidence export     |
 | [Competition demo](competition-demo.md)                | Reproducible three-minute judging script        |
 | [Failure scenarios](scenario-studio.md)                | Custom response-sequence authoring              |

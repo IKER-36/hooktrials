@@ -19,7 +19,8 @@
     "react-dom": "19.2.7",
     "react-router-dom": "7.18.1",
     "recharts": "^3.10.1",
-    "vite": "8.1.5"
+    "vite": "8.1.5",
+    "yaml": "2.9.0"
   },
   "devDependencies": {
     "@types/react": "19.2.17",

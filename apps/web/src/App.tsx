@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { AppLayout } from './layouts/AppLayout';
 import { AuthPage } from './pages/AuthPage';
 import { EvidencePage } from './pages/EvidencePage';
@@ -19,6 +20,12 @@ import { WorkspacePage } from './pages/app/WorkspacePage';
 import { AccountSettingsPage } from './pages/app/AccountSettingsPage';
 import { useAuth } from './context/AuthContext';
 import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/EmailActionPage';
+
+const OpenApiImportPage = lazy(() =>
+  import('./pages/app/OpenApiImportPage').then(({ OpenApiImportPage: page }) => ({
+    default: page,
+  })),
+);
 
 function RootRedirect() {
   const { user, loading, setup } = useAuth();
@@ -50,6 +57,14 @@ export function App() {
         <Route path="operations" element={<OperationsPage />} />
         <Route path="demo" element={<DemoPage />} />
         <Route path="docs" element={<DocsPage />} />
+        <Route
+          path="openapi-import"
+          element={
+            <Suspense fallback={null}>
+              <OpenApiImportPage />
+            </Suspense>
+          }
+        />
         <Route path="evidence" element={<EvidenceReportsPage />} />
         <Route path="api-keys" element={<ApiKeysPage />} />
         {/* Audit entries now live with operational triage. Keep the old URL as a
