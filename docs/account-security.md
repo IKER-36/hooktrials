@@ -4,6 +4,14 @@ HookTrials keeps account access separate from webhook and monitoring credentials
 settings** from the profile area to review your profile, email status, password and active browser
 sessions.
 
+## Email verification
+
+If your account still needs verification, Account settings shows the current email state and a
+**Resend verification email** action. Use it when the first message has not arrived, then check the
+inbox and spam folder. The action does not change your email, password or existing workspace data.
+Accounts that were already active before verification enforcement remain usable; only accounts
+marked as requiring verification are asked to complete this step.
+
 ## Active sessions
 
 The **Active sessions** section lists every unexpired browser session for your account, including
