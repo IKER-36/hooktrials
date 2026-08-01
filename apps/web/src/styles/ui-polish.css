@@ -1553,6 +1553,61 @@ html[data-theme] .ht-shell .ht-main .ht-modal-close {
   line-height: 1;
 }
 
+/* Phase 20A — compact domain controls still get the same predictable hit
+ * area as the shared button contract. */
+html[data-theme] .ht-shell .ht-main .ht-attempt-nav button,
+html[data-theme] .ht-shell .ht-main .ht-toggle button,
+html[data-theme] .ht-shell .ht-main .ht-delivery-actions button {
+  min-height: 34px;
+}
+
+/* Selection is communicated by surface and divider changes. Avoid a bright
+ * vertical rail that makes every list feel like a generic admin template. */
+html[data-theme] .ht-shell .ht-main .ht-scenario-library-item.selected {
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--ht-green) 55%, var(--ht-hairline));
+}
+
+html[data-theme] .ht-shell .ht-main .ht-scenario-library-item:hover:not(.selected) {
+  box-shadow: inset 0 -1px 0 var(--ht-hairline-bright);
+}
+
+/* Replace legacy hard-coded dark-theme colours in the event inspector with
+ * the same semantic tokens used by the rest of the workspace. */
+html[data-theme] .ht-shell .ht-main :where(.ht-attempt-nav button, .ht-toggle button) {
+  color: var(--ht-muted);
+  background: var(--ht-surface-2);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: var(--ht-radius-sm);
+}
+
+html[data-theme] .ht-shell .ht-main :where(.ht-attempt-nav button:hover, .ht-toggle button:hover) {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+  border-color: var(--ht-green-dim);
+}
+
+html[data-theme]
+  .ht-shell
+  .ht-main
+  :where(.ht-attempt-nav button.active, .ht-toggle button.active) {
+  color: var(--ht-ink);
+  background: color-mix(in srgb, var(--ht-green) 9%, var(--ht-surface-2));
+  border-color: color-mix(in srgb, var(--ht-green) 50%, var(--ht-hairline-bright));
+}
+
+html[data-theme] .ht-shell .ht-main .ht-delivery-actions button {
+  color: var(--ht-orange);
+  background: var(--ht-surface-2);
+  border-color: color-mix(in srgb, var(--ht-orange) 45%, var(--ht-hairline-bright));
+  border-radius: var(--ht-radius-sm);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-delivery-actions button:hover {
+  color: var(--ht-ink);
+  background: var(--ht-surface-hover);
+  border-color: var(--ht-orange);
+}
+
 @media (max-width: 900px) {
   html[data-theme] .ht-shell .ht-main .ht-integration-table {
     overflow-x: auto;
