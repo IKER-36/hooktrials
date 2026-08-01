@@ -1608,6 +1608,18 @@ html[data-theme] .ht-shell .ht-main .ht-delivery-actions button:hover {
   border-color: var(--ht-orange);
 }
 
+/* Public status is outside the authenticated shell, but its refresh action
+ * follows the same compact control rhythm. */
+.ht-public-tools .button {
+  min-height: 32px;
+  padding: 7px 10px;
+  font-size: 10px;
+}
+
+.ht-status-missing > .button {
+  margin-top: 12px;
+}
+
 @media (max-width: 900px) {
   html[data-theme] .ht-shell .ht-main .ht-integration-table {
     overflow-x: auto;

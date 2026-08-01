@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useParams } from 'react-router-dom';
+import { RefreshCw } from 'lucide-react';
 import { Brand } from '../components/Brand';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { apiRequest, readableError } from '../lib/api';
@@ -14,37 +15,42 @@ export function StatusPage() {
   const { token = '' } = useParams();
   const [page, setPage] = useState<PublicStatusPage | null>(null);
   const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    const load = () =>
-      apiRequest<StatusResponse>(`/v1/status/${token}`)
-        .then((response) => {
-          if (cancelled) return;
-          if (response.page) setPage(response.page);
-          else if (response.status) {
-            setPage({
-              name: response.status.name,
-              headline: response.status.name,
-              description: t('Live availability and incident history.'),
-              accentColor: '#36e37e',
-              state: response.status.state,
-              monitors: [response.status],
-              generatedAt: response.status.generatedAt,
-            });
-          }
-          setError('');
-        })
-        .catch((requestError) => {
-          if (!cancelled) setError(readableError(requestError));
-        });
+    const load = async () => {
+      setRefreshing(true);
+      try {
+        const response = await apiRequest<StatusResponse>(`/v1/status/${token}`);
+        if (cancelled) return;
+        if (response.page) setPage(response.page);
+        else if (response.status) {
+          setPage({
+            name: response.status.name,
+            headline: response.status.name,
+            description: t('Live availability and incident history.'),
+            accentColor: '#36e37e',
+            state: response.status.state,
+            monitors: [response.status],
+            generatedAt: response.status.generatedAt,
+          });
+        }
+        setError('');
+      } catch (requestError) {
+        if (!cancelled) setError(readableError(requestError));
+      } finally {
+        if (!cancelled) setRefreshing(false);
+      }
+    };
     void load();
     const timer = window.setInterval(() => void load(), 30_000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [t, token]);
+  }, [refreshKey, t, token]);
 
   return (
     <main
@@ -55,6 +61,16 @@ export function StatusPage() {
         <Brand />
         <div className="ht-public-tools">
           <LanguageSwitcher compact />
+          <button
+            type="button"
+            className="button secondary compact"
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={refreshing}
+            aria-busy={refreshing}
+          >
+            <RefreshCw aria-hidden="true" />
+            {refreshing ? t('Refreshing…') : t('Refresh')}
+          </button>
           <a href="https://cubepath.com/" target="_blank" rel="noreferrer">
             Hosted on CubePath
           </a>
@@ -64,6 +80,14 @@ export function StatusPage() {
         <section className="ht-status-missing">
           <h1>Status page unavailable</h1>
           <p>The link may have been rotated or disabled by its owner.</p>
+          <button
+            type="button"
+            className="button secondary compact"
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={refreshing}
+          >
+            {t('Retry')}
+          </button>
         </section>
       ) : !page ? (
         <div className="ht-skeleton tall" aria-label="Loading public status" />

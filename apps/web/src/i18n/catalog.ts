@@ -1001,6 +1001,8 @@ export const es: Record<string, string> = {
   'Triage incidents, recover dead letters and verify alert delivery from one queue.':
     'Clasifica incidentes, recupera dead letters y verifica alertas desde una única cola.',
   'Refresh evidence': 'Actualizar evidencia',
+  Refresh: 'Actualizar',
+  'Refreshing…': 'Actualizando…',
   'Recovered 24h': 'Recuperados 24 h',
   'Show resolved': 'Mostrar resueltos',
   'Open incidents': 'Incidentes abiertos',
