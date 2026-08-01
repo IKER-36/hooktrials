@@ -41,6 +41,7 @@ interface HomeData {
 }
 
 type HealthTone = 'new' | 'healthy' | 'degraded' | 'down';
+type DashboardWindow = 1 | 7 | 30;
 
 interface PriorityItem {
   title: string;
@@ -86,13 +87,15 @@ export function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [windowDays, setWindowDays] = useState<DashboardWindow>(1);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const results = await Promise.allSettled([
       apiRequest<OperationsResponse>('/v1/operations'),
       apiRequest<{ monitors: MonitorSummary[] }>('/v1/monitors'),
       apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations'),
-      apiRequest<ReliabilitySummary>('/v1/reliability/summary?windowDays=1'),
+      apiRequest<ReliabilitySummary>(`/v1/reliability/summary?windowDays=${windowDays}`),
     ]);
     const [operations, monitors, routes, reliability] = results;
     const next: HomeData = {
@@ -105,8 +108,9 @@ export function HomePage() {
       throw new Error('The workspace overview could not load.');
     }
     setData(next);
+    setLastUpdatedAt(new Date().toISOString());
     setError('');
-  }, []);
+  }, [windowDays]);
 
   useEffect(() => {
     setLoading(true);
@@ -313,6 +317,8 @@ export function HomePage() {
     },
   }[health];
 
+  const windowLabel = windowDays === 1 ? '24 hours' : `${windowDays} days`;
+
   function openPriority(item: PriorityItem | ActivityItem) {
     if (item.endpointId) selectEndpoint(item.endpointId);
   }
@@ -325,6 +331,18 @@ export function HomePage() {
         description="See what is running, what needs attention and where to go next."
         actions={
           <>
+            <label className="ht-home-window">
+              <span>Window</span>
+              <select
+                aria-label="Dashboard time window"
+                value={windowDays}
+                onChange={(event) => setWindowDays(Number(event.target.value) as DashboardWindow)}
+              >
+                <option value="1">24 hours</option>
+                <option value="7">7 days</option>
+                <option value="30">30 days</option>
+              </select>
+            </label>
             <button
               type="button"
               className="button secondary compact"
@@ -336,6 +354,11 @@ export function HomePage() {
             <Link className="button primary compact" to="/app/live-webhooks">
               Connect a route <ArrowRight aria-hidden="true" />
             </Link>
+            {lastUpdatedAt ? (
+              <span className="ht-home-updated" aria-live="polite">
+                Updated {timeAgo(lastUpdatedAt)}
+              </span>
+            ) : null}
           </>
         }
       />
@@ -394,40 +417,50 @@ export function HomePage() {
           </section>
 
           <section className="ht-home-metrics" aria-label="Workspace metrics">
-            <MetricCard
-              label="Live routes"
-              value={liveEndpoints.length}
-              detail="Webhook Hub"
-              icon={RadioTower}
-              tone={liveEndpoints.length ? 'healthy' : 'neutral'}
-            />
-            <MetricCard
-              label="Trial endpoints"
-              value={trialEndpoints.length}
-              detail="Safe synthetic paths"
-              icon={FlaskConical}
-            />
-            <MetricCard
-              label="Monitors"
-              value={monitors.length}
-              detail={`${data?.reliability?.aggregate.checks ?? 0} checks in 24h`}
-              icon={Radar}
-              tone={monitors.length ? 'healthy' : 'neutral'}
-            />
-            <MetricCard
-              label="Open incidents"
-              value={openIncidents}
-              detail={`${unresolvedDeadLetters} unresolved deliveries`}
-              icon={CircleAlert}
-              tone={openIncidents ? 'danger' : 'healthy'}
-            />
-            <MetricCard
-              label="Recoveries 24h"
-              value={operations?.summary.protectedRecoveries24h ?? 0}
-              detail="Protected delivery paths"
-              icon={ShieldCheck}
-              tone="healthy"
-            />
+            <Link className="ht-metric-card-link" to="/app/live-webhooks">
+              <MetricCard
+                label="Live routes"
+                value={liveEndpoints.length}
+                detail="Webhook Hub"
+                icon={RadioTower}
+                tone={liveEndpoints.length ? 'healthy' : 'neutral'}
+              />
+            </Link>
+            <Link className="ht-metric-card-link" to="/app/endpoints">
+              <MetricCard
+                label="Trial endpoints"
+                value={trialEndpoints.length}
+                detail="Safe synthetic paths"
+                icon={FlaskConical}
+              />
+            </Link>
+            <Link className="ht-metric-card-link" to="/app/monitor">
+              <MetricCard
+                label="Monitors"
+                value={monitors.length}
+                detail={`${data?.reliability?.aggregate.checks ?? 0} checks in ${windowLabel}`}
+                icon={Radar}
+                tone={monitors.length ? 'healthy' : 'neutral'}
+              />
+            </Link>
+            <Link className="ht-metric-card-link" to="/app/operations">
+              <MetricCard
+                label="Open incidents"
+                value={openIncidents}
+                detail={`${unresolvedDeadLetters} unresolved deliveries`}
+                icon={CircleAlert}
+                tone={openIncidents ? 'danger' : 'healthy'}
+              />
+            </Link>
+            <Link className="ht-metric-card-link" to="/app/operations#recovery-queue">
+              <MetricCard
+                label="Recoveries 24h"
+                value={operations?.summary.protectedRecoveries24h ?? 0}
+                detail="Protected delivery paths"
+                icon={ShieldCheck}
+                tone="healthy"
+              />
+            </Link>
           </section>
 
           <Suspense fallback={<div className="ht-home-telemetry-loading" aria-hidden="true" />}>
@@ -436,6 +469,7 @@ export function HomePage() {
               monitors={monitors}
               operations={operations}
               reliability={data?.reliability}
+              windowDays={windowDays}
             />
           </Suspense>
 

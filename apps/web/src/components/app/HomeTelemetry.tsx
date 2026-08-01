@@ -26,6 +26,7 @@ interface HomeTelemetryProps {
   monitors: MonitorSummary[];
   operations: OperationsResponse | null | undefined;
   reliability: ReliabilitySummary | null | undefined;
+  windowDays: 1 | 7 | 30;
 }
 
 interface HealthPoint {
@@ -65,7 +66,13 @@ function shortLabel(value: string): string {
   return value.length > 17 ? `${value.slice(0, 15)}…` : value;
 }
 
-export function HomeTelemetry({ routes, monitors, operations, reliability }: HomeTelemetryProps) {
+export function HomeTelemetry({
+  routes,
+  monitors,
+  operations,
+  reliability,
+  windowDays,
+}: HomeTelemetryProps) {
   const reducedMotion = useReducedMotion() ?? false;
   const healthMix = useMemo<HealthPoint[]>(() => {
     const counts: Record<HealthTone, number> = { healthy: 0, degraded: 0, down: 0, new: 0 };
@@ -101,6 +108,7 @@ export function HomeTelemetry({ routes, monitors, operations, reliability }: Hom
   const checks = reliability?.aggregate.checks ?? 0;
   const recovered = operations?.summary.protectedRecoveries24h ?? 0;
   const hasCoverage = coverage.some((point) => point.hasChecks);
+  const windowLabel = windowDays === 1 ? '24h' : `${windowDays}d`;
 
   return (
     <section className="ht-home-telemetry" aria-label="Workspace telemetry">
@@ -182,7 +190,7 @@ export function HomeTelemetry({ routes, monitors, operations, reliability }: Hom
         <header>
           <div>
             <p className="ht-kicker">MONITOR COVERAGE</p>
-            <h2>Availability over 24h</h2>
+            <h2>Availability over {windowLabel}</h2>
             <p>Measured against each monitor's configured reliability target.</p>
           </div>
           <Radar aria-hidden="true" />
@@ -244,7 +252,7 @@ export function HomeTelemetry({ routes, monitors, operations, reliability }: Hom
         )}
         <footer className="ht-home-chart-footnote">
           <span>
-            <CircleAlert aria-hidden="true" /> {checks} checks in the current window
+            <CircleAlert aria-hidden="true" /> {checks} checks in {windowLabel}
           </span>
           <span>
             <ShieldCheck aria-hidden="true" /> {recovered} recoveries in 24h

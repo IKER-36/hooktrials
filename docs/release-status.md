@@ -2,6 +2,26 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.7` — Actionable Home dashboard
+
+Released 1 August 2026. Home now helps you move from a signal to the next useful action without
+leaving the workspace overview.
+
+### Added
+
+- A time-window selector for monitor coverage and reliability checks: 24 hours, 7 days or 30 days.
+- Home metric surfaces now link directly to Webhook Hub, Trial endpoints, Monitoring or Operations.
+- A live “Updated” indicator makes the refresh cadence visible.
+
+### Improved
+
+- Availability charts and check counts now identify the selected period instead of always implying
+  a fixed window.
+- Metric links have visible hover and keyboard-focus treatments while preserving the compact grid.
+- The dashboard keeps its existing responsive and reduced-motion behavior across the new controls.
+
+No database migration or user action is required.
+
 ## Release `v0.33.6` — Unified operational timeline
 
 Released 1 August 2026. Operations now starts with one chronological view of the signals that need

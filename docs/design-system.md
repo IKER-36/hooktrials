@@ -76,6 +76,9 @@ colors.
 13. Operations begins with a unified chronological activity timeline. Timeline rows expose state,
     resource context, relative time and a direct link to the actionable queue; filters preserve the
     same layout on desktop and mobile.
+14. Home metric surfaces are actionable links when they represent a destination. Their hover and
+    focus treatment must remain visible in both themes, and any selected telemetry window must be
+    repeated in chart headings and supporting counts.
 
 ## Accessibility and verification
 
