@@ -2,6 +2,40 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.12` — Safer accounts and clearer public status
+
+Released 1 August 2026. This release groups account self-service, public status controls and a
+small accessibility pass into one coherent update. Existing endpoints, monitors, events and
+workspace data remain intact.
+
+### Added
+
+- Unverified users can request a fresh verification email from **Account settings** without
+  changing their password or profile.
+- Public status pages include a **Refresh** action for an immediate check and a **Retry** action
+  when a temporary request failure needs another attempt.
+- Status-page refresh feedback is visible while data is being requested, so an operator can tell
+  whether the page is showing a fresh result or recovering from a network interruption.
+
+### Improved
+
+- Public status pages continue their automatic 30-second refresh after a manual refresh or retry.
+- Account security copy explains where verification mail is sent and keeps the existing recovery
+  and password-reset paths together in one place.
+- Interactive controls across the dashboard now share clearer hover, active and keyboard-focus
+  states in both themes, with touch-sized targets for compact actions.
+
+### Fixed
+
+- Scenario selection no longer depends on a bright vertical accent that could look like a generic
+  focus rail or reduce contrast in dark mode.
+- Public status error states no longer leave an operator without a visible next action.
+- Compact delivery and navigation controls keep their borders and text readable when focused or
+  pressed.
+
+No database migration or user action is required. Existing active accounts remain usable; only an
+account that is already marked as requiring verification will be asked to verify its email.
+
 ## Release `v0.33.11` — Shareable Home windows
 
 Released 1 August 2026. Home now keeps the selected reliability window in the address, so a

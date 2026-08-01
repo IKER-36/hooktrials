@@ -17,7 +17,13 @@ Each account can create up to 10 pages with up to 25 monitors per page.
 
 ## Public contents
 
-The page refreshes every 30 seconds and shows an aggregate state plus, for every selected monitor:
+The page refreshes every 30 seconds and shows an aggregate state plus, for every selected monitor.
+Use **Refresh** in the page tools to request the latest checks immediately. If a temporary network
+error prevents a refresh, the page keeps the last safe state and exposes **Retry** in the unavailable
+state instead of leaving the page without an action. Automatic refresh continues after a successful
+retry.
+
+For every selected monitor, the page shows:
 
 - integration name, type, environment and redacted hostname;
 - current health state;

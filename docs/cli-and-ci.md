@@ -25,7 +25,7 @@ Add the endpoint as an Actions secret named `HOOKTRIALS_ENDPOINT_URL`; never com
 token. Copy `examples/github-action.yml` into your own workflow or call the published action:
 
 ```yaml
-- uses: IKER-36/hooktrials@v0.33.11
+- uses: IKER-36/hooktrials@v0.33.12
   with:
     config: examples/payment-webhook.trial.yml
     endpoint: ${{ secrets.HOOKTRIALS_ENDPOINT_URL }}
@@ -61,8 +61,8 @@ The root `./hooktrials` CLI also manages safe self-hosted upgrades:
 
 ```bash
 git fetch --tags origin
-./hooktrials update --release v0.33.11 --check
-./hooktrials update --release v0.33.11
+./hooktrials update --release v0.33.12 --check
+./hooktrials update --release v0.33.12
 ./hooktrials doctor --external
 ./hooktrials doctor --deep
 ```
