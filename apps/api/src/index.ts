@@ -92,6 +92,7 @@ import {
   setSessionCookie,
 } from './auth.js';
 import { hashAuthToken, issueAuthToken } from './email/tokens.js';
+import { buildOpenApiDocument } from './openapi.js';
 import {
   passwordChangedEmail,
   passwordResetEmail,
@@ -650,6 +651,14 @@ app.get('/healthz', async () => ({
   status: 'ok' as const,
   timestamp: new Date().toISOString(),
 }));
+
+const openApiDocument = buildOpenApiDocument(config.API_ORIGIN);
+app.get('/openapi.json', async (_request, reply) => {
+  return reply.header('cache-control', 'public, max-age=300').send(openApiDocument);
+});
+app.get('/v1/openapi.json', async (_request, reply) => {
+  return reply.header('cache-control', 'public, max-age=300').send(openApiDocument);
+});
 
 app.get('/v1/setup', async () => {
   const result = await database.db.select({ value: count() }).from(users);

@@ -41,6 +41,16 @@ present it immediately downloads the same redacted evidence model used by the da
 key is used for the synthetic run; use a separate read-only key for evidence export in stricter
 pipelines.
 
+The same CLI can verify that an installation publishes its API contract:
+
+```bash
+pnpm exec hooktrials-api \
+  --api-origin "$HOOKTRIALS_API_ORIGIN" \
+  --operation-id runAutomationEvent
+```
+
+See [API catalogue](api-catalogue.md) for discovery and export options.
+
 To export an existing event later:
 
 ```bash

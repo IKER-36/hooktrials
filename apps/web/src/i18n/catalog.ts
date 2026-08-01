@@ -738,6 +738,7 @@ export const es: Record<string, string> = {
   'Product documentation': 'Documentación del producto',
   'Product guide': 'Guía del producto',
   'Technical docs': 'Documentación técnica',
+  'OpenAPI catalogue': 'Catálogo OpenAPI',
   'Quick start': 'Inicio rápido',
   'How it works': 'Cómo funciona',
   'If the result looks wrong': 'Si el resultado parece incorrecto',

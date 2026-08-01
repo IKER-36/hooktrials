@@ -2,6 +2,41 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.29.0` — API catalogue and CI discovery
+
+This release makes the HookTrials integration surface easier to discover and safer to automate.
+Every installation now publishes a redacted OpenAPI contract, and the CLI can inspect that contract
+before a team depends on a route in CI.
+
+### Added
+
+- A public **OpenAPI 3.1 catalogue** is available at `/openapi.json` on every API origin.
+- The catalogue documents system checks, route and monitor operations, public status pages,
+  redacted evidence and the scoped automation endpoints.
+- **`hooktrials-api`** lists documented operations, exports the contract to a file and checks that a
+  required operation ID exists.
+- The in-product **Documentation** page now links directly to the live API catalogue alongside the
+  public technical guides.
+
+### Improved
+
+- Automation documentation clearly separates dashboard sessions from read/write API-key scopes.
+- OpenAPI descriptions explain the safe boundaries: synthetic checks only, no arbitrary destinations
+  and no raw payloads or credentials in evidence responses.
+- Self-hosted operators can point the same CLI command at their own API origin without changing the
+  product workflow or exposing runtime secrets.
+
+### Fixed
+
+- Integrators no longer need to infer the supported automation paths from browser network traffic.
+- API contract checks now fail clearly when an origin is unavailable or returns an invalid document.
+- API catalogue examples use redacted values and do not encourage copying secrets into source files.
+
+### Upgrade note
+
+The release adds a read-only API route and a CLI command. Existing routes, accounts, data and
+automation keys remain compatible.
+
 ## Release `v0.28.1` — Safer alert and status-page workflows
 
 This maintenance release makes two operational workflows easier to complete safely: configuring

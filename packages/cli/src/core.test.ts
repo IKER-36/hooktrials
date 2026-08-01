@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { junitReport, parseTrialConfig, runTrial } from './core.js';
 import { downloadAutomationEvidence, runAutomationEvent } from './automation.js';
+import { fetchOpenApiDocument, listOpenApiOperations } from './catalog.js';
 
 describe('trial configuration', () => {
   it('uses a secret endpoint override and validates attempts', () => {
@@ -56,6 +57,53 @@ describe('automation client', () => {
     ).resolves.toBe('# evidence');
     expect(fetcher.mock.calls[0]?.[0]).toContain(
       '/v1/automation/events/evt-1/export?format=markdown',
+    );
+  });
+});
+
+describe('OpenAPI catalogue client', () => {
+  it('downloads and lists documented operations without credentials', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          openapi: '3.1.0',
+          info: { title: 'HookTrials API', version: '0.29.0' },
+          paths: {
+            '/healthz': { get: { operationId: 'getHealth', summary: 'Health', tags: ['System'] } },
+            '/v1/automation/events/{eventId}/export': {
+              get: { operationId: 'exportAutomationEvidence', tags: ['Automation'] },
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+    const document = await fetchOpenApiDocument('https://api.example.test/', fetcher);
+    expect(fetcher.mock.calls[0]?.[0]).toBe('https://api.example.test/openapi.json');
+    expect(listOpenApiOperations(document)).toEqual([
+      {
+        method: 'GET',
+        path: '/healthz',
+        operationId: 'getHealth',
+        summary: 'Health',
+        tags: ['System'],
+      },
+      {
+        method: 'GET',
+        path: '/v1/automation/events/{eventId}/export',
+        operationId: 'exportAutomationEvidence',
+        summary: '',
+        tags: ['Automation'],
+      },
+    ]);
+  });
+
+  it('rejects a non-OpenAPI response', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify({ error: 'not_found' }), { status: 200 }));
+    await expect(fetchOpenApiDocument('https://api.example.test', fetcher)).rejects.toThrow(
+      'invalid OpenAPI document',
     );
   });
 });

@@ -7,7 +7,8 @@
   "bin": {
     "hooktrials-trial": "dist/index.js",
     "hooktrials-run": "dist/run.js",
-    "hooktrials-evidence": "dist/evidence.js"
+    "hooktrials-evidence": "dist/evidence.js",
+    "hooktrials-api": "dist/catalog-cli.js"
   },
   "exports": {
     ".": {

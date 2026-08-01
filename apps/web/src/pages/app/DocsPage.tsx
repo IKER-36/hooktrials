@@ -4,6 +4,7 @@ import {
   Activity,
   BellRing,
   BookOpen,
+  Code2,
   FlaskConical,
   Gauge,
   GitBranch,
@@ -13,6 +14,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useI18n } from '../../i18n/I18nContext';
+import { API_ORIGIN } from '../../lib/api';
 
 interface Guide {
   id: string;
@@ -238,14 +240,24 @@ export function DocsPage() {
             What every module does, when to use it and how to verify the result.
           </p>
         </div>
-        <a
-          className="button secondary"
-          href="https://github.com/IKER-36/hooktrials/tree/main/docs"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <BookOpen aria-hidden="true" /> Technical docs
-        </a>
+        <div className="ht-shared-page-head-actions">
+          <a
+            className="button secondary"
+            href={`${API_ORIGIN}/openapi.json`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Code2 aria-hidden="true" /> OpenAPI catalogue
+          </a>
+          <a
+            className="button secondary"
+            href="https://github.com/IKER-36/hooktrials/tree/main/docs"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <BookOpen aria-hidden="true" /> Technical docs
+          </a>
+        </div>
       </header>
 
       <div className="ht-docs-search">
