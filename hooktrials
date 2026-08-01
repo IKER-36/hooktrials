@@ -202,6 +202,40 @@ external_doctor() {
   printf '%s\n' "External HTTPS probe: OK ($origin)"
 }
 
+deep_doctor() {
+  compose ps
+
+  require curl
+  origin=$(env_value HOOKTRIALS_ORIGIN)
+  case "${origin:-}" in
+    http://* | https://*) ;;
+    *) die "HOOKTRIALS_ORIGIN must use http:// or https://" ;;
+  esac
+  curl --fail --silent --show-error --max-time 15 "$origin/api/healthz" >/dev/null ||
+    die "API health probe failed: $origin/api/healthz"
+  setup=$(curl --fail --silent --show-error --max-time 15 "$origin/api/v1/setup") ||
+    die "setup discovery probe failed: $origin/api/v1/setup"
+  printf '%s\n' "API health and setup discovery: OK"
+  case "$setup" in
+    *'deploymentMode'*) printf '%s\n' "Installation metadata: OK" ;;
+    *) die "setup discovery response did not include installation metadata" ;;
+  esac
+
+  available_kb=$(df -Pk "$ROOT" | awk 'NR == 2 { print $4 }')
+  if [ -n "${available_kb:-}" ] && [ "$available_kb" -lt 1048576 ]; then
+    printf '%s\n' "warning: less than 1 GiB is available on the application volume" >&2
+  else
+    printf '%s\n' "Application volume: OK"
+  fi
+  if [ -d "$ROOT/backups" ] && find "$ROOT/backups" -maxdepth 1 -name 'hooktrials-*.sql.gz' -print -quit | grep -q .; then
+    printf '%s\n' "PostgreSQL backup: present"
+  else
+    printf '%s\n' "warning: no local PostgreSQL backup found; run ./hooktrials backup" >&2
+  fi
+  show_access
+  show_update_state
+}
+
 create_backup() {
   [ -f "$RUNTIME_ENV" ] || die "HookTrials is not initialized"
   mkdir -p "$ROOT/backups"
@@ -446,7 +480,13 @@ case "${1:-up}" in
     generate_runtime
     compose config --quiet
     printf '%s\n' "Docker, Compose and configuration: OK"
-    if [ "${2:-}" = "--external" ]; then external_doctor; else show_access; fi
+    if [ "${2:-}" = "--external" ]; then
+      external_doctor
+    elif [ "${2:-}" = "--deep" ]; then
+      deep_doctor
+    else
+      show_access
+    fi
     ;;
   configure)
     configure_access "${2:-}" "${3:-}" "${4:-}"
@@ -470,10 +510,10 @@ case "${1:-up}" in
     printf '%s\n' "HookTrials data and runtime secrets removed."
     ;;
   help | -h | --help)
-    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update [--release vX.Y.Z] [--check]|rollback --yes|backup|reset --yes}"
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external|--deep]|configure [local|proxy|domain]|update [--release vX.Y.Z] [--check]|rollback --yes|backup|reset --yes}"
     ;;
   *)
-    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external]|configure [local|proxy|domain]|update [--release vX.Y.Z] [--check]|rollback --yes|backup|reset --yes}" >&2
+    printf '%s\n' "Usage: ./hooktrials {up|down|logs [service]|status|doctor [--external|--deep]|configure [local|proxy|domain]|update [--release vX.Y.Z] [--check]|rollback --yes|backup|reset --yes}" >&2
     exit 2
     ;;
 esac

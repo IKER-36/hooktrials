@@ -2,6 +2,23 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.1` — Self-host diagnostics
+
+Released 1 August 2026. Self-hosted operators can now run a deeper read-only preflight before an
+update or handoff.
+
+### Added
+
+- `./hooktrials doctor --deep` checks Compose services, API health, setup metadata, disk space and
+  local backup presence.
+
+### Improved
+
+- Diagnostic output remains safe for support handoffs and never prints runtime secrets or payloads.
+- Update and rollback behavior is unchanged, including backup-first protection.
+
+Read the [v0.33.1 release notes](releases/v0.33.1.md).
+
 ## Release `v0.33.0` — Account session controls
 
 Released 1 August 2026. Account settings now shows active browser sessions and lets users sign out
