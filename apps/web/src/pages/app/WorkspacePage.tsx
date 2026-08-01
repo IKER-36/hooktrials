@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Users, UserPlus, ShieldCheck, Trash2 } from 'lucide-react';
+import { UserPlus, ShieldCheck, Trash2 } from 'lucide-react';
 import { CopyButton } from '../../components/ui/CopyButton';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { ProductState } from '../../components/ui/ProductState';
 import { apiRequest, readableError } from '../../lib/api';
 import type { WorkspaceMember, WorkspaceResponse, WorkspaceRole } from '../../lib/types';
@@ -119,20 +120,16 @@ export function WorkspacePage() {
 
   return (
     <section className="ht-page" data-product-area="resources">
-      <header className="ht-page-head ht-shared-page-head">
-        <div>
-          <div className="ht-eyebrow">
-            <Users aria-hidden="true" /> Team workspace
-          </div>
-          <h1>{data.workspace?.name ?? 'Workspace'}</h1>
-          <p className="ht-muted-line">
-            Share reliability evidence without sharing credentials or personal accounts.
-          </p>
-        </div>
-        <span className="ht-status-chip healthy">
-          <ShieldCheck aria-hidden="true" /> {data.currentRole}
-        </span>
-      </header>
+      <PageHeader
+        eyebrow="RESOURCES / WORKSPACE"
+        title={data.workspace?.name ?? 'Workspace'}
+        description="Share reliability evidence without sharing credentials or personal accounts."
+        actions={
+          <span className="ht-status-chip healthy">
+            <ShieldCheck aria-hidden="true" /> {data.currentRole}
+          </span>
+        }
+      />
 
       {error ? (
         <div className="ht-form-error" role="alert">

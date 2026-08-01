@@ -40,6 +40,9 @@ The system prioritizes operational clarity, legibility and predictable hierarchy
   dense rows remain open and separated by hairlines rather than nested floating cards. Responsive
   layouts must stack the detail surface below its inventory or journey rail without horizontal
   scrolling.
+- Operational lists (routes, monitors, incidents, dead letters and alerts) use a state-aware row
+  contract: status first, context second, action last. Focus must remain visible without a light
+  background fallback.
 
 Keeping layout and visual overrides separate allows the product to evolve without changing API or
 workflow behavior. New components should use semantic `--ht-*` tokens rather than hard-coded brand

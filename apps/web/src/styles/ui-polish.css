@@ -258,6 +258,240 @@ html[data-theme] .ht-shell .ht-main .ht-home-chart-panel .recharts-surface {
   }
 }
 
+/* Phase 16B — operational surfaces use one quiet row contract. The module
+ * keeps its existing data/actions; this layer only makes hierarchy, focus and
+ * responsive grouping predictable in both themes. */
+html[data-theme] .ht-shell .ht-main .ht-live-route-row,
+html[data-theme] .ht-shell .ht-main .ht-incident-row,
+html[data-theme] .ht-shell .ht-main .ht-dlq-row,
+html[data-theme] .ht-shell .ht-main .ht-alert-row {
+  position: relative;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-row:hover,
+html[data-theme] .ht-shell .ht-main .ht-incident-row:hover,
+html[data-theme] .ht-shell .ht-main .ht-dlq-row:hover,
+html[data-theme] .ht-shell .ht-main .ht-alert-row:hover {
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-row:focus-within,
+html[data-theme] .ht-shell .ht-main .ht-incident-row:focus-within,
+html[data-theme] .ht-shell .ht-main .ht-dlq-row:focus-within,
+html[data-theme] .ht-shell .ht-main .ht-alert-row:focus-within {
+  box-shadow: inset 2px 0 0 var(--ht-focus);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-row.healthy {
+  border-left: 2px solid color-mix(in srgb, var(--ht-green) 42%, transparent);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-row.degraded {
+  border-left: 2px solid color-mix(in srgb, var(--ht-amber) 48%, transparent);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-row.down {
+  border-left: 2px solid color-mix(in srgb, var(--ht-red) 55%, transparent);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-row.paused,
+html[data-theme] .ht-shell .ht-main .ht-live-route-row.new {
+  border-left: 2px solid var(--ht-hairline-bright);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-actions .button {
+  flex: 0 0 auto;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-live-route-actions > small {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: var(--ht-muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-incident-row,
+html[data-theme] .ht-shell .ht-main .ht-dlq-row,
+html[data-theme] .ht-shell .ht-main .ht-alert-row {
+  border-radius: 8px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-incident-row.acknowledged,
+html[data-theme] .ht-shell .ht-main .ht-dlq-row.resolved {
+  opacity: 0.78;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-incident-row.open {
+  background: color-mix(in srgb, var(--ht-danger-bg) 42%, transparent);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-dlq-row:not(.resolved) {
+  background: color-mix(in srgb, var(--ht-warning-bg) 30%, transparent);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-incident-triage,
+html[data-theme] .ht-shell .ht-main .ht-incident-note,
+html[data-theme] .ht-shell .ht-main .ht-operation-actions {
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-actions > a,
+html[data-theme] .ht-shell .ht-main .ht-status-page-actions > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 9px;
+  color: var(--ht-green-dim);
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-operation-actions > a:hover,
+html[data-theme] .ht-shell .ht-main .ht-status-page-actions > a:hover {
+  color: var(--ht-ink);
+  border-color: var(--ht-green-dim);
+  background: var(--ht-surface-hover);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-pages {
+  overflow: hidden;
+  border: 1px solid var(--ht-hairline-bright);
+  border-radius: 12px;
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-pages > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-pages > header h2,
+html[data-theme] .ht-shell .ht-main .ht-status-pages > header p {
+  margin: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-pages > header p {
+  max-width: 620px;
+  margin-top: 6px;
+  color: var(--ht-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-page-list {
+  display: grid;
+  gap: 1px;
+  background: var(--ht-hairline);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-page-list > article {
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr) auto;
+  gap: 15px;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 18px;
+  background: var(--ht-surface-1);
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-page-list > article > i {
+  align-self: stretch;
+  min-height: 42px;
+  border-radius: 99px;
+  background: var(--status-accent, var(--ht-green));
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-page-list > article > div:nth-child(2) {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-page-list > article span,
+html[data-theme] .ht-shell .ht-main .ht-status-page-list > article small {
+  overflow: hidden;
+  color: var(--ht-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-page-list > article strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-status-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+html[data-theme] .ht-shell .ht-main .ht-settings > .ht-page-head-actions > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--ht-green);
+}
+
+@media (max-width: 760px) {
+  html[data-theme] .ht-shell .ht-main .ht-status-pages > header {
+    display: grid;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-status-pages > header .button {
+    width: 100%;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-status-page-list > article {
+    grid-template-columns: 4px minmax(0, 1fr);
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-status-page-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-live-route-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  html[data-theme] .ht-shell .ht-main .ht-live-route-actions .button {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .ht-shell .ht-main .ht-live-route-row,
+  html[data-theme] .ht-shell .ht-main .ht-incident-row,
+  html[data-theme] .ht-shell .ht-main .ht-dlq-row,
+  html[data-theme] .ht-shell .ht-main .ht-alert-row {
+    transition: none;
+  }
+}
+
 /* Phase 16A: the reliability and lab surfaces now share the same instrument
  * language as Webhook Hub. Detail work stays dense, but hierarchy comes from
  * dividers, action affordances and state colour rather than stacked cards. */

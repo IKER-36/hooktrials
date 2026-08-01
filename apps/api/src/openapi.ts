@@ -31,7 +31,7 @@ export function buildOpenApiDocument(apiOrigin: string): Record<string, unknown>
     jsonSchemaDialect: 'https://json-schema.org/draft/2020-12/schema',
     info: {
       title: 'HookTrials API',
-      version: '0.33.4',
+      version: '0.33.5',
       description:
         'A redacted contract for integration setup, synthetic reliability checks and evidence export. Payload bodies, captured headers, credentials and destination URLs are never returned by the automation surface.',
       license: { name: 'AGPL-3.0-only', identifier: 'AGPL-3.0-only' },

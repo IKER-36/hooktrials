@@ -384,6 +384,7 @@ export function LiveWebhooksPage() {
     >
       <PageHeader
         className="ht-live-head"
+        eyebrow="PRODUCT / WEBHOOK HUB"
         title="Webhook Hub"
         description="Put HookTrials between every provider and your backend. Inspect the complete request, validate it and forward it with an auditable delivery trail."
         actions={
@@ -981,7 +982,11 @@ export function LiveWebhooksPage() {
               const tone = integrationTone(integration, endpoint);
               const latest = integration?.latestDelivery;
               return (
-                <article key={endpoint.id}>
+                <article
+                  key={endpoint.id}
+                  className={`ht-live-route-row ${tone}`}
+                  aria-label={`${endpoint.name} · ${integrationToneLabel(tone)}`}
+                >
                   <span className={`ht-listen ${endpoint.active ? 'on' : 'off'}`}>
                     <i /> {endpoint.active ? 'LIVE' : 'PAUSED'}
                   </span>

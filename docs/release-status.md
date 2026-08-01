@@ -2,6 +2,32 @@
 
 Updated: 1 August 2026.
 
+## Release `v0.33.5` — Operational surface coherence
+
+Released 1 August 2026. Webhook Hub, Monitoring, Operations and account workspaces now share a
+more consistent operational layout, with clearer status grouping and responsive action placement.
+
+### Improved
+
+- Webhook Hub live connections now expose their state through consistent row treatments, visible
+  actions and clearer focus behavior.
+- Monitoring, incident, dead-letter and alert rows use the same scan order for status, context and
+  next action across desktop and mobile.
+- Public status-page management uses the same compact list and action language as the rest of the
+  operational workspace.
+- Account and workspace pages now use the shared page-header contract, keeping titles, context and
+  role/security indicators aligned with the rest of the dashboard.
+
+### Fixed
+
+- Operational rows no longer rely on a hover colour alone to communicate their state.
+- Long route names, hosts and delivery messages stay contained instead of pushing action controls
+  outside the viewport.
+- Mobile action groups wrap into an operable order without exposing light-theme fallbacks in dark
+  mode.
+
+No database migration or user action is required.
+
 ## Release `v0.33.4` — Reliability workspace coherence
 
 Released 1 August 2026. Reliability, Evidence and Lab surfaces now share the same visual rhythm

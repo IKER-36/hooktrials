@@ -11,6 +11,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { apiRequest, readableError } from '../../lib/api';
 import type { AccountSession } from '../../lib/types';
@@ -143,16 +144,12 @@ export function AccountSettingsPage() {
 
   return (
     <section className="ht-page ht-settings" data-product-area="resources">
-      <header className="ht-page-head ht-shared-page-head">
-        <div>
-          <p className="ht-kicker">ACCOUNT</p>
-          <h1>Account settings</h1>
-          <p className="ht-muted-line">
-            Keep your profile, sign-in and automation access under control.
-          </p>
-        </div>
-        <UserRound aria-hidden="true" />
-      </header>
+      <PageHeader
+        eyebrow="RESOURCES / ACCOUNT"
+        title="Account settings"
+        description="Keep your profile, sign-in and automation access under control."
+        actions={<UserRound aria-hidden="true" />}
+      />
 
       {notice ? (
         <p className="ht-form-success" role="status">

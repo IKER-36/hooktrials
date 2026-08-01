@@ -110,6 +110,7 @@ export function OperationsPage() {
   return (
     <section className="ht-page" data-tour-section="operations" data-product-area="product">
       <PageHeader
+        eyebrow="PRODUCT / OPERATIONS"
         title="Operations"
         description="Triage incidents, recover dead letters and verify alert delivery from one queue."
         actions={
@@ -231,7 +232,8 @@ export function OperationsPage() {
                 {incidents.map((incident) => (
                   <article
                     key={incident.id}
-                    className={incident.acknowledgedAt ? 'acknowledged' : ''}
+                    className={`ht-incident-row ${incident.acknowledgedAt ? 'acknowledged' : ''} ${incident.status}`}
+                    aria-label={`${incident.resourceName} · ${incident.status}`}
                   >
                     <span
                       className={`ht-monitor-state ${incident.status === 'open' ? 'down' : 'healthy'}`}
@@ -352,7 +354,11 @@ export function OperationsPage() {
             ) : (
               <div className="ht-dlq-list">
                 {deadLetters.map((delivery) => (
-                  <article key={delivery.id} className={delivery.resolved ? 'resolved' : ''}>
+                  <article
+                    key={delivery.id}
+                    className={`ht-dlq-row ${delivery.resolved ? 'resolved' : ''}`}
+                    aria-label={`${delivery.resourceName} · ${delivery.resolved ? 'recovered' : 'dead letter'}`}
+                  >
                     <div>
                       <span
                         className={`ht-monitor-state ${delivery.resolved ? 'healthy' : 'down'}`}
@@ -422,7 +428,11 @@ export function OperationsPage() {
             ) : (
               <div className="ht-alert-audit-list">
                 {data.alerts.map((alert) => (
-                  <article key={alert.id}>
+                  <article
+                    key={alert.id}
+                    className="ht-alert-row"
+                    aria-label={`${alert.resourceName} · ${alert.event}`}
+                  >
                     <span
                       className={`ht-monitor-state ${alert.state === 'sent' ? 'healthy' : alert.state === 'failed' ? 'down' : 'degraded'}`}
                     >

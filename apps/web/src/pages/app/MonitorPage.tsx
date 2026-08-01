@@ -131,6 +131,7 @@ export function MonitorPage() {
   return (
     <section className="ht-page" data-tour-section="monitor" data-product-area="product">
       <PageHeader
+        eyebrow="PRODUCT / MONITORING"
         title="Monitoring"
         description="Know what failed, where it failed and when it recovered."
         actions={
