@@ -31,39 +31,39 @@ interface Guide {
 
 const guides: Guide[] = [
   {
-    id: 'overview',
-    title: 'Route control & readiness',
-    summary: 'Understand current risk and the next highest-impact action.',
+    id: 'home',
+    title: 'Home & next actions',
+    summary: 'See workspace health and choose the right workflow.',
     icon: Gauge,
-    route: '/app/control-center',
+    route: '/app',
     purpose:
-      'Route control combines route state, active monitoring, incidents, recovery evidence and Production Readiness for the selected endpoint.',
+      'Home summarizes production integrations, monitors, incidents and reliability evidence without mixing in isolated demo resources.',
     steps: [
-      'Choose the endpoint from the selector at the top of the page.',
-      'Read route control for cross-product health and operational work.',
-      'Use Production Readiness to find the first unproven reliability control.',
-      'Open a retry timeline to inspect Reliability Replay and individual attempts.',
+      'Start in Home to understand the current production state.',
+      'Choose Connect a real webhook, Test an integration safely or Monitor a service.',
+      'Review the priority list before opening individual modules.',
+      'Open an integration when you need its delivery timeline and readiness controls.',
     ],
-    result: 'You leave with an evidence-backed next action, not a generic score.',
+    result: 'You leave with one clear next action instead of navigating module by module.',
     troubleshooting: [
-      'A new endpoint has little evidence until it receives traffic.',
-      'A local-only self-hosted URL cannot be reached by a cloud provider; configure HTTPS first.',
+      'Demo resources never contribute to the production summary.',
+      'A new workspace stays intentionally simple until you connect, test or monitor something.',
     ],
   },
   {
     id: 'live-webhooks',
-    title: 'Webhook Hub & live traffic',
+    title: 'Integrations & live traffic',
     summary: 'Concentrate real providers, inspect every request and control delivery.',
     icon: RadioTower,
     route: '/app/live-webhooks',
     purpose:
-      'Webhook Hub places HookTrials between a provider and your real backend. One public ingestion URL captures, validates and forwards every request while preserving an operational trail.',
+      'Integrations places HookTrials between a provider and your real backend. One public ingestion URL captures, validates and forwards every request while preserving an operational trail.',
     steps: [
       'Choose the provider and enter the current public webhook destination.',
       'Use Observe for synchronous forwarding or Protect for durable acceptance and retries.',
       'Add the Stripe or GitHub signing secret when native verification is required.',
       'Copy the generated HookTrials URL into the provider webhook settings.',
-      'Send a provider test, then open the live inspector to verify both sides.',
+      'Send a provider test, then open the integration delivery timeline to verify both sides.',
     ],
     result:
       'Real webhook traffic is centralized without losing visibility, validation or recovery evidence.',
@@ -75,29 +75,29 @@ const guides: Guide[] = [
   },
   {
     id: 'endpoints',
-    title: 'Trial endpoints',
+    title: 'Test Lab',
     summary: 'Test deterministic failure behaviour in an isolated laboratory.',
     icon: GitBranch,
     route: '/app/endpoints',
     purpose:
-      'Trial endpoints are isolated receivers for synthetic traffic. They return deterministic scenario responses without forwarding requests to a real backend.',
+      'Test Lab endpoints are isolated receivers for synthetic traffic. They return deterministic scenario responses without forwarding requests to a real backend.',
     steps: [
       'Create an endpoint from a template or choose a scenario manually.',
       'Copy the ingestion URL and send only synthetic data while testing.',
       'Use Trial for deterministic responses and retry verification.',
       'Inspect the correlated retry timeline and compare every attempt.',
-      'Move to Webhook Hub when the integration is ready for Observe or Protect.',
+      'Move to Integrations when the connection is ready for Observe or Protect.',
     ],
     result: 'Failure behaviour is proven without mixing laboratory traffic with live connections.',
     troubleshooting: [
       '422 means the inbound method, headers or JSON contract did not match.',
       'Reuse the same event identifier so sender retries stay in one timeline.',
-      'Real provider traffic belongs in Webhook Hub, not in a Trial endpoint.',
+      'Real provider traffic belongs in Integrations, not in Test Lab.',
     ],
   },
   {
     id: 'scenarios',
-    title: 'Scenario Studio',
+    title: 'Scenarios',
     summary: 'Create exact, repeatable failure sequences.',
     icon: FlaskConical,
     route: '/app/scenarios',
@@ -138,12 +138,12 @@ const guides: Guide[] = [
   },
   {
     id: 'operations',
-    title: 'Operations',
+    title: 'Incidents & recovery',
     summary: 'Triage incidents, dead letters and outgoing alerts.',
     icon: BellRing,
     route: '/app/operations',
     purpose:
-      'Operations is the recovery queue for failures that need an operator decision or a proof that automation recovered correctly.',
+      'Incidents & recovery is the queue for failures that need an operator decision or proof that automation recovered correctly.',
     steps: [
       'Review open incidents and the recorded failure cause.',
       'Inspect unresolved dead letters before choosing Retry or Replay.',
@@ -158,19 +158,19 @@ const guides: Guide[] = [
   },
   {
     id: 'demo',
-    title: 'Guided Demo Lab',
-    summary: 'Learn every module with isolated synthetic resources.',
+    title: 'Optional Demo Lab',
+    summary: 'Explore the product with a separate synthetic workspace.',
     icon: Activity,
     route: '/app/demo',
     purpose:
-      'Demo Lab exercises the complete control loop without modifying normal resources or consuming the regular endpoint quota.',
+      'Demo Lab exercises the complete control loop in a separate environment without modifying production resources or consuming the regular endpoint quota.',
     steps: [
       'Run the full demo and keep the page open while eight stages complete.',
-      'Open Control Center, Monitoring and Operations to inspect the generated evidence.',
+      'Inspect the demo inside its isolated page; production modules stay clean.',
       'Return to Demo Lab when you want to reset all demo-owned runs.',
     ],
     result:
-      'You see a realistic populated product while all data remains synthetic and user-owned.',
+      'You see a realistic populated product while synthetic data remains clearly separated and user-owned.',
     troubleshooting: [
       'An existing demo is recovered after reload; reset it before starting another run.',
       'Never use Demo Lab as a substitute for validating a real integration.',

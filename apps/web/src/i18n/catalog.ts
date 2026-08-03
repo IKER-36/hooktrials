@@ -1,6 +1,148 @@
 export type Locale = 'en' | 'es';
 
 export const es: Record<string, string> = {
+  Home: 'Inicio',
+  Reliability: 'Fiabilidad',
+  'Forgot your password?': '¿Has olvidado tu contraseña?',
+  Workspace: 'Espacio de trabajo',
+  Build: 'Construir',
+  Operate: 'Operar',
+  Prove: 'Demostrar',
+  Integrations: 'Integraciones',
+  'Test Lab': 'Laboratorio de pruebas',
+  'Incidents & recovery': 'Incidentes y recuperación',
+  'Build integrations': 'Construir integraciones',
+  'Integration detail': 'Detalle de integración',
+  'Delivery timeline': 'Línea temporal de entrega',
+  'Isolated environment': 'Entorno aislado',
+  'BUILD / INTEGRATIONS': 'CONSTRUIR / INTEGRACIONES',
+  'BUILD / TEST LAB': 'CONSTRUIR / LABORATORIO DE PRUEBAS',
+  'BUILD / SCENARIOS': 'CONSTRUIR / ESCENARIOS',
+  'OPERATE / MONITORING': 'OPERAR / MONITORIZACIÓN',
+  'OPERATE / INCIDENTS & RECOVERY': 'OPERAR / INCIDENTES Y RECUPERACIÓN',
+  'PROVE / RELIABILITY': 'DEMOSTRAR / FIABILIDAD',
+  'PROVE / EVIDENCE': 'DEMOSTRAR / EVIDENCIA',
+  'What do you want to do?': '¿Qué quieres hacer?',
+  'Choose one outcome. HookTrials will keep the next steps inside that workflow.':
+    'Elige un objetivo. HookTrials mantendrá los siguientes pasos dentro de ese flujo.',
+  'Receive provider traffic, validate it and deliver it to your backend.':
+    'Recibe tráfico del proveedor, valídalo y entrégalo a tu backend.',
+  'Test an integration safely': 'Probar una integración de forma segura',
+  'Reproduce failures and retries without touching production.':
+    'Reproduce fallos y reintentos sin tocar producción.',
+  'Monitor a service': 'Monitorizar un servicio',
+  'Track availability, latency and recovery for an API or host.':
+    'Mide disponibilidad, latencia y recuperación de una API o un host.',
+  'Need a guided example?': '¿Necesitas un ejemplo guiado?',
+  'The isolated Demo Lab creates synthetic data in a separate environment and can be cleaned without touching your normal resources.':
+    'El Demo Lab aislado crea datos sintéticos en un entorno separado y puede limpiarse sin tocar tus recursos normales.',
+  'Home & next actions': 'Inicio y próximas acciones',
+  'See workspace health and choose the right workflow.':
+    'Consulta la salud del espacio y elige el flujo adecuado.',
+  'Home summarizes production integrations, monitors, incidents and reliability evidence without mixing in isolated demo resources.':
+    'Inicio resume integraciones productivas, monitores, incidentes y evidencias de fiabilidad sin mezclar recursos del entorno demo.',
+  'Start in Home to understand the current production state.':
+    'Empieza en Inicio para entender el estado productivo actual.',
+  'Choose Connect a real webhook, Test an integration safely or Monitor a service.':
+    'Elige Conectar un webhook real, Probar una integración de forma segura o Monitorizar un servicio.',
+  'Review the priority list before opening individual modules.':
+    'Revisa la lista de prioridades antes de abrir módulos concretos.',
+  'Open an integration when you need its delivery timeline and readiness controls.':
+    'Abre una integración cuando necesites su línea temporal de entrega y controles de preparación.',
+  'You leave with one clear next action instead of navigating module by module.':
+    'Obtienes una próxima acción clara en lugar de navegar módulo por módulo.',
+  'Demo resources never contribute to the production summary.':
+    'Los recursos demo nunca contribuyen al resumen productivo.',
+  'A new workspace stays intentionally simple until you connect, test or monitor something.':
+    'Un espacio nuevo se mantiene sencillo hasta que conectas, pruebas o monitorizas algo.',
+  'Integrations & live traffic': 'Integraciones y tráfico real',
+  'Integrations places HookTrials between a provider and your real backend. One public ingestion URL captures, validates and forwards every request while preserving an operational trail.':
+    'Integraciones sitúa HookTrials entre un proveedor y tu backend real. Una URL pública captura, valida y reenvía cada petición conservando un registro operativo.',
+  'Send a provider test, then open the integration delivery timeline to verify both sides.':
+    'Envía una prueba desde el proveedor y abre la línea temporal de la integración para verificar ambos lados.',
+  'Test Lab endpoints are isolated receivers for synthetic traffic. They return deterministic scenario responses without forwarding requests to a real backend.':
+    'Los endpoints del Laboratorio de pruebas reciben tráfico sintético de forma aislada. Devuelven respuestas deterministas sin reenviar peticiones a un backend real.',
+  'Move to Integrations when the connection is ready for Observe or Protect.':
+    'Pasa a Integraciones cuando la conexión esté lista para Observar o Proteger.',
+  'Real provider traffic belongs in Integrations, not in Test Lab.':
+    'El tráfico real de proveedores pertenece a Integraciones, no al Laboratorio de pruebas.',
+  'Incidents & recovery is the queue for failures that need an operator decision or proof that automation recovered correctly.':
+    'Incidentes y recuperación reúne los fallos que necesitan una decisión del operador o demostrar que la automatización se recuperó correctamente.',
+  'Optional Demo Lab': 'Demo Lab opcional',
+  'Explore the product with a separate synthetic workspace.':
+    'Explora el producto con un espacio sintético separado.',
+  'Demo Lab exercises the complete control loop in a separate environment without modifying production resources or consuming the regular endpoint quota.':
+    'Demo Lab recorre el ciclo de control completo en un entorno separado sin modificar recursos productivos ni consumir la cuota normal de endpoints.',
+  'Inspect the demo inside its isolated page; production modules stay clean.':
+    'Inspecciona la demo dentro de su página aislada; los módulos productivos permanecen limpios.',
+  'You see a realistic populated product while synthetic data remains clearly separated and user-owned.':
+    'Ves un producto poblado de forma realista mientras los datos sintéticos permanecen claramente separados y bajo tu control.',
+  'Test Lab endpoints receive synthetic traffic and return controlled failures without forwarding requests into your real delivery path.':
+    'Los endpoints del Laboratorio de pruebas reciben tráfico sintético y devuelven fallos controlados sin reenviar peticiones a tu ruta real de entrega.',
+  'Connect a provider to a real backend when you are ready. Test Lab remains separate and safe.':
+    'Conecta un proveedor a un backend real cuando esté listo. El Laboratorio de pruebas permanece separado y seguro.',
+  'Your workspace is ready. Use Test Lab, connect a live integration or add a monitor to establish the first evidence.':
+    'Tu espacio está listo. Usa el Laboratorio de pruebas, conecta una integración real o añade un monitor para crear la primera evidencia.',
+  'The last known recovery evidence is still visible.':
+    'La última evidencia conocida de recuperación sigue visible.',
+  'Incidents & recovery could not load.': 'No se pudieron cargar Incidentes y recuperación.',
+  'No incidents need attention.': 'No hay incidentes que requieran atención.',
+  'Use the Test Lab runner or send the generated curl request.':
+    'Usa el ejecutor del Laboratorio de pruebas o envía la petición curl generada.',
+  'Open scenarios': 'Abrir escenarios',
+  'Your Test Lab endpoints': 'Tus endpoints del Laboratorio de pruebas',
+  'No Test Lab endpoints yet.': 'Aún no hay endpoints en el Laboratorio de pruebas.',
+  'Demo delivery timeline': 'Línea temporal de entrega demo',
+  'This route belongs to the isolated Demo Lab and is excluded from your workspace.':
+    'Esta ruta pertenece al Demo Lab aislado y está excluida de tu espacio de trabajo.',
+  'Return to Demo Lab': 'Volver al Demo Lab',
+  'Exit to production workspace': 'Salir al espacio productivo',
+  'Open isolated Demo Lab': 'Abrir Demo Lab aislado',
+  'Choose first workflow': 'Elegir primer flujo',
+  'connected routes': 'rutas conectadas',
+  'Manage test endpoints': 'Gestionar endpoints de prueba',
+  'Manage integrations': 'Gestionar integraciones',
+  'Run a safe trial': 'Ejecutar una prueba segura',
+  'ISOLATED ENVIRONMENT': 'ENTORNO AISLADO',
+  'Explore a synthetic workspace without mixing its routes, monitors or incidents with your normal product data.':
+    'Explora un espacio sintético sin mezclar sus rutas, monitores o incidentes con los datos normales del producto.',
+  'DEMO DATA · SAFE TO CLEAN': 'DATOS DEMO · SEGURO DE LIMPIAR',
+  'Exit to workspace': 'Salir al espacio de trabajo',
+  'Separate from your workspace': 'Separado de tu espacio de trabajo',
+  'Everything created here is tagged to this demo run. Normal dashboards and inventories do not include it.':
+    'Todo lo creado aquí queda etiquetado para esta ejecución demo. Los paneles e inventarios normales no lo incluyen.',
+  'Choose one of the three starting actions. Each opens the module that owns that job.':
+    'Elige una de las tres acciones iniciales. Cada una abre el módulo responsable de esa tarea.',
+  'Each connection opens its own delivery timeline instead of a separate global control module.':
+    'Cada conexión abre su propia línea temporal de entrega en lugar de un módulo de control global separado.',
+  '03 / TEST LAB': '03 / LABORATORIO DE PRUEBAS',
+  '04 / SCENARIOS': '04 / ESCENARIOS',
+  '05 / MONITORING': '05 / MONITORIZACIÓN',
+  '06 / INCIDENTS & RECOVERY': '06 / INCIDENTES Y RECUPERACIÓN',
+  '07 / RELIABILITY': '07 / FIABILIDAD',
+  '08 / DOCUMENTATION': '08 / DOCUMENTACIÓN',
+  'Prove the service objective': 'Demuestra el objetivo del servicio',
+  'Reliability turns checks, latency, incidents and recovery history into an explainable operational baseline.':
+    'Fiabilidad convierte las comprobaciones, la latencia, los incidentes y el historial de recuperación en una base operativa explicable.',
+  'Evidence reports remain available as a separate handoff for individual delivery events.':
+    'Los informes de evidencia siguen disponibles como entrega separada para cada evento.',
+  'Open delivery timeline': 'Abrir línea temporal de entrega',
+  'Open Integrations': 'Abrir Integraciones',
+  'Open incidents & recovery': 'Abrir incidentes y recuperación',
+  'Use Integrations when a provider should reach your backend.':
+    'Usa Integraciones cuando un proveedor deba llegar a tu backend.',
+  'Use Incidents & recovery to inspect incidents, recovery and delivery state.':
+    'Usa Incidentes y recuperación para revisar incidentes, recuperaciones y el estado de entrega.',
+  'Test Lab endpoints': 'Endpoints del laboratorio de pruebas',
+  'No live routes yet. Open Integrations when a provider is ready.':
+    'Todavía no hay rutas reales. Abre Integraciones cuando tengas un proveedor preparado.',
+  'Try another view or change the route state from its delivery timeline.':
+    'Prueba otra vista o cambia el estado de la ruta desde su línea temporal de entrega.',
+  'Test runner': 'Ejecutor de pruebas',
+  'The test delivery could not reach this endpoint. Check that it is publicly reachable.':
+    'La entrega de prueba no pudo alcanzar este endpoint. Comprueba que sea accesible públicamente.',
+  'Payload used by the test': 'Payload usado por la prueba',
+  'Open test runner': 'Abrir ejecutor de pruebas',
   'EVIDENCE CENTER': 'CENTRO DE EVIDENCIAS',
   'Evidence & reports': 'Evidencias e informes',
   'Explain what happened, prove recovery and share a redacted record safely.':

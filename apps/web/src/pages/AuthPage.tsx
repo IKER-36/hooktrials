@@ -127,7 +127,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                 ? setup?.deploymentMode === 'cloud'
                   ? 'Free hosted sandbox. No credit card.'
                   : 'Create an account on this installation.'
-                : 'Continue to your webhook labs.'}
+                : 'Continue to your reliability workspace.'}
           </p>
           <form onSubmit={submit}>
             {registerMode ? (

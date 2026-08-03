@@ -1,9 +1,9 @@
 # Audit history
 
 HookTrials keeps a redacted record of operational changes so a team can explain what happened
-without searching application logs. Audit entries are surfaced inside **Operations**, next to
+without searching application logs. Audit entries are surfaced inside **Incidents & recovery**, next to
 incidents, dead letters and notification delivery. The former `/app/audit` URL remains as a
-compatibility redirect to Operations so saved links continue to work.
+compatibility redirect to Incidents & recovery so saved links continue to work.
 
 The history includes actions such as:
 

@@ -6,7 +6,7 @@ request.
 
 ## Open a report
 
-1. Open **Resources → Evidence & reports**.
+1. Open **Prove → Evidence**.
 2. Search by route, event correlation key or environment, or filter by endpoint and report state.
 3. Select an event to see its explainable score, outcome and recorded time.
 4. Use **Open route control** when you need to continue troubleshooting the route itself.
@@ -39,10 +39,10 @@ until it expires. Creating a new link replaces the previous active link for that
 
 ## What to do next
 
-- For a route configuration issue, open **Control Center** from the report.
+- For a route configuration issue, open the integration's **Delivery timeline** from the report.
 - For a dependency or destination health issue, open **Monitoring**.
-- For retries, dead letters, incidents or alerts, open **Operations**.
-- For deterministic testing before changing a live integration, use **Lab → Trial endpoints**.
+- For retries, dead letters, incidents or alerts, open **Incidents & recovery**.
+- For deterministic testing before changing a live integration, use **Build → Test Lab**.
 
-The old `/app/audit` URL redirects to Operations. Redacted operational history remains available
+The old `/app/audit` URL redirects to Incidents & recovery. Redacted operational history remains available
 there; Evidence & reports is the place for event-level recovery proof.

@@ -37,12 +37,18 @@ export const auditQuerySchema = z.object({
   before: z.string().datetime().optional(),
 });
 
-export const reliabilityQuerySchema = z.object({
+export const resourceScopeSchema = z.enum(['all', 'product', 'demo']);
+
+export const resourceScopeQuerySchema = z.object({
+  scope: resourceScopeSchema.default('all'),
+});
+
+export const reliabilityQuerySchema = resourceScopeQuerySchema.extend({
   windowDays: z.coerce.number().int().min(1).max(30).default(7),
   target: z.coerce.number().min(90).max(100).optional(),
 });
 
-export const evidenceListQuerySchema = z.object({
+export const evidenceListQuerySchema = resourceScopeQuerySchema.extend({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   status: z.enum(['all', 'pending', 'passed', 'failed']).default('all'),
   endpointId: z.string().uuid().optional(),

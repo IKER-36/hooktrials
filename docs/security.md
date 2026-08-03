@@ -48,7 +48,7 @@ a product requirement, not a deployment option.
   headers, query strings and user identity.
 - ICMP targets pass the same public/private address policy as HTTP targets. Only the worker receives
   `NET_RAW`; the API, dashboard and ingestor do not.
-- Guided Demo setup, cleanup and reset are serialized by an expiring per-user Redis lock; cleanup
+- Demo Lab setup, cleanup and reset are serialized by an expiring per-user Redis lock; cleanup
   still requires both authenticated ownership and the exact private run identifier.
 - Cloud monitor creation and manual checks have per-user quotas and route-level throttles; set the
   quota to zero for an unlimited self-hosted installation.

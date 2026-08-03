@@ -4,13 +4,19 @@ import { apiRequest } from '../../lib/api';
 import { useI18n } from '../../i18n/I18nContext';
 import type { IntegrationSummary } from '../../lib/types';
 
-export function ReadinessPanel({ endpointId }: { endpointId: string }) {
+export function ReadinessPanel({
+  endpointId,
+  scope = 'product',
+}: {
+  endpointId: string;
+  scope?: 'product' | 'demo';
+}) {
   const { t } = useI18n();
   const [integration, setIntegration] = useState<IntegrationSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations')
+    apiRequest<{ integrations: IntegrationSummary[] }>(`/v1/integrations?scope=${scope}`)
       .then((response) => {
         if (!cancelled) {
           setIntegration(
@@ -24,7 +30,7 @@ export function ReadinessPanel({ endpointId }: { endpointId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [endpointId]);
+  }, [endpointId, scope]);
 
   if (!integration) return null;
   const failed = integration.readiness.checks
@@ -53,7 +59,7 @@ export function ReadinessPanel({ endpointId }: { endpointId: string }) {
             <h2>What is proven — and what is missing</h2>
             <p>Every point comes from configuration or recorded evidence, never a hidden grade.</p>
           </div>
-          <Link to="/app/demo">Run full proof</Link>
+          <Link to="/app/endpoints">Run a safe trial</Link>
         </header>
         <div className="ht-readiness-grid">
           {integration.readiness.checks.map((check) => (

@@ -1,6 +1,6 @@
-# Webhook Hub and live traffic
+# Integrations and live traffic
 
-Webhook Hub is the production-facing entry point for real webhook traffic. It places HookTrials
+Integrations is the production-facing entry point for real webhook traffic. It places HookTrials
 between an external provider and the application that normally receives the request.
 
 ```text
@@ -36,7 +36,7 @@ currently available for Stripe and GitHub, while the other starters remain contr
 
 ## Create a live connection
 
-1. Open **Webhook Hub** in the Product workspace and select **Connect a real webhook**.
+1. Open **Build → Integrations** and select **Connect a real webhook**.
 2. Choose the provider. Provider starters configure an inbound POST contract; Stripe and GitHub
    support native signature verification, while the other starters validate the expected header
    surface before delivery.
@@ -48,7 +48,7 @@ currently available for Stripe and GitHub, while the other starters remain contr
 7. Replace the old destination in the provider configuration with this URL.
 8. If the provider issues its signing secret only after URL registration, paste it into the
    activation panel before accepting real traffic.
-9. Send the provider's test event and open **Live inspector**.
+9. Send the provider's test event and open the integration's **Delivery timeline**.
 
 For a Protect connection, choose a delivery policy before creating it. **Single** keeps the default
 retry path, **Fan-out** delivers to every active target, and **Failover** moves through targets in
@@ -124,7 +124,7 @@ destination latency and response outcome.
 ### Central integration workspace
 
 Create separate routes for billing, source control, commerce and internal automation. Each route has
-its own private URL, destination, validation and environment while Operations provides one incident,
+its own private URL, destination, validation and environment while Incidents & recovery provides one incident,
 dead-letter and alert queue for the account.
 
 ## Cloud and self-hosted operation
@@ -149,10 +149,9 @@ reverse proxy. Explicit private CIDR access is available only in self-hosted mod
 - document the HookTrials URL as part of the integration inventory;
 - retain the previous provider destination for rollback.
 
-The Webhook Hub activation path in Control Center mirrors this checklist at account level. Use it
-to confirm that a Trial has produced evidence, that the real route is connected, that at least one
-dependency is monitored and that Operations has been reviewed before moving a provider out of
-staging.
+Home and each Integration's Delivery timeline mirror this checklist. Use them to confirm that a
+Test Lab run has produced evidence, that the real route is connected, that at least one dependency
+is monitored and that Incidents & recovery has been reviewed before moving a provider out of staging.
 
 Do not place authentication middleware in front of `/i/*`; providers cannot complete an interactive
 login. The ingestion URL itself is a high-entropy secret. If it is exposed, rotate it from an

@@ -35,7 +35,7 @@ export function ReliabilityPage() {
 
   const load = useCallback(async () => {
     const result = await apiRequest<ReliabilitySummary>(
-      `/v1/reliability/summary?windowDays=${windowDays}`,
+      `/v1/reliability/summary?windowDays=${windowDays}&scope=product`,
     );
     setData(result);
     setError('');
@@ -49,10 +49,10 @@ export function ReliabilityPage() {
   }, [load]);
 
   return (
-    <section className="ht-page" data-product-area="product">
+    <section className="ht-page" data-product-area="prove" data-tour-section="reliability">
       <PageHeader
-        eyebrow="RELIABILITY"
-        title="SLO & reliability"
+        eyebrow="PROVE / RELIABILITY"
+        title="Reliability"
         description="Availability, latency and incident evidence across your monitored dependencies."
         actions={
           <>

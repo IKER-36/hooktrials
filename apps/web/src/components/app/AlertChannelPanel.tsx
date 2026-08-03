@@ -345,7 +345,7 @@ export function AlertChannelPanel() {
       <ConfirmDialog
         open={confirmDelete}
         title="Remove this alert channel?"
-        body="New incident notifications will stop immediately. Existing delivery evidence remains available in Operations."
+        body="New incident notifications will stop immediately. Existing delivery evidence remains available in Incidents & recovery."
         confirmLabel="Remove channel"
         busy={busy === 'delete'}
         onConfirm={() => void remove()}

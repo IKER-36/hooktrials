@@ -46,9 +46,13 @@ installation upgrade.
 The automation paths deliberately do not create routes, accept arbitrary destinations or return raw
 payloads. Use [API keys and automation](api-keys.md) for the complete CI workflow.
 
+Session-authenticated monitor and evidence inventories accept an optional `scope` query. Use
+`product` for normal workspace data, `demo` for isolated Demo Lab resources or omit it to retain the
+backwards-compatible `all` behavior.
+
 ## From catalogue to monitors
 
-The dashboard also includes **Resources → Import OpenAPI**. It reads a JSON or YAML contract in the
+The dashboard also links **Import OpenAPI** from Documentation and Monitoring. It reads a JSON or YAML contract in the
 browser, previews monitorable operations and can create up to 20 test or staging monitors at a time.
 The import does not copy security schemes, headers, request bodies or secrets. See
 [OpenAPI import](openapi-import.md) for the selection and safety rules.

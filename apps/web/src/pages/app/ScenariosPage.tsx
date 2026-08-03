@@ -19,9 +19,13 @@ function outcome(status: number): string {
 
 export function ScenariosPage() {
   const { scenarios, endpoints, saveScenario, deleteScenario, reportError } = useDashboard();
-  const [selectedId, setSelectedId] = useState<string | null>(scenarios[0]?.id ?? null);
+  const productScenarios = useMemo(
+    () => scenarios.filter((scenario) => !scenario.demoOwned),
+    [scenarios],
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(productScenarios[0]?.id ?? null);
   const [creating, setCreating] = useState(false);
-  const selected = scenarios.find((scenario) => scenario.id === selectedId) ?? null;
+  const selected = productScenarios.find((scenario) => scenario.id === selectedId) ?? null;
   const [name, setName] = useState('');
   const [steps, setSteps] = useState<ScenarioStep[]>([EMPTY_STEP]);
   const [repeatLastStep, setRepeatLastStep] = useState(true);
@@ -29,8 +33,8 @@ export function ScenariosPage() {
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
-    if (!creating && !selected && scenarios[0]) setSelectedId(scenarios[0].id);
-  }, [creating, scenarios, selected]);
+    if (!creating && !selected && productScenarios[0]) setSelectedId(productScenarios[0].id);
+  }, [creating, productScenarios, selected]);
 
   useEffect(() => {
     if (!selected) return;
@@ -110,10 +114,10 @@ export function ScenariosPage() {
   const readOnlyBuiltIn = Boolean(selected?.builtIn);
 
   return (
-    <section className="ht-page" data-tour-section="scenarios" data-product-area="lab">
+    <section className="ht-page" data-tour-section="scenarios" data-product-area="build">
       <PageHeader
-        eyebrow="LAB / SCENARIOS"
-        title="Failure scenarios"
+        eyebrow="BUILD / SCENARIOS"
+        title="Scenarios"
         description="Model the exact response sequence your webhook sender must survive."
         actions={
           <button type="button" className="button primary" onClick={() => startNew()}>
@@ -126,9 +130,9 @@ export function ScenariosPage() {
         <aside className="ht-studio-library" aria-label="Scenario library">
           <header>
             <span>Scenario library</span>
-            <small>{scenarios.length} total</small>
+            <small>{productScenarios.length} total</small>
           </header>
-          {scenarios.map((scenario) => (
+          {productScenarios.map((scenario) => (
             <button
               key={scenario.id}
               type="button"

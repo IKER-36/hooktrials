@@ -1,152 +1,146 @@
 # Product guide
 
-The dashboard includes a searchable **Docs** module at `/app/docs`. This guide is the public,
-self-hosted companion for operators who want the same workflow outside the application.
+HookTrials is organized around the job an operator wants to complete. The authenticated dashboard
+also includes a searchable **Documentation** module at `/app/docs`; this guide is its public,
+self-hosted companion.
+
+## Start with one outcome
+
+Home presents three primary starting points:
+
+1. **Connect a real webhook** opens Integrations for provider traffic that must reach a backend.
+2. **Test an integration safely** opens Test Lab for deterministic failures and retries.
+3. **Monitor a service** opens Monitoring for availability, latency and contract checks.
+
+Choose one path first. Each page keeps its configuration, evidence and next action together instead
+of sending the operator through an unrelated global control screen.
 
 ## Workspace map
 
-The dashboard deliberately separates live work from experiments:
+- **Workspace** — Home summarizes normal routes, monitors, incidents and recent evidence.
+- **Build** — Integrations, Test Lab and Scenarios create and validate delivery paths.
+- **Operate** — Monitoring and Incidents & recovery show live health and actionable failures.
+- **Prove** — Reliability and Evidence turn recorded behavior into an explainable baseline.
+- **Resources** — Documentation, API keys and Team workspace support operation and automation.
 
-- **Product** contains Control Center, Webhook Hub, Monitoring and Operations. These modules work
-  with real integrations, health signals, incidents and recovery.
-- **Lab** contains Trial endpoints, Failure scenarios and Guided Demo. These modules use synthetic
-  traffic and deterministic failures without being presented as live connections.
-- **Resources** contains the searchable operator documentation, OpenAPI import, Evidence & reports,
-  API keys and workspace tools.
+Account settings remain available from the user profile. OpenAPI import belongs to the Integrations
+workflow and is linked from Monitoring and Documentation rather than presented as another top-level
+module.
 
-The slim context line above every page always identifies the current workspace and module. The same
-structure is retained when the desktop rail is collapsed and in the horizontally scrollable mobile
-navigation.
+The slim context line above every page identifies the area and current module. The same taxonomy is
+used by the desktop sidebar, collapsed rail, mobile More menu and command palette.
 
-## Command palette
+## Navigation and precise routes
 
-Use the search control in the context bar, or press **Cmd + K** on macOS and **Ctrl + K** on Windows
-and Linux, to open the command palette. Search by module, action or keyword, then use the arrow keys
-and Enter to move or act without leaving the current workspace. Escape closes the palette.
+- `/app` — Home and its three starting actions.
+- `/app/live-webhooks` — real Observe and Protect integrations.
+- `/app/endpoints` — isolated Test Lab endpoints.
+- `/app/scenarios` — deterministic response sequences.
+- `/app/control-center/:endpointId` — the delivery timeline for one exact route.
+- `/app/monitor` — monitor inventory and selected monitor detail.
+- `/app/operations` — incidents, dead letters, recoveries and alert evidence.
+- `/app/reliability` — SLO objectives and error-budget evidence.
+- `/app/evidence` — redacted event and recovery reports.
+- `/app/docs`, `/app/api-keys` and `/app/workspace` — supporting resources.
 
-The palette includes every dashboard destination, account settings, theme switching, the product
-tour, workspace refresh and sidebar density. It is available in English and Spanish and respects
-the same focus and reduced-motion preferences as the rest of the dashboard.
+The old `/app/control-center` entry redirects safely to Home. Saved links containing an endpoint ID
+remain valid and open that route's delivery timeline directly.
 
-## Navigation and route context
+Integrations accepts `?view=attention` or `?view=paused`. Monitoring accepts `?monitor=<id>`.
+Incidents & recovery preserves its view and incident filters in the URL. Home accepts `?window=7`
+or `?window=30`; omitting it uses the 24-hour window. These parameters contain navigation state
+only, never payloads, credentials or destination URLs.
 
-Every module has its own address so a shared link opens the same context instead of falling back to a
-generic page:
+## Integrations and delivery timelines
 
-- `/app` is the workspace Home with cross-module health, activity and next actions.
-- Home also includes current resource health and monitor-coverage visualizations. These are derived
-  from the same route, monitor and reliability evidence shown elsewhere; an empty chart means that
-  the workspace has not collected enough checks yet, not that data was invented.
-- `/app/control-center` is the route-control entry point for one selected route.
-- `/app/control-center/:endpointId` opens one Trial or live route directly.
-- `/app/live-webhooks`, `/app/monitor` and `/app/operations` open their respective Product modules.
-- `/app/endpoints`, `/app/scenarios` and `/app/demo` open the Lab modules.
-- `/app/evidence` opens the redacted event reports and recovery timelines.
+Use **Build → Integrations** for real provider traffic. Creation keeps the provider preset, inbound
+contract, encrypted destination and Observe or Protect delivery mode in one workflow. After saving,
+copy the generated ingestion URL and run the safe smoke test.
 
-Webhook Hub accepts `?view=attention` or `?view=paused` to open a shared route inventory in that
-state; omitting `view` shows all live connections. Monitoring accepts `?monitor=<id>` to reopen one
-selected monitor. These parameters contain navigation state only and are safe to share; they never
-include payloads, credentials or destination URLs.
+Opening a connection leads to its **Delivery timeline**. This is a detail view, not a separate
+product module. It contains the selected route's state, URL, correlated attempts, destination
+deliveries, Production Readiness and configuration. Links from Home, Monitoring, Incidents &
+recovery and Evidence preserve the exact route whenever one is known.
 
-Home accepts `?window=7` or `?window=30` to share the seven- or thirty-day reliability view; omitting
-`window` uses the 24-hour default. The selected period is repeated in the telemetry labels and does
-not expose any account or integration data.
-
-Links from endpoint, webhook, monitor and recovery views preserve the selected route when moving
-between modules. Use Home for workspace orientation and Control Center when you need the complete
-evidence and retry timeline for one route.
-
-## Control Center and Production Readiness
-
-Use **Control Center** as the operational starting point. Select a route, read cross-product health,
-then follow the highest-impact missing item in Production Readiness. The score
-is derived only from configuration and stored evidence: public HTTPS reachability, inbound contract,
-signature verification, destination configuration, durable delivery, observed traffic, recovery,
-evidence generation and incident state.
-
-For any selected route, the **Route journey** keeps the lifecycle visible in one place: setup in
-Trial endpoints or Webhook Hub, traffic and retry evidence in Control Center, dependency checks in
-Monitoring, and incident or dead-letter recovery in Operations. Use the links in that strip to move
-between modules without losing the route context.
-
-## Live connections and Trial endpoints
-
-For real integrations, start in **Webhook Hub**. It creates the provider-facing URL,
-encrypted destination, validation and delivery strategy atomically, then explains exactly where to
-paste the URL. Before creation, the inbound contract preview lists the provider headers and
-signature expectations. After creation, copy the generated smoke-test command, send a safe first
-event and watch the latest delivery signal refresh beside the route. The connection list can be
-filtered to all routes, paused routes or routes that need attention.
-
-Use **Trial endpoints** and **Failure scenarios** only for deterministic Lab work. They are listed
-separately from real Observe/Protect connections so synthetic experiments cannot be mistaken for
-production delivery paths.
-
-1. Create an endpoint from a starter or choose a scenario explicitly.
-2. Copy its stable ingestion URL.
-3. Send a synthetic request and inspect its retry timeline.
-4. Inspect the correlated attempts and prove the sender's retry behaviour.
-5. Create a separate live connection in Webhook Hub when moving to real traffic.
-
-**Trial** returns deterministic responses without contacting a destination. **Observe** forwards once
-and records both sides. **Protect** persists the event first, retries with bounded backoff and moves
-exhausted deliveries to the dead-letter inbox. Protect can use one destination, Fan-out to deliver
-to every active target, or ordered Failover to move to the next target after retry exhaustion.
+**Observe** forwards once and records both sides. **Protect** persists the event first, retries with
+bounded backoff and moves exhausted deliveries to the recovery queue. Protect supports one
+destination, Fan-out to every active destination, or ordered Failover after retry exhaustion.
 Destination URLs, headers, contracts and signing secrets are encrypted and write-only.
 
-## Failure scenarios
+## Test Lab and Scenarios
 
-Built-in scenarios cover basic inspection, rate limiting, temporary outage and unstable services.
-Custom scenarios define an ordered sequence of status, delay, headers and response body. Use the
-same HookTrials event ID across sender retries so every attempt stays in one timeline.
+Use **Build → Test Lab** when the goal is to prove sender behavior without forwarding traffic to a
+real backend:
+
+1. Choose a built-in or custom Scenario.
+2. Create a Test Lab endpoint and copy its ingestion URL.
+3. Use the built-in test runner or send a synthetic request.
+4. Open the generated delivery timeline and compare every correlated attempt.
+5. Create a separate Integration only when real provider traffic is ready.
+
+Built-in Scenarios cover inspection, rate limiting, temporary outage and unstable services. Custom
+Scenarios define ordered status codes, delays, response headers and bodies. Reuse the same event ID
+across sender retries so HookTrials groups the attempts into one timeline.
 
 ## Monitoring
 
 Create an HTTP monitor with method, expected status range, timeout, cadence and failure threshold,
-or an ICMP monitor for host reachability. Optional HTTP contracts can require headers or JSON paths.
-Run or edit it, inspect latency and availability, then combine selected monitors in a customizable
-status page when the redacted public fields are suitable. Monitor pause affects active checks only;
-it never pauses webhook routes.
+or an ICMP monitor for host reachability. Optional HTTP contracts can require text or JSON paths.
+Run or edit a monitor, inspect latency and availability, then publish selected monitors through a
+customizable status page. Pausing a monitor affects active checks only; it never pauses webhook
+routes.
 
-## Operations
+## Incidents & recovery
 
-Operations combines open and recovered incidents, unresolved dead letters and alert-delivery audit.
-Retry continues an existing protected delivery. Replay creates a new delivery from the preserved
-event. Both require explicit confirmation and record operator/source metadata. Check destination
+This area combines open and recovered incidents, unresolved dead letters and alert-delivery audit.
+**Retry** continues an existing protected delivery. **Replay** creates a new delivery from the
+preserved event. Both require confirmation and record operator/source metadata. Check destination
 health and idempotency before either action.
 
-## Evidence & reports
+## Reliability and Evidence
 
-Open **Resources → Evidence & reports** when you need a durable explanation of a recorded event.
-Filter by route or state, select an event and read its score, outcome, impact, attempts, deliveries
-and recovery timeline. The view is redacted by design and never exposes payload bodies, credentials,
-signing secrets or destination URLs. Authenticated JSON/Markdown exports and temporary 24-hour
-handoff links are available from the selected report.
+**Reliability** aggregates monitor checks into availability, latency, SLO and error-budget evidence.
+Every state is derived from recorded checks and incidents.
 
-## Guided Demo
+**Evidence** explains an individual event through its result, attempts, deliveries and recovery
+timeline. Authenticated JSON/Markdown exports and temporary redacted handoff links are available.
+Payload bodies, credentials, signing secrets and destination URLs are excluded from these reports.
 
-Guided Demo creates isolated, user-owned synthetic resources that exercise Trial, Observe, Protect,
-Monitoring, Operations and Evidence through the normal API, queue and worker paths. It is a learning and
-competition-demonstration workspace, not a substitute for real endpoints and monitors. Reset removes
-only resources owned by the current demo run.
+## Isolated Demo Lab
+
+Demo Lab is deliberately absent from the normal sidebar, mobile menu and command palette. It is an
+optional learning environment reachable from the collapsed help entry on Home or directly at
+`/app/demo`.
+
+Its synthetic routes, custom Scenario, monitors, status page, incidents, recoveries and evidence are
+tagged to a private demo run. Normal Home metrics and Build, Operate and Prove inventories request
+product scope and do not include those records. Demo Lab requests demo scope, shows a permanent
+isolation notice and provides scoped cleanup. Existing normal resources are never selected by demo
+cleanup.
+
+## Command palette
+
+Press **Cmd + K** on macOS or **Ctrl + K** on Windows and Linux. The palette contains the same normal
+destinations as the sidebar plus account, theme, tour, refresh and density actions. Demo Lab is not
+advertised there. Keyboard navigation, focus handling and English/Spanish labels follow the rest of
+the dashboard.
 
 ## Security and data handling
 
-- Use synthetic payloads for testing and avoid unnecessary personal or production data.
-- Public status and evidence links are opaque, redacted and revocable.
-- Outbound destinations are checked by the shared network policy; private CIDRs require an explicit
-  allowlist.
-- A local-only self-hosted URL cannot receive cloud-provider traffic. Configure a public HTTPS domain
-  or an existing reverse proxy first.
+- Use synthetic payloads for tests and avoid unnecessary personal or production data.
+- Public status and Evidence links are opaque, redacted and revocable.
+- Outbound destinations pass the shared network policy; private CIDRs require an explicit allowlist.
+- A local-only self-hosted URL cannot receive cloud-provider traffic. Configure public HTTPS or an
+  existing reverse proxy first.
 
 ## Troubleshooting order
 
-1. Confirm the route or monitor is active.
-2. Confirm the public HTTPS URL is reachable from outside the host.
+1. Confirm the exact route or monitor is active.
+2. Confirm the public HTTPS URL is reachable outside the host.
 3. Read contract and signature evidence before changing validation rules.
-4. Inspect individual attempts, `Retry-After` and destination outcomes.
-5. Open Operations for incident or dead-letter recovery.
+4. Inspect the route's delivery timeline, including `Retry-After` and destination outcomes.
+5. Open Incidents & recovery only when an incident or dead letter requires action.
 
 Continue with [Getting started](getting-started.md), [Monitoring](monitoring.md),
-[Webhook Hub](live-webhook-hub.md), [Protect mode](protect-mode.md) and
+[Live integrations](live-webhook-hub.md), [Protect mode](protect-mode.md) and
 [External access](external-access.md).

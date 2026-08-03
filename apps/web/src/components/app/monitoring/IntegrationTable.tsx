@@ -42,7 +42,7 @@ export function IntegrationTable({
           type="button"
           className="ht-integration-row"
           onClick={() => onSelectRoute(route.endpointId)}
-          aria-label={`Open ${route.name} in Control Center`}
+          aria-label={`Open ${route.name} delivery timeline`}
         >
           <strong>{route.name}</strong>
           {/* Destination carried over from the removed duplicate route list. */}

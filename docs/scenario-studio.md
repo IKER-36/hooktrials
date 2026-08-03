@@ -1,6 +1,6 @@
-# Failure scenarios
+# Scenarios
 
-The **Failure scenarios** Lab module controls what HookTrials returns on each delivery attempt. It lets you reproduce
+The **Scenarios** module controls what HookTrials returns on each delivery attempt. It lets you reproduce
 temporary outages, rate limits, slow responses and eventual recovery without changing the webhook
 sender.
 
@@ -20,7 +20,7 @@ Example recipe:
 
 ## Create a custom scenario
 
-1. Open **Failure scenarios** from the Lab workspace.
+1. Open **Build → Scenarios**.
 2. Select **New scenario**, or open a built-in and select **Duplicate to edit**.
 3. Give the recipe a descriptive name.
 4. Add up to 20 response steps. Each step supports an HTTP status, delay from 0–30 seconds,

@@ -49,8 +49,8 @@ export function ActivationChecklist({ endpoints }: ActivationChecklistProps) {
       try {
         const [events, monitors, operations] = await Promise.all([
           eventRequest,
-          apiRequest<{ monitors: Array<{ id: string }> }>('/v1/monitors'),
-          apiRequest<OperationsResponse>('/v1/operations'),
+          apiRequest<{ monitors: Array<{ id: string }> }>('/v1/monitors?scope=product'),
+          apiRequest<OperationsResponse>('/v1/operations?scope=product'),
         ]);
         if (cancelled) return;
         setData({
@@ -89,17 +89,17 @@ export function ActivationChecklist({ endpoints }: ActivationChecklistProps) {
       key: 'event',
       complete: data.eventObserved,
       label: t('Observe your first delivery'),
-      detail: t('Run the guided demo or send the generated curl request.'),
-      to: trialEndpoint ? `/app/control-center/${trialEndpoint.id}` : '/app/demo',
-      action: t('Open Control Center'),
+      detail: t('Use the Test Lab runner or send the generated curl request.'),
+      to: trialEndpoint ? `/app/control-center/${trialEndpoint.id}` : '/app/endpoints',
+      action: t('Open delivery timeline'),
     },
     {
       key: 'route',
       complete: Boolean(liveRoute),
       label: t('Connect a real webhook route'),
-      detail: t('Use Webhook Hub when a provider should reach your backend.'),
+      detail: t('Use Integrations when a provider should reach your backend.'),
       to: '/app/live-webhooks',
-      action: t('Open Webhook Hub'),
+      action: t('Open Integrations'),
     },
     {
       key: 'monitor',
@@ -113,9 +113,9 @@ export function ActivationChecklist({ endpoints }: ActivationChecklistProps) {
       key: 'evidence',
       complete: data.operationsEvidence,
       label: t('Review operational evidence'),
-      detail: t('Use Operations to inspect incidents, recovery and delivery state.'),
+      detail: t('Use Incidents & recovery to inspect incidents, recovery and delivery state.'),
       to: '/app/operations',
-      action: t('Open Operations'),
+      action: t('Open incidents & recovery'),
     },
   ];
   const completed = steps.filter((step) => step.complete).length;

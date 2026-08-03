@@ -29,7 +29,7 @@ cannot grant the owner role.
 
 ## Incident ownership
 
-Operations includes an assignee selector for each incident. The assignee must be a member of the
+Incidents & recovery includes an assignee selector for each incident. The assignee must be a member of the
 active workspace. Assignments, acknowledgements and operator notes are recorded by the audit
 history so a hand-off remains explainable.
 

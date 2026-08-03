@@ -1,7 +1,7 @@
 # HookTrials
 
 [![Hosted on CubePath](https://img.shields.io/badge/Hosted%20on-CubePath-22c55e?style=flat-square)](https://cubepath.com/)
-[![Release](https://img.shields.io/badge/release-v0.33.12-6366f1?style=flat-square)](docs/release-status.md)
+[![Release](https://img.shields.io/badge/release-v0.34.0-6366f1?style=flat-square)](docs/release-status.md)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-334155?style=flat-square)](LICENSE)
 
 Open-source integration reliability control plane. HookTrials tests failure behavior, safely
@@ -9,7 +9,7 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.33.12** (1 August 2026). The managed sandbox is available at
+Current public release: **v0.34.0** (3 August 2026). The managed sandbox is available at
 [app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
 
 ## Run locally
@@ -29,8 +29,8 @@ then closes. Self-hosted mode has no endpoint or daily-event quota by default.
 ./hooktrials status
 ./hooktrials logs
 ./hooktrials backup
-./hooktrials update --release v0.33.12 --check
-./hooktrials update --release v0.33.12
+./hooktrials update --release v0.34.0 --check
+./hooktrials update --release v0.34.0
 ```
 
 Updates back up PostgreSQL, rebuild the selected checkout and wait for migrations and health checks.
@@ -56,28 +56,29 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 
 - React dashboard, login and first-run setup. No marketing landing.
 - Complete English and Spanish interface, persisted per browser and available on public pages.
-- Contextual product tour that keeps each live module visible, with a permanent restart control.
+- Outcome-based onboarding that starts from connect, test or monitor and stays inside the owning workflow.
 - Searchable in-product Docs with exact workflows, outcomes and troubleshooting.
 - Persistent accessible light and dark themes built from a sober, solid semantic design system.
 - Consistent workspace controls, route transitions and responsive metric surfaces with reduced-motion support.
-- Unified Control Center, integration inventory and Operations recovery queue.
-- Explicit Product / Lab / Resources workspaces, keeping real Observe/Protect connections separate
-  from synthetic Trial endpoints and failure scenarios.
+- Task-based Workspace / Build / Operate / Prove navigation, with contextual Delivery timelines and
+  a unified Incidents & recovery queue.
+- Product-scoped Home, Integrations, Monitoring, Scenarios, Reliability and Evidence reads that keep
+  isolated Demo Lab data out of normal counts and inventories.
 - Open operational layouts based on typography, whitespace and data dividers instead of repetitive
   floating cards, with the same hierarchy on desktop and mobile.
-- One-click Guided Demo filling every product module with an isolated, realistic synthetic workspace,
-  including clearly labelled Observe and Protect connections in Webhook Hub.
+- Optional one-click Demo Lab filling a separate, realistic synthetic workspace without appearing
+  in normal product navigation or metrics.
 - Fastify API and isolated public ingestion service.
 - Background analysis and retention worker.
 - PostgreSQL migrations and Redis/BullMQ processing.
 - Deterministic `500`, `503`, `429` and recovery scenarios.
-- Failure scenarios for custom multi-step status, delay, header and body recipes.
+- Scenarios for custom multi-step status, delay, header and body recipes.
 - Guided endpoint templates and an integrated provider simulator.
 - Live event stream, retry timeline and encrypted payload inspector.
 - Reliability Replay turning each event into a causal diagnosis, impact statement and runbook.
 - Attempt comparison for status, latency, headers, payload stability, signature and contract state.
 - Trial, Observe and Protect route modes with contracts and GitHub/Stripe signatures.
-- Webhook Hub for atomic real-provider onboarding, complete request interception and centralized
+- Integrations for atomic real-provider onboarding, complete request interception and centralized
   delivery operations.
 - Destination preflight and explicit provider-shaped synthetic events for validating live routes
   before changing a real provider.
@@ -102,10 +103,11 @@ permissions. Never delete or rotate `PAYLOAD_ENCRYPTION_KEY` while encrypted pay
 - Shared workspaces with owner, admin, operator and viewer roles, invitations and incident
   assignment.
 
-## One-click full product demo
+## Optional isolated product demo
 
-After signing in, open **Guided demo** and select **Run full demo**. HookTrials creates and exercises a
-complete synthetic workspace instead of showing static sample cards:
+After signing in, expand **Need a guided example?** on Home, open **Demo Lab** and select **Run full
+demo**. HookTrials creates and exercises a separate synthetic workspace instead of showing static
+sample cards:
 
 - a custom cascading-outage scenario and a `500 → 503 → 429 → 200` Trial timeline;
 - separate Observe and Protect routes with destination evidence, durable retries and recovery;
@@ -124,7 +126,7 @@ concurrent browser requests cannot create overlapping workspaces.
 **Clean only this demo run** removes that exact workspace without matching names or touching other
 user data. Demo incidents never call a real alert webhook configured by the user.
 
-See [Guided Demo](docs/demo-lab.md) for the generated dataset, safety boundary and cleanup model.
+See [Demo Lab](docs/demo-lab.md) for the generated dataset, safety boundary and cleanup model.
 
 ## Why HookTrials is different
 
@@ -138,9 +140,9 @@ conclusion or hides a grading formula.
 
 ### See the product, not a mock-up
 
-The current `v0.33.12` interface keeps real delivery work in **Product** and deterministic
-experiments in **Lab**. These captures come from the deployed Cloud application; the same dashboard
-is included in the self-hosted distribution.
+The current `v0.34.0` interface organizes work by outcome and keeps the optional Demo Lab outside
+normal production navigation and metrics. These captures come from the deployed Cloud application;
+the same dashboard is included in the self-hosted distribution.
 
 ![HookTrials Cloud product tour](docs/assets/hooktrials-demo.gif)
 
@@ -159,7 +161,7 @@ the marketing website are outside its scope and are not required to run HookTria
 
 - [Getting started](docs/getting-started.md)
 - [Trial, Observe and Protect](docs/trial-mode.md)
-- [Webhook Hub and real traffic](docs/live-webhook-hub.md)
+- [Integrations and real traffic](docs/live-webhook-hub.md)
 - [Delivery policies](docs/delivery-policies.md)
 - [Monitoring](docs/monitoring.md)
 - [SLOs, error budgets and alerts](docs/slo-and-alerts.md)
@@ -172,12 +174,12 @@ the marketing website are outside its scope and are not required to run HookTria
 - [Incidents, alerts and evidence](docs/incidents-alerts-evidence.md)
 - [Architecture](docs/architecture.md)
 - [Guided demonstration](docs/guided-demo.md)
-- [Guided Demo](docs/demo-lab.md)
+- [Isolated Demo Lab](docs/demo-lab.md)
 - [CLI and GitHub Actions](docs/cli-and-ci.md)
 - [API keys and automation](docs/api-keys.md)
 - [Account security](docs/account-security.md)
 - [Competition demonstration script](docs/competition-demo.md)
-- [Failure scenarios](docs/scenario-studio.md)
+- [Scenarios](docs/scenario-studio.md)
 - [Self-hosting](docs/self-hosting.md)
 - [Configuration](docs/configuration.md)
 - [Development](docs/development.md)

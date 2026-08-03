@@ -36,7 +36,7 @@ The system prioritizes operational clarity, legibility and predictable hierarchy
   transition contracts. Telemetry charts use Recharts only where a visual comparison is useful.
 - Inventory and monitor rows must expose a visible open/selection affordance, a keyboard focus
   ring and an accessible name. Editors and dialogs must trap focus and restore it on close.
-- Reliability, Evidence, Scenario and Guided Demo surfaces use the shared page-header contract;
+- Reliability, Evidence, Scenarios and Demo Lab surfaces use the shared page-header contract;
   dense rows remain open and separated by hairlines rather than nested floating cards. Responsive
   layouts must stack the detail surface below its inventory or journey rail without horizontal
   scrolling.
@@ -50,7 +50,7 @@ colors.
 
 ## Component rules
 
-1. Prefer the open Webhook Hub workspace language. Nested content changes one semantic surface
+1. Prefer the open Integrations workspace language. Nested content changes one semantic surface
    level or uses a divider; it does not introduce a new floating card or shadow.
 2. Use a pill only for statuses and compact counters; use restrained corners for controls and
    intentionally contained surfaces.
@@ -71,17 +71,16 @@ colors.
 11. Do not repeat navigation destinations or generic health copy above every page. Product routes
     begin with their own title and actions; global utilities remain in the rail.
 12. Audit history is not a standalone navigation destination. Redacted operational activity remains
-    available where it is actionable in Operations, and `/app/audit` is retained only as a
+    available where it is actionable in Incidents & recovery, and `/app/audit` is retained only as a
     compatibility redirect.
-13. Operations begins with a unified chronological activity timeline. Timeline rows expose state,
+13. Incidents & recovery begins with a unified chronological activity timeline. Timeline rows expose state,
     resource context, relative time and a direct link to the actionable queue; filters preserve the
     same layout on desktop and mobile.
 14. Home metric surfaces are actionable links when they represent a destination. Their hover and
     focus treatment must remain visible in both themes, and any selected telemetry window must be
     repeated in chart headings and supporting counts.
-15. Primary workspaces may expose a compact contextual journey when a workflow spans several
-    modules. It must complement the global rail rather than duplicate it, link each step to its
-    owning route, expose the current step, and collapse without horizontal scrolling on mobile.
+15. Home exposes three outcome-based starting actions. Detail views may link to the next relevant
+    action, but pages do not repeat a global workflow strip or duplicate the sidebar.
 16. Actionable list links and inventory views should preserve non-sensitive view state in the URL
     when it improves hand-off or triage. A deep-linked row or selected resource must expose a visible
     target state, keep its semantic status contrast, and remain reachable after asynchronous data
@@ -94,6 +93,6 @@ colors.
 
 Every visual change must be checked at desktop and mobile widths, with authenticated and public
 surfaces. The required gate is `pnpm check`; local browser validation should cover login, Home,
-Control Center, Webhook Hub, Monitoring, Operations, Trial endpoints, Failure scenarios, Guided Demo
+Integrations, Delivery timeline, Monitoring, Incidents & recovery, Test Lab, Scenarios, Demo Lab
 and public evidence/status views. Check at least 320, 768, 1024 and 1440px in both themes, plus a
 keyboard pass and a reduced-motion pass.

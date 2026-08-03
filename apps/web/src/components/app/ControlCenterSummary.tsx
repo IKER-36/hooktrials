@@ -3,21 +3,21 @@ import { Link } from 'react-router-dom';
 import { apiRequest } from '../../lib/api';
 import type { IntegrationSummary, MonitorSummary, OperationsResponse } from '../../lib/types';
 
-export function ControlCenterSummary() {
+export function ControlCenterSummary({ scope = 'product' }: { scope?: 'product' | 'demo' }) {
   const [operations, setOperations] = useState<OperationsResponse | null>(null);
   const [monitors, setMonitors] = useState<MonitorSummary[]>([]);
   const [routes, setRoutes] = useState<IntegrationSummary[]>([]);
 
   const load = useCallback(async () => {
     const [operationResponse, monitorResponse, integrationResponse] = await Promise.all([
-      apiRequest<OperationsResponse>('/v1/operations'),
-      apiRequest<{ monitors: MonitorSummary[] }>('/v1/monitors'),
-      apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations'),
+      apiRequest<OperationsResponse>(`/v1/operations?scope=${scope}`),
+      apiRequest<{ monitors: MonitorSummary[] }>(`/v1/monitors?scope=${scope}`),
+      apiRequest<{ integrations: IntegrationSummary[] }>(`/v1/integrations?scope=${scope}`),
     ]);
     setOperations(operationResponse);
     setMonitors(monitorResponse.monitors);
     setRoutes(integrationResponse.integrations);
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
     void load().catch(() => undefined);
@@ -48,7 +48,7 @@ export function ControlCenterSummary() {
 
   const priority = operations?.incidents.find((incident) => incident.status === 'open');
   return (
-    <section className="ht-control-center" aria-label="Control Center">
+    <section className="ht-control-center" aria-label="Workspace reliability summary">
       <header>
         <div>
           <p className="ht-kicker">CURRENT STATE</p>
@@ -88,7 +88,7 @@ export function ControlCenterSummary() {
         </p>
         <div>
           <Link to="/app/monitor">Open inventory</Link>
-          <Link to="/app/operations">Open operations</Link>
+          <Link to="/app/operations">Open incidents & recovery</Link>
         </div>
       </footer>
     </section>

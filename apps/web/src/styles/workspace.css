@@ -27,7 +27,7 @@
   white-space: nowrap;
 }
 
-.ht-nav-group[data-area='product'] > p {
+.ht-nav-group[data-area='build'] > p {
   color: var(--ht-green-deep);
 }
 
@@ -240,12 +240,14 @@ html[data-theme] .ht-shell.sidebar-collapsed .ht-nav-group > p {
   font-weight: 650;
 }
 
-.ht-workspace-context.area-product i {
+.ht-workspace-context.area-workspace i,
+.ht-workspace-context.area-build i,
+.ht-workspace-context.area-prove i {
   background: var(--ht-green);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ht-green) 10%, transparent);
 }
 
-.ht-workspace-context.area-lab i {
+.ht-workspace-context.area-operate i {
   background: var(--ht-amber);
 }
 

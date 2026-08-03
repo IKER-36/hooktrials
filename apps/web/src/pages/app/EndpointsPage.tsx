@@ -39,7 +39,10 @@ export function EndpointsPage() {
 
   const limit = limits?.endpoints ?? 0;
   const limited = limit > 0;
-  const trialEndpoints = endpoints.filter((endpoint) => endpoint.mode === 'trial');
+  const trialEndpoints = endpoints.filter(
+    (endpoint) => endpoint.mode === 'trial' && !endpoint.demoOwned,
+  );
+  const productScenarios = scenarios.filter((scenario) => !scenario.demoOwned);
   const endpointUsage =
     limits?.endpointUsage ?? endpoints.filter((endpoint) => !endpoint.demoOwned).length;
   const atLimit = limited && endpointUsage >= limit;
@@ -85,10 +88,11 @@ export function EndpointsPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="endpoints" data-product-area="lab">
+    <section className="ht-page" data-tour-section="endpoints" data-product-area="build">
       <header className="ht-page-head ht-shared-page-head">
         <div>
-          <h1>Trial endpoints</h1>
+          <p className="ht-kicker">BUILD / TEST LAB</p>
+          <h1>Test Lab</h1>
           <p className="ht-muted-line">
             Exercise failure and retry behaviour with synthetic traffic, completely separate from
             your live webhook routes.
@@ -99,7 +103,7 @@ export function EndpointsPage() {
           aria-label={
             limited
               ? `${endpointUsage} of ${limit} regular endpoints used`
-              : `${trialEndpoints.length} trial endpoints`
+              : `${trialEndpoints.length} Test Lab endpoints`
           }
         >
           {limited ? (
@@ -114,7 +118,7 @@ export function EndpointsPage() {
       </header>
 
       <EndpointTemplates
-        scenarios={scenarios}
+        scenarios={productScenarios}
         activeId={templateId}
         disabled={loading || atLimit}
         onSelect={(selectedTemplate, endpointName, selectedScenario) => {
@@ -156,7 +160,7 @@ export function EndpointsPage() {
             <div className="ht-skeleton" aria-label="Loading scenarios" />
           ) : (
             <ScenarioPicker
-              scenarios={scenarios}
+              scenarios={productScenarios}
               value={scenarioId}
               onChange={(id) => {
                 setScenarioId(id);
@@ -181,20 +185,20 @@ export function EndpointsPage() {
           <button
             className="button primary"
             type="submit"
-            disabled={submitting || atLimit || scenarios.length === 0}
+            disabled={submitting || atLimit || productScenarios.length === 0}
           >
             {submitting ? 'Creating…' : 'Create endpoint'}
           </button>
           <small className="ht-muted-line">Use synthetic payloads whenever possible.</small>
         </form>
 
-        <div className="ht-endpoint-list" aria-label="Your trial endpoints">
+        <div className="ht-endpoint-list" aria-label="Your Test Lab endpoints">
           {loading ? (
             <div className="ht-skeleton tall" />
           ) : trialEndpoints.length === 0 ? (
             <ProductState
               compact
-              title="No trial endpoints yet."
+              title="No Test Lab endpoints yet."
               description="Choose a template and create the first safe failure route with the form beside this list."
               action={
                 <button

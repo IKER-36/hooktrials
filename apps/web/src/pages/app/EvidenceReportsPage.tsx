@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { API_ORIGIN, apiRequest, readableError } from '../../lib/api';
@@ -64,7 +63,9 @@ export function EvidenceReportsPage() {
 
   const load = useCallback(async () => {
     try {
-      const response = await apiRequest<{ reports: EvidenceReport[] }>('/v1/evidence?limit=100');
+      const response = await apiRequest<{ reports: EvidenceReport[] }>(
+        '/v1/evidence?limit=100&scope=product',
+      );
       setReports(response.reports);
       setError('');
       setSelectedId((current) => current ?? response.reports[0]?.id ?? null);
@@ -138,10 +139,10 @@ export function EvidenceReportsPage() {
   }
 
   return (
-    <section className="ht-page ht-evidence-reports" data-product-area="resources">
+    <section className="ht-page ht-evidence-reports" data-product-area="prove">
       <PageHeader
-        eyebrow={t('EVIDENCE CENTER')}
-        title={t('Evidence & reports')}
+        eyebrow={t('PROVE / EVIDENCE')}
+        title={t('Evidence')}
         description={t('Explain what happened, prove recovery and share a redacted record safely.')}
         actions={
           <button className="button secondary" type="button" onClick={() => void load()}>
@@ -149,8 +150,6 @@ export function EvidenceReportsPage() {
           </button>
         }
       />
-
-      <WorkspaceJourney />
 
       {error && reports.length > 0 ? (
         <p className="ht-inline-notice" role="status">
@@ -180,7 +179,7 @@ export function EvidenceReportsPage() {
           )}
           action={
             <Link className="button primary" to="/app/control-center">
-              {t('Open Control Center')}
+              {t('Open delivery timeline')}
             </Link>
           }
         />

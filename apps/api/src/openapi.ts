@@ -20,6 +20,14 @@ export function buildOpenApiDocument(apiOrigin: string): Record<string, unknown>
     description,
     schema: { type: 'string' },
   });
+  const resourceScopeParameter = {
+    name: 'scope',
+    in: 'query',
+    required: false,
+    description:
+      'Return all user-owned resources, normal product resources, or isolated Demo Lab resources.',
+    schema: { type: 'string', enum: ['all', 'product', 'demo'], default: 'all' },
+  };
   const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
   const response = (description: string, schema?: Record<string, unknown>) => ({
     description,
@@ -31,7 +39,7 @@ export function buildOpenApiDocument(apiOrigin: string): Record<string, unknown>
     jsonSchemaDialect: 'https://json-schema.org/draft/2020-12/schema',
     info: {
       title: 'HookTrials API',
-      version: '0.33.12',
+      version: '0.34.0',
       description:
         'A redacted contract for integration setup, synthetic reliability checks and evidence export. Payload bodies, captured headers, credentials and destination URLs are never returned by the automation surface.',
       license: { name: 'AGPL-3.0-only', identifier: 'AGPL-3.0-only' },
@@ -153,6 +161,7 @@ export function buildOpenApiDocument(apiOrigin: string): Record<string, unknown>
           tags: ['Monitoring'],
           summary: 'List active monitors visible to the current session',
           security: [{ cookieSession: [] }],
+          parameters: [resourceScopeParameter],
           responses: { '200': response('Monitor inventory', { type: 'object' }) },
         },
         post: {
@@ -235,6 +244,7 @@ export function buildOpenApiDocument(apiOrigin: string): Record<string, unknown>
           tags: ['Evidence'],
           summary: 'List redacted evidence for the current session',
           security: [{ cookieSession: [] }],
+          parameters: [resourceScopeParameter],
           responses: { '200': response('Evidence inventory', { type: 'object' }) },
         },
       },

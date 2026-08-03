@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   Activity,
   ArrowRight,
-  BellRing,
   CheckCircle2,
   CircleAlert,
   FlaskConical,
@@ -17,7 +16,6 @@ import {
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { MetricCard } from '../../components/ui/MetricCard';
-import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { timeAgo } from '../../lib/format';
@@ -113,10 +111,12 @@ export function HomePage() {
 
   const load = useCallback(async () => {
     const results = await Promise.allSettled([
-      apiRequest<OperationsResponse>('/v1/operations'),
-      apiRequest<{ monitors: MonitorSummary[] }>('/v1/monitors'),
-      apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations'),
-      apiRequest<ReliabilitySummary>(`/v1/reliability/summary?windowDays=${windowDays}`),
+      apiRequest<OperationsResponse>('/v1/operations?scope=product'),
+      apiRequest<{ monitors: MonitorSummary[] }>('/v1/monitors?scope=product'),
+      apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations?scope=product'),
+      apiRequest<ReliabilitySummary>(
+        `/v1/reliability/summary?windowDays=${windowDays}&scope=product`,
+      ),
     ]);
     const [operations, monitors, routes, reliability] = results;
     const next: HomeData = {
@@ -311,9 +311,9 @@ export function HomePage() {
       eyebrow: 'WORKSPACE PULSE',
       title: 'Start by proving one path.',
       detail:
-        'Your workspace is ready. Create a safe Trial, connect a live route or add a monitor to establish the first evidence.',
-      action: '/app/demo',
-      actionLabel: 'Run guided demo',
+        'Your workspace is ready. Use Test Lab, connect a live integration or add a monitor to establish the first evidence.',
+      action: '/app/live-webhooks',
+      actionLabel: 'Choose first workflow',
     },
     healthy: {
       eyebrow: 'WORKSPACE PULSE',
@@ -329,7 +329,7 @@ export function HomePage() {
       detail:
         'There is degraded evidence or an unresolved operational item. Start with the highest-impact action below.',
       action: '/app/operations',
-      actionLabel: 'Open operations',
+      actionLabel: 'Open incidents & recovery',
     },
     down: {
       eyebrow: 'WORKSPACE PULSE',
@@ -348,7 +348,7 @@ export function HomePage() {
   }
 
   return (
-    <section className="ht-page ht-home" data-tour-section="home" data-product-area="product">
+    <section className="ht-page ht-home" data-tour-section="home" data-product-area="workspace">
       <PageHeader
         eyebrow="WORKSPACE OVERVIEW"
         title="Home"
@@ -387,7 +387,52 @@ export function HomePage() {
         }
       />
 
-      <WorkspaceJourney />
+      <section className="ht-home-start" aria-labelledby="home-start-title">
+        <header>
+          <div>
+            <p className="ht-kicker">START HERE</p>
+            <h2 id="home-start-title">What do you want to do?</h2>
+            <p>Choose one outcome. HookTrials will keep the next steps inside that workflow.</p>
+          </div>
+        </header>
+        <div className="ht-home-start-actions">
+          <Link to="/app/live-webhooks">
+            <span className="ht-home-start-index">01</span>
+            <RadioTower aria-hidden="true" />
+            <span>
+              <strong>Connect a real webhook</strong>
+              <small>Receive provider traffic, validate it and deliver it to your backend.</small>
+            </span>
+            <ArrowRight aria-hidden="true" />
+          </Link>
+          <Link to="/app/endpoints">
+            <span className="ht-home-start-index">02</span>
+            <FlaskConical aria-hidden="true" />
+            <span>
+              <strong>Test an integration safely</strong>
+              <small>Reproduce failures and retries without touching production.</small>
+            </span>
+            <ArrowRight aria-hidden="true" />
+          </Link>
+          <Link to="/app/monitor">
+            <span className="ht-home-start-index">03</span>
+            <Radar aria-hidden="true" />
+            <span>
+              <strong>Monitor a service</strong>
+              <small>Track availability, latency and recovery for an API or host.</small>
+            </span>
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </div>
+        <details className="ht-home-demo-entry">
+          <summary>Need a guided example?</summary>
+          <p>
+            The isolated Demo Lab creates synthetic data in a separate environment and can be
+            cleaned without touching your normal resources.
+          </p>
+          <Link to="/app/demo">Open isolated Demo Lab</Link>
+        </details>
+      </section>
 
       {error && data ? (
         <ProductState
@@ -447,14 +492,14 @@ export function HomePage() {
               <MetricCard
                 label="Live routes"
                 value={liveEndpoints.length}
-                detail="Webhook Hub"
+                detail="Integrations"
                 icon={RadioTower}
                 tone={liveEndpoints.length ? 'healthy' : 'neutral'}
               />
             </Link>
             <Link className="ht-metric-card-link" to="/app/endpoints">
               <MetricCard
-                label="Trial endpoints"
+                label="Test Lab endpoints"
                 value={trialEndpoints.length}
                 detail="Safe synthetic paths"
                 icon={FlaskConical}
@@ -499,7 +544,7 @@ export function HomePage() {
             />
           </Suspense>
 
-          <div className="ht-home-grid">
+          <div className="ht-home-grid ht-home-grid-single">
             <section
               className="ht-home-panel ht-home-priorities"
               aria-labelledby="home-priority-title"
@@ -539,50 +584,6 @@ export function HomePage() {
                 </div>
               )}
             </section>
-
-            <section className="ht-home-panel ht-home-quick" aria-labelledby="home-quick-title">
-              <header>
-                <div>
-                  <p className="ht-kicker">SHORTCUTS</p>
-                  <h2 id="home-quick-title">Go straight to the work</h2>
-                </div>
-                <Activity aria-hidden="true" />
-              </header>
-              <div className="ht-home-quick-list">
-                <Link to="/app/live-webhooks">
-                  <RadioTower aria-hidden="true" />
-                  <span>
-                    <strong>Webhook Hub</strong>
-                    <small>Connect real provider traffic</small>
-                  </span>
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-                <Link to="/app/monitor">
-                  <Radar aria-hidden="true" />
-                  <span>
-                    <strong>Monitoring</strong>
-                    <small>Check APIs and dependencies</small>
-                  </span>
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-                <Link to="/app/endpoints">
-                  <FlaskConical aria-hidden="true" />
-                  <span>
-                    <strong>Trial lab</strong>
-                    <small>Prove a deterministic failure path</small>
-                  </span>
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-                <Link to="/app/operations">
-                  <BellRing aria-hidden="true" />
-                  <span>
-                    <strong>Operations</strong>
-                    <small>Recover deliveries and incidents</small>
-                  </span>
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </div>
-            </section>
           </div>
 
           <div className="ht-home-grid">
@@ -620,9 +621,9 @@ export function HomePage() {
               ) : (
                 <div className="ht-home-empty">
                   <RadioTower aria-hidden="true" />
-                  <p>No live routes yet. Start in Webhook Hub when a provider is ready.</p>
+                  <p>No live routes yet. Open Integrations when a provider is ready.</p>
                   <Link className="button secondary compact" to="/app/live-webhooks">
-                    Open Webhook Hub
+                    Open Integrations
                   </Link>
                 </div>
               )}
@@ -673,7 +674,7 @@ export function HomePage() {
                 <p className="ht-kicker">RECENT EVIDENCE</p>
                 <h2 id="home-activity-title">Workspace activity</h2>
               </div>
-              <Link to="/app/operations">Open Operations</Link>
+              <Link to="/app/operations">Open incidents & recovery</Link>
             </header>
             {activity.length ? (
               <div className="ht-home-activity-list">

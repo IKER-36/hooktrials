@@ -47,7 +47,7 @@ export function App() {
       <Route path="/status/:token" element={<StatusPage />} />
       <Route path="/app" element={<AppLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="control-center" element={<OverviewPage />} />
+        <Route path="control-center" element={<Navigate to="/app" replace />} />
         <Route path="control-center/:endpointId" element={<OverviewPage />} />
         <Route path="live-webhooks" element={<LiveWebhooksPage />} />
         <Route path="endpoints" element={<EndpointsPage />} />
@@ -72,7 +72,7 @@ export function App() {
         <Route path="audit" element={<Navigate to="/app/operations" replace />} />
         <Route path="workspace" element={<WorkspacePage />} />
         <Route path="settings" element={<AccountSettingsPage />} />
-        <Route path="*" element={<Navigate to="/app/control-center" replace />} />
+        <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
       <Route path="*" element={<RootRedirect />} />
     </Routes>

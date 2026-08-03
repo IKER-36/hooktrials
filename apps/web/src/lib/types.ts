@@ -26,6 +26,7 @@ export interface Scenario {
   id: string;
   name: string;
   builtIn: boolean;
+  demoOwned?: boolean;
   definition: { name: string; steps: ScenarioStep[]; repeatLastStep: boolean };
 }
 export interface Endpoint {

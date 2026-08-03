@@ -279,9 +279,9 @@ export function OpenApiImportPage() {
   const successfulImports = outcomes.filter((outcome) => outcome.ok).length;
 
   return (
-    <section className="ht-page ht-openapi-import" data-product-area="resources">
+    <section className="ht-page ht-openapi-import" data-product-area="build">
       <PageHeader
-        eyebrow={t('INTEGRATION TOOLING')}
+        eyebrow={t('BUILD / INTEGRATIONS')}
         title={t('Import an OpenAPI contract')}
         description={t(
           'Turn documented read operations into monitored integrations without copying secrets or building each check by hand.',

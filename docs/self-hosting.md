@@ -49,11 +49,11 @@ application. Never expose PostgreSQL or Redis ports.
 
 ## First useful trial
 
-1. Open **Trial endpoints** in the Lab workspace and choose a starter template.
+1. Open **Build → Test Lab** and choose a starter template.
 2. Copy the generated ingestion URL.
 3. Use the integrated simulator with synthetic data, or configure that URL in your webhook sender.
-4. Watch attempts arrive in **Control Center** and inspect the retry timeline.
-5. Open **Failure scenarios** to create the exact failure/recovery sequence needed by your system.
+4. Open the endpoint's **Delivery timeline** and inspect every retry.
+5. Open **Scenarios** to create the exact failure/recovery sequence needed by your system.
 
 ## Operations
 
@@ -78,7 +78,7 @@ Preview a tagged update without changing containers, volumes or application data
 
 ```bash
 git fetch --tags origin
-./hooktrials update --release v0.33.12 --check
+./hooktrials update --release v0.34.0 --check
 ```
 
 Update to a tagged release:
@@ -86,7 +86,7 @@ Update to a tagged release:
 ```bash
 git status --short                 # keep local changes out of production
 git fetch --tags origin
-./hooktrials update --release v0.33.12
+./hooktrials update --release v0.34.0
 ./hooktrials doctor --external     # omit --external for local-only mode
 ```
 

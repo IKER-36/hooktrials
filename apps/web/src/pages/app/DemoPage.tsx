@@ -39,13 +39,16 @@ interface ActiveDemo {
 }
 
 const definitions = [
-  ['Scenario Studio', 'A custom cascading-outage recipe is added to the scenario library.'],
+  ['Scenarios', 'A custom cascading-outage recipe is added to the scenario library.'],
   ['Trial', 'Provider retries become one 500 → 503 → 429 → 200 timeline.'],
   ['Observe', 'One request is proxied synchronously and its destination failure is recorded.'],
   ['Protect', 'The event is accepted first, retried durably and recovered without data loss.'],
   ['Monitor', 'HTTP and ICMP checks fill every health state and a public status page.'],
   ['Recovery queue', 'A separate delivery exhausts its retry budget and enters dead-letter.'],
-  ['Operations', 'Open and recovered incidents, retries and safe alert audit share one queue.'],
+  [
+    'Incidents & recovery',
+    'Open and recovered incidents, retries and safe alert audit share one queue.',
+  ],
   ['Evidence', 'A redacted, expiring report proves the recovered Trial sequence.'],
 ] as const;
 
@@ -290,7 +293,7 @@ export function DemoPage() {
       activeStep = 6;
       step(6, 'running');
       const result = await eventually(
-        () => apiRequest<OperationsResponse>('/v1/operations'),
+        () => apiRequest<OperationsResponse>('/v1/operations?scope=demo'),
         (value) =>
           value.summary.openIncidents >= 1 &&
           value.summary.recovered24h >= 2 &&
@@ -361,13 +364,28 @@ export function DemoPage() {
   const hasActiveDemo = Boolean(run || activeDemo);
 
   return (
-    <section className="ht-page ht-demo-lab" data-tour-section="demo" data-product-area="lab">
+    <section className="ht-page ht-demo-lab" data-tour-section="demo" data-product-area="demo">
       <PageHeader
-        eyebrow="LAB / GUIDED DEMO"
-        title="Guided demo"
-        description="One click fills every HookTrials module with a realistic, synthetic reliability workspace."
-        actions={<span className="ht-demo-safety">ISOLATED · USER OWNED · SAFE TO CLEAN</span>}
+        eyebrow="ISOLATED ENVIRONMENT"
+        title="Demo Lab"
+        description="Explore a synthetic workspace without mixing its routes, monitors or incidents with your normal product data."
+        actions={
+          <>
+            <span className="ht-demo-safety">DEMO DATA · SAFE TO CLEAN</span>
+            <Link className="button secondary compact" to="/app">
+              Exit to workspace
+            </Link>
+          </>
+        }
       />
+
+      <div className="ht-demo-boundary" role="note">
+        <strong>Separate from your workspace</strong>
+        <span>
+          Everything created here is tagged to this demo run. Normal dashboards and inventories do
+          not include it.
+        </span>
+      </div>
 
       <div className="ht-demo-grid">
         <div className="ht-demo-rail" aria-label="Demo journey progress">
@@ -469,20 +487,17 @@ export function DemoPage() {
               >
                 Inspect timelines
               </Link>
-              <Link to="/app/live-webhooks">Open Webhook Hub</Link>
-              <Link to="/app/scenarios">Open failure scenarios</Link>
-              <Link to="/app/monitor">Inspect monitoring</Link>
               {run?.statusPage.shareUrl ? (
                 <a href={run.statusPage.shareUrl} target="_blank" rel="noreferrer">
                   Open public status page
                 </a>
               ) : null}
-              <Link to="/app/operations">Open Operations</Link>
               {evidenceUrl ? (
                 <a href={evidenceUrl} target="_blank" rel="noreferrer">
                   Open redacted evidence
                 </a>
               ) : null}
+              <Link to="/app">Exit to production workspace</Link>
             </div>
           ) : null}
         </aside>

@@ -72,7 +72,7 @@ export function GuidedDemo({ endpoint, scenario, onComplete }: GuidedDemoProps) 
         ...current,
         running: false,
         error:
-          'The demo delivery could not reach this endpoint. Check that it is publicly reachable.',
+          'The test delivery could not reach this endpoint. Check that it is publicly reachable.',
       }));
     }
   }
@@ -80,10 +80,10 @@ export function GuidedDemo({ endpoint, scenario, onComplete }: GuidedDemoProps) 
   return (
     <section id="guided-demo" className="ht-guided-demo" aria-labelledby="guided-demo-title">
       <div className="ht-guided-copy">
-        <p className="ht-kicker">Guided demonstration</p>
+        <p className="ht-kicker">Test runner</p>
         <h2 id="guided-demo-title">See the complete retry cycle</h2>
         <p>
-          HookTrials acts as the webhook receiver. The demo runner behaves like a provider: it sends
+          HookTrials acts as the webhook receiver. The test runner behaves like a provider: it sends
           the same event again after every failure, allowing HookTrials to group all attempts into
           one timeline.
         </p>
@@ -113,17 +113,17 @@ export function GuidedDemo({ endpoint, scenario, onComplete }: GuidedDemoProps) 
         >
           {state.running
             ? `Sending attempt ${Math.min(state.completed + 1, total)}/${total}…`
-            : `Run ${total}-attempt demo`}
+            : `Run ${total}-attempt test`}
         </button>
         {!endpoint.active ? <small>Resume the endpoint before running the demo.</small> : null}
         {state.error ? <p className="ht-form-error">{state.error}</p> : null}
         {!state.running && state.completed === total ? (
           <p className="ht-demo-success" role="status">
-            Demo complete. Event <code>{state.eventId}</code> is now in the timeline below.
+            Test complete. Event <code>{state.eventId}</code> is now in the timeline below.
           </p>
         ) : null}
         <details className="ht-demo-payload">
-          <summary>Payload used by the demo</summary>
+          <summary>Payload used by the test</summary>
           <pre>{examplePayload}</pre>
         </details>
       </div>

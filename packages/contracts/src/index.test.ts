@@ -10,6 +10,7 @@ import {
   evidenceListQuerySchema,
   incidentTriageInputSchema,
   reliabilityQuerySchema,
+  resourceScopeQuerySchema,
   workspaceInviteAcceptSchema,
   workspaceInviteInputSchema,
   syntheticEventInputSchema,
@@ -221,13 +222,18 @@ describe('evidenceExportQuerySchema', () => {
 
 describe('evidenceListQuerySchema', () => {
   it('defaults to the newest 50 reports', () => {
-    expect(evidenceListQuerySchema.parse({})).toEqual({ limit: 50, status: 'all' });
+    expect(evidenceListQuerySchema.parse({})).toEqual({
+      limit: 50,
+      status: 'all',
+      scope: 'all',
+    });
   });
 
   it('accepts a bounded status filter and rejects unsupported values', () => {
     expect(evidenceListQuerySchema.parse({ limit: '20', status: 'failed' })).toEqual({
       limit: 20,
       status: 'failed',
+      scope: 'all',
     });
     expect(evidenceListQuerySchema.safeParse({ status: 'complete' }).success).toBe(false);
   });
@@ -236,12 +242,19 @@ describe('evidenceListQuerySchema', () => {
 describe('operational evidence queries', () => {
   it('bounds audit history and defaults the reliability window', () => {
     expect(auditQuerySchema.parse({})).toMatchObject({ limit: 100 });
-    expect(reliabilityQuerySchema.parse({})).toMatchObject({ windowDays: 7 });
+    expect(reliabilityQuerySchema.parse({})).toMatchObject({ windowDays: 7, scope: 'all' });
   });
 
   it('rejects unbounded reliability requests', () => {
     expect(reliabilityQuerySchema.safeParse({ windowDays: 31 }).success).toBe(false);
     expect(auditQuerySchema.safeParse({ limit: 201 }).success).toBe(false);
+  });
+
+  it('keeps product and demo resources explicitly separable', () => {
+    expect(resourceScopeQuerySchema.parse({})).toEqual({ scope: 'all' });
+    expect(resourceScopeQuerySchema.parse({ scope: 'product' })).toEqual({ scope: 'product' });
+    expect(resourceScopeQuerySchema.parse({ scope: 'demo' })).toEqual({ scope: 'demo' });
+    expect(resourceScopeQuerySchema.safeParse({ scope: 'mixed' }).success).toBe(false);
   });
 });
 

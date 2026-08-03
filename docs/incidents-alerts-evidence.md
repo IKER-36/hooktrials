@@ -5,7 +5,7 @@ delivery failures. Recovery is automatic when passing evidence arrives.
 
 ## Outgoing alert channel
 
-Open **Operations** and choose one delivery provider:
+Open **Incidents & recovery** and choose one delivery provider:
 
 - **Generic webhook** sends stable JSON to an HTTPS URL and supports optional encrypted headers.
 - **Discord** sends a native embed to a Discord incoming-webhook URL with mentions disabled.
@@ -18,7 +18,7 @@ Then choose which incident sources and lifecycle events should notify that chann
 - Incident recovered.
 
 At least one source and one lifecycle event must remain enabled. Use **Send test** before relying on
-the channel. Recent delivery state, status and latency are visible in Operations; destination URLs,
+the channel. Recent delivery state, status and latency are visible in Incidents & recovery; destination URLs,
 encrypted headers, captured payloads and other secrets are never returned to the browser.
 
 An existing URL remains write-only when preferences are edited, so changing scopes does not require
@@ -26,9 +26,9 @@ re-entering it. Changing from generic webhook to Discord clears obsolete custom 
 generic receiver like any other integration: authenticate it, return quickly and deduplicate by
 incident and event identifiers.
 
-## Operations queue
+## Incidents and recovery queue
 
-The Operations page combines open/recovered incidents, unresolved dead letters, manual retry/replay
+The Incidents & recovery page combines open/recovered incidents, unresolved dead letters, manual retry/replay
 and outgoing alert audit. Resolved dead letters remain available as evidence but are hidden by
 default. Every recovery action requires confirmation and records its source and requesting user.
 

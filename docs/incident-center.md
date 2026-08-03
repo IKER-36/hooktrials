@@ -1,11 +1,11 @@
 # Incident Center
 
-Operations is the place to triage reliability incidents without losing the evidence that created
+Incidents & recovery is the place to triage reliability incidents without losing the evidence that created
 them.
 
 ## Review the queue
 
-Open **Operations** to see incident status, cause, affected integration and recovery time. Use the
+Open **Incidents & recovery** to see incident status, cause, affected integration and recovery time. Use the
 filter to switch between all incidents, open incidents, recovered incidents and incidents that
 still need acknowledgement.
 

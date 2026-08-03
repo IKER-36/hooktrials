@@ -1,7 +1,7 @@
 # Reliability Replay
 
 Reliability Replay explains one event from provider receipt through validation, delivery and final
-recovery. Open any retry timeline from **Control Center** to see it at the top of the authenticated event
+recovery. Open any integration and select its **Delivery timeline** to see it at the top of the authenticated event
 inspector.
 
 The replay contains:

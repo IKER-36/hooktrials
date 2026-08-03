@@ -10,7 +10,6 @@ import { RouteJourney } from '../../components/app/RouteJourney';
 import { RouteConfiguration } from '../../components/app/RouteConfiguration';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
-import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { useEventStream } from '../../hooks/useEventStream';
@@ -51,6 +50,9 @@ export function OverviewPage() {
   const selected = endpointId
     ? (endpoints.find((endpoint) => endpoint.id === endpointId) ?? null)
     : contextSelected;
+  const visibleEndpoints = selected?.demoOwned
+    ? endpoints.filter((endpoint) => endpoint.demoOwned)
+    : endpoints.filter((endpoint) => !endpoint.demoOwned);
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [inspecting, setInspecting] = useState<string | null>(null);
@@ -134,7 +136,7 @@ export function OverviewPage() {
 
   if (endpointId && !selected) {
     return (
-      <section className="ht-page" data-tour-section="overview" data-product-area="product">
+      <section className="ht-page" data-tour-section="overview" data-product-area="build">
         <header className="ht-page-head ht-shared-page-head">
           <div>
             <p className="ht-kicker">ROUTE CONTROL</p>
@@ -144,7 +146,6 @@ export function OverviewPage() {
             </p>
           </div>
         </header>
-        <WorkspaceJourney />
         <ProductState
           title="Choose another route"
           description="Open the endpoint inventory to select an available Trial or live route."
@@ -160,14 +161,13 @@ export function OverviewPage() {
 
   if (!selected) {
     return (
-      <section className="ht-page" data-tour-section="overview" data-product-area="product">
+      <section className="ht-page" data-tour-section="overview" data-product-area="build">
         <header className="ht-page-head ht-shared-page-head">
           <div>
             <p className="ht-kicker">ROUTE CONTROL</p>
-            <h1>Control Center</h1>
+            <h1>Delivery timeline</h1>
           </div>
         </header>
-        <WorkspaceJourney />
         <ControlCenterSummary />
         <div
           className="ht-onboarding ht-onboarding-empty"
@@ -200,14 +200,14 @@ export function OverviewPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="overview" data-product-area="product">
+    <section className="ht-page" data-tour-section="overview" data-product-area="build">
       <header className="ht-page-head ht-shared-page-head">
         <div>
           <p className="ht-kicker">
             ROUTE CONTROL · {selected.mode === 'trial' ? 'TRIAL' : 'LIVE'}
           </p>
-          <h1>Control Center</h1>
-          {endpoints.length > 1 ? null : (
+          <h1>Delivery timeline</h1>
+          {visibleEndpoints.length > 1 ? null : (
             <p className="ht-page-subject">
               Selected route: <b>{selected.name}</b>
             </p>
@@ -216,7 +216,7 @@ export function OverviewPage() {
         <div className="ht-page-head-actions">
           {/* With several routes the switcher is the page's subject control, so
               it carries a visible label instead of a screen-reader-only one. */}
-          {endpoints.length > 1 ? (
+          {visibleEndpoints.length > 1 ? (
             <label className="ht-switcher labelled">
               <span>Selected route</span>
               <select
@@ -227,7 +227,7 @@ export function OverviewPage() {
                   navigate(`/app/control-center/${id}`);
                 }}
               >
-                {endpoints.map((endpoint) => (
+                {visibleEndpoints.map((endpoint) => (
                   <option key={endpoint.id} value={endpoint.id}>
                     {endpoint.name}
                   </option>
@@ -235,17 +235,39 @@ export function OverviewPage() {
               </select>
             </label>
           ) : null}
-          <Link className="button secondary compact" to="/app/endpoints">
-            Manage endpoints
+          <Link
+            className="button secondary compact"
+            to={
+              selected.demoOwned
+                ? '/app/demo'
+                : selected.mode === 'trial'
+                  ? '/app/endpoints'
+                  : '/app/live-webhooks'
+            }
+          >
+            {selected.demoOwned
+              ? 'Return to Demo Lab'
+              : selected.mode === 'trial'
+                ? 'Manage test endpoints'
+                : 'Manage integrations'}
           </Link>
         </div>
       </header>
 
-      <WorkspaceJourney />
-
-      <ControlCenterSummary />
-      <RouteJourney endpoint={selected} />
-      <ActivationChecklist endpoints={endpoints} />
+      {selected.demoOwned ? (
+        <div className="ht-demo-boundary" role="note">
+          <strong>Demo delivery timeline</strong>
+          <span>
+            This route belongs to the isolated Demo Lab and is excluded from your workspace.
+          </span>
+          <Link to="/app/demo">Return to Demo Lab</Link>
+        </div>
+      ) : (
+        <>
+          <RouteJourney endpoint={selected} />
+          <ActivationChecklist endpoints={endpoints} />
+        </>
+      )}
 
       <section className="ht-endpoint-card" aria-label="Active endpoint">
         <div className="ht-endpoint-state">
@@ -350,7 +372,7 @@ export function OverviewPage() {
           <ProductState
             compact
             title="Waiting for the first delivery."
-            description={`Run the guided demo, send a request to the URL, or use the curl example. New attempts appear here automatically${selected.active ? '.' : ' once the endpoint is resumed.'}`}
+            description={`Run the test runner, send a request to the URL, or use the curl example. New attempts appear here automatically${selected.active ? '.' : ' once the endpoint is resumed.'}`}
             action={
               <button
                 className="button secondary compact"
@@ -359,7 +381,7 @@ export function OverviewPage() {
                   document.getElementById('guided-demo')?.scrollIntoView({ behavior: 'smooth' })
                 }
               >
-                Open guided demo
+                Open test runner
               </button>
             }
           />
@@ -390,9 +412,9 @@ export function OverviewPage() {
         )}
       </section>
 
-      <ReadinessPanel endpointId={selected.id} />
+      <ReadinessPanel endpointId={selected.id} scope={selected.demoOwned ? 'demo' : 'product'} />
 
-      <RouteConfiguration endpoint={selected} />
+      {!selected.demoOwned ? <RouteConfiguration endpoint={selected} /> : null}
 
       {selected.mode === 'trial' ? (
         <GuidedDemo

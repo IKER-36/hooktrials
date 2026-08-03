@@ -1,6 +1,41 @@
 # Current release status
 
-Updated: 1 August 2026.
+Updated: 3 August 2026.
+
+## Release `v0.34.0` — Clear workflows, isolated demo
+
+Released 3 August 2026. HookTrials is now organized around the outcome a user wants to achieve,
+with synthetic demo resources kept outside normal production navigation, inventories and metrics.
+
+### Added
+
+- Home offers three explicit starting actions: connect a real webhook, test an integration safely
+  or monitor a service.
+- Build, Operate and Prove group the product into predictable workflows without changing existing
+  resource URLs or stored data.
+- Every integration owns its Delivery timeline, keeping configuration, attempts, retries and
+  readiness evidence attached to one exact route.
+- API consumers can optionally request product, demo or all user-owned resources through a
+  backwards-compatible scope query.
+
+### Improved
+
+- Demo Lab is hidden from normal navigation and available only as an optional guided example or
+  direct destination.
+- Normal Home, Integrations, Test Lab, Scenarios, Monitoring, Incidents & recovery, Reliability and
+  Evidence views exclude demo-owned resources.
+- Desktop, mobile, command search, onboarding and documentation now use the same product taxonomy.
+- Repeated workflow strips have been replaced with clearer page ownership and contextual next steps.
+
+### Fixed
+
+- Demo runs no longer inflate product counters or appear inside normal monitor, scenario, status or
+  evidence inventories.
+- Opening the old global Control Center URL no longer selects an ambiguous resource; saved
+  endpoint-specific Delivery timeline URLs continue to work.
+- New sessions prefer a normal endpoint over a demo-owned endpoint when restoring route context.
+
+No database migration or user action is required. Existing accounts and resources remain intact.
 
 ## Release `v0.33.12` — Safer accounts and clearer public status
 

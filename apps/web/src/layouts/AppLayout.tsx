@@ -13,9 +13,7 @@ import {
   KeyRound,
   BellRing,
   FileText,
-  FileUp,
   FlaskConical,
-  Gauge,
   GitBranch,
   Code2,
   HelpCircle,
@@ -55,7 +53,7 @@ interface NavigationItem {
 }
 
 interface NavigationGroup {
-  id: 'product' | 'lab' | 'resources';
+  id: 'workspace' | 'build' | 'operate' | 'prove' | 'resources';
   label: string;
   contextLabel?: string;
   items: NavigationItem[];
@@ -172,8 +170,15 @@ export function AppLayout() {
     setLimits(endpointResponse.limits ?? null);
     setScenarios(scenarioResponse.scenarios);
     setSelectedId((current) => {
-      const exists = endpointResponse.endpoints.some((endpoint) => endpoint.id === current);
-      return exists ? current : (endpointResponse.endpoints[0]?.id ?? null);
+      const currentEndpoint = endpointResponse.endpoints.find(
+        (endpoint) => endpoint.id === current,
+      );
+      const firstProductEndpoint = endpointResponse.endpoints.find(
+        (endpoint) => !endpoint.demoOwned,
+      );
+      return currentEndpoint && !currentEndpoint.demoOwned
+        ? current
+        : (firstProductEndpoint?.id ?? endpointResponse.endpoints[0]?.id ?? null);
     });
   }, []);
 
@@ -281,41 +286,51 @@ export function AppLayout() {
 
   const navigation: NavigationGroup[] = [
     {
-      id: 'product',
-      label: 'Product',
-      contextLabel: 'Production workspace',
-      items: [
-        { to: '/app', label: 'Home', icon: LayoutDashboard, end: true },
-        { to: '/app/control-center', label: 'Control Center', icon: Gauge },
-        {
-          to: '/app/live-webhooks',
-          label: 'Webhook Hub',
-          icon: RadioTower,
-          count: endpoints.filter((endpoint) => endpoint.mode !== 'trial').length,
-        },
-        { to: '/app/monitor', label: 'Monitoring', icon: Radar },
-        { to: '/app/reliability', label: 'Reliability', icon: Activity },
-        { to: '/app/operations', label: 'Operations', icon: BellRing },
-      ],
+      id: 'workspace',
+      label: 'Workspace',
+      items: [{ to: '/app', label: 'Home', icon: LayoutDashboard, end: true }],
     },
     {
-      id: 'lab',
-      label: 'Lab',
-      contextLabel: 'Reliability Lab',
+      id: 'build',
+      label: 'Build',
+      contextLabel: 'Build integrations',
       items: [
         {
+          to: '/app/live-webhooks',
+          label: 'Integrations',
+          icon: RadioTower,
+          count: endpoints.filter((endpoint) => endpoint.mode !== 'trial' && !endpoint.demoOwned)
+            .length,
+        },
+        {
           to: '/app/endpoints',
-          label: 'Trial endpoints',
-          icon: GitBranch,
-          count: endpoints.filter((endpoint) => endpoint.mode === 'trial').length,
+          label: 'Test Lab',
+          icon: FlaskConical,
+          count: endpoints.filter((endpoint) => endpoint.mode === 'trial' && !endpoint.demoOwned)
+            .length,
         },
         {
           to: '/app/scenarios',
-          label: 'Failure scenarios',
-          icon: FlaskConical,
-          count: scenarios.length,
+          label: 'Scenarios',
+          icon: GitBranch,
+          count: scenarios.filter((scenario) => !scenario.demoOwned).length,
         },
-        { to: '/app/demo', label: 'Guided demo', icon: Activity },
+      ],
+    },
+    {
+      id: 'operate',
+      label: 'Operate',
+      items: [
+        { to: '/app/monitor', label: 'Monitoring', icon: Radar },
+        { to: '/app/operations', label: 'Incidents & recovery', icon: BellRing },
+      ],
+    },
+    {
+      id: 'prove',
+      label: 'Prove',
+      items: [
+        { to: '/app/reliability', label: 'Reliability', icon: Activity },
+        { to: '/app/evidence', label: 'Evidence', icon: FileText },
       ],
     },
     {
@@ -323,8 +338,6 @@ export function AppLayout() {
       label: 'Resources',
       items: [
         { to: '/app/docs', label: 'Documentation', icon: BookOpen },
-        { to: '/app/openapi-import', label: 'Import OpenAPI', icon: FileUp },
-        { to: '/app/evidence', label: 'Evidence & reports', icon: FileText },
         { to: '/app/api-keys', label: 'API keys', icon: KeyRound },
         { to: '/app/workspace', label: 'Team workspace', icon: Users },
       ],
@@ -342,7 +355,13 @@ export function AppLayout() {
   const activeModule =
     location.pathname === '/app/settings'
       ? { area: 'resources' as const, areaLabel: 'Account', label: 'Account settings' }
-      : (navigationItems.find(isCurrent) ?? navigationItems[0]!);
+      : location.pathname === '/app/openapi-import'
+        ? { area: 'build' as const, areaLabel: 'Build integrations', label: 'Import OpenAPI' }
+        : location.pathname.startsWith('/app/control-center/')
+          ? { area: 'build' as const, areaLabel: 'Integration detail', label: 'Delivery timeline' }
+          : location.pathname === '/app/demo'
+            ? { area: 'build' as const, areaLabel: 'Isolated environment', label: 'Demo Lab' }
+            : (navigationItems.find(isCurrent) ?? navigationItems[0]!);
   // Keep the mobile bar to five equal destinations. The remaining product
   // routes are intentionally discoverable in More instead of wrapping into a
   // second row or disappearing behind horizontal scrolling.
@@ -352,7 +371,7 @@ export function AppLayout() {
     '/app/monitor',
     '/app/operations',
   ]);
-  const mobilePrimaryItems = navigation[0]!.items.filter((item) => mobilePrimaryPaths.has(item.to));
+  const mobilePrimaryItems = navigationItems.filter((item) => mobilePrimaryPaths.has(item.to));
   const mobileMoreGroups = navigation
     .map((group) => ({
       ...group,

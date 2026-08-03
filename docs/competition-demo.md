@@ -1,40 +1,40 @@
 # Three-minute competition demonstration
 
-Use a dedicated synthetic Cloud account. Open the dashboard before recording and keep Operations in
+Use a dedicated synthetic Cloud account. Open the dashboard before recording and keep Incidents & recovery in
 a second tab. Do not show secrets, private runtime files, VPS addresses or administration consoles.
 
 ## 0:00-0:25 — the problem
 
 “A request bin proves one request arrived. HookTrials proves how an integration behaves across
-failure, retries, monitoring and recovery.” Start in **Product → Webhook Hub** and show the explicit
+failure, retries, monitoring and recovery.” Start in **Build → Integrations** and show the explicit
 provider → HookTrials → backend flow. Explain that Product contains live work while Lab contains
 safe deterministic experiments.
 
 ## 0:25-1:35 — one complete control loop
 
-Open **Lab → Guided Demo** and select **Run full demo**. Explain each state as it turns green:
+Expand **Need a guided example?** on Home, open **Demo Lab** and select **Run full demo**. Explain each state as it turns green:
 
-- Failure scenarios receives a custom cascading-outage recipe.
+- Scenarios receives a custom cascading-outage recipe.
 - Trial groups the provider-style `500 -> 503 -> 429 -> 200` sequence.
 - Observe exposes the real downstream failure synchronously.
 - Protect returns `202`, persists first and retries without losing the event.
 - Monitoring fills external API, internal API, HTTP route and webhook-destination rows across healthy,
   degraded, down and recovered states.
 - Recovery queue receives a separate protected event after it exhausts all three delivery attempts.
-- Operations reconciles open/recovered incidents, protected recovery, safe alert audit and the
+- Incidents & recovery reconciles open/recovered incidents, protected recovery, safe alert audit and the
   actionable dead letter.
 - Evidence creates a redacted 24-hour share link for the signed Protect recovery.
 
-Pause on **Journey verified** and the six operational counters. Then open Webhook Hub and show the
+Pause on **Journey verified** and the six operational counters. Then exit to the workspace, open Integrations and show the
 three labelled demo connections without implying that they are production traffic.
 
 ## 1:35-2:15 — evidence, not animation
 
 Open **Inspect timelines** and pause on **Reliability Replay**: diagnosis, impact, four causal stages
-and evidence-based runbook. Expand the first-to-last attempt comparison. Return to **Control Center**
+and evidence-based runbook. Expand the first-to-last attempt comparison. Return to the integration's **Delivery timeline**
 and show the Production Readiness checklist with its highest-impact next action. Open **Monitoring** to show all
 four demo resource types plus a live ICMP target, create a customizable status page with two
-selected monitors and then show Operations with one
+selected monitors and then show Incidents & recovery with one
 actionable dead letter. Finish on the redacted evidence link.
 
 ## 2:15-2:38 — developer workflow

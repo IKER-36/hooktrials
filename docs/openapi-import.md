@@ -5,7 +5,7 @@ service has many health or read endpoints and creating every monitor manually wo
 
 ## Start an import
 
-1. Open **Resources → Import OpenAPI**.
+1. Open **Documentation → Import OpenAPI** or use the import action in Monitoring.
 2. Upload an OpenAPI 3.0/3.1 JSON or YAML file, paste the document, or provide a public URL.
 3. Check the concrete server URL. It can override the first `servers` entry and resolve server
    variables to the host you actually want to monitor.
@@ -40,6 +40,6 @@ target or network policy in Monitoring rather than retrying the entire import bl
 
 Use a dedicated health or read-only server in the specification, import a small selection first,
 and run the checks before expanding the set. Keep authentication headers write-only and configure
-them manually in the monitor editor. For a webhook provider, use [Webhook Hub](live-webhook-hub.md)
-instead: OpenAPI import validates service availability, while Webhook Hub protects and forwards
+them manually in the monitor editor. For a webhook provider, use [Integrations](live-webhook-hub.md)
+instead: OpenAPI import validates service availability, while Integrations protects and forwards
 real inbound delivery.

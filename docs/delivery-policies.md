@@ -1,7 +1,7 @@
 # Delivery policies
 
 HookTrials Protect routes can send one incoming event to a deliberate delivery topology. The
-topology is selected when the route is created or edited in **Product → Webhook Hub**. Trial and
+topology is selected when the route is created or edited in **Build → Integrations**. Trial and
 Observe routes keep their existing single-destination behavior.
 
 ## Choose a topology
@@ -43,13 +43,13 @@ contain the payload, URL, credentials or personally identifying data.
 
 ## Configure safely
 
-1. Open **Webhook Hub** and create a **Protect** route, or edit an existing Protect route.
+1. Open **Integrations** and create a **Protect** route, or edit an existing Protect route.
 2. Enter the primary HTTPS destination and choose **Single**, **Fan-out** or **Failover**.
 3. Add up to two additional HTTPS targets. For Failover, the first additional target is the first
    fallback in the chain.
 4. Choose the idempotency scope and save the route.
-5. Send a synthetic event first, then inspect **Control Center**, **Operations** and the route's
-   delivery timeline before pointing a provider at the ingestion URL.
+5. Send a synthetic event first, then inspect its **Delivery timeline** and **Incidents & recovery**
+   before pointing a provider at the ingestion URL.
 
 Destination URLs and custom headers are write-only. The dashboard shows only target names and
 redacted hosts after saving. To replace a policy, re-enter the primary and additional URLs; this
@@ -65,7 +65,7 @@ For each target, HookTrials preserves the received event, delivery state, respon
 retry/failover transitions and idempotency key metadata. Payload bodies, authentication headers and
 destination URLs remain encrypted or redacted at the same boundaries as the rest of the product.
 
-A failed target opens an incident and remains available in Operations for replay. A successful
+A failed target opens an incident and remains available in Incidents & recovery for replay. A successful
 fallback does not delete the failed primary evidence; it closes the incident only after a delivery
 path has recovered. Fan-out keeps partial failure visible so an unhealthy target cannot be mistaken
 for a fully recovered event.

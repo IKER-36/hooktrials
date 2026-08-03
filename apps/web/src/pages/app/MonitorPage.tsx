@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { ProductState } from '../../components/ui/ProductState';
-import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { IntegrationTable } from '../../components/app/monitoring/IntegrationTable';
 import { MonitorDetail } from '../../components/app/monitoring/MonitorDetail';
 import { MonitorForm } from '../../components/app/monitoring/MonitorForm';
@@ -69,13 +68,20 @@ export function MonitorPage() {
 
   const loadMonitors = useCallback(async () => {
     const [response, integrationResponse, statusPageResponse] = await Promise.all([
-      apiRequest<{ monitors: MonitorSummary[] }>('/v1/monitors'),
-      apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations'),
+      apiRequest<{ monitors: MonitorSummary[] }>('/v1/monitors?scope=product'),
+      apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations?scope=product'),
       apiRequest<{ pages: StatusPageConfig[] }>('/v1/status-pages'),
     ]);
     setMonitors(response.monitors);
     setRoutes(integrationResponse.integrations);
-    setStatusPages(statusPageResponse.pages);
+    const productMonitorIds = new Set(response.monitors.map((monitor) => monitor.id));
+    setStatusPages(
+      statusPageResponse.pages.filter(
+        (page) =>
+          page.monitorIds.length === 0 ||
+          page.monitorIds.some((monitorId) => productMonitorIds.has(monitorId)),
+      ),
+    );
     setError('');
     const requestedId = searchParams.get('monitor');
     const nextId =
@@ -156,9 +162,9 @@ export function MonitorPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="monitor" data-product-area="product">
+    <section className="ht-page" data-tour-section="monitor" data-product-area="operate">
       <PageHeader
-        eyebrow="PRODUCT / MONITORING"
+        eyebrow="OPERATE / MONITORING"
         title="Monitoring"
         description="Know what failed, where it failed and when it recovered."
         actions={
@@ -179,8 +185,6 @@ export function MonitorPage() {
           </>
         }
       />
-
-      <WorkspaceJourney />
 
       <section className="ht-monitor-summary" aria-label="Monitor summary">
         <article>

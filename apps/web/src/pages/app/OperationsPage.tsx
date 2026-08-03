@@ -6,7 +6,6 @@ import { AlertChannelPanel } from '../../components/app/AlertChannelPanel';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { ProductState } from '../../components/ui/ProductState';
-import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
 import { shortDate, timeAgo } from '../../lib/format';
@@ -69,7 +68,7 @@ export function OperationsPage() {
 
   const load = useCallback(async () => {
     const [response, workspace] = await Promise.all([
-      apiRequest<OperationsResponse>('/v1/operations'),
+      apiRequest<OperationsResponse>('/v1/operations?scope=product'),
       apiRequest<WorkspaceResponse>('/v1/workspace'),
     ]);
     setData(response);
@@ -209,10 +208,10 @@ export function OperationsPage() {
   }
 
   return (
-    <section className="ht-page" data-tour-section="operations" data-product-area="product">
+    <section className="ht-page" data-tour-section="operations" data-product-area="operate">
       <PageHeader
-        eyebrow="PRODUCT / OPERATIONS"
-        title="Operations"
+        eyebrow="OPERATE / INCIDENTS & RECOVERY"
+        title="Incidents & recovery"
         description="Triage incidents, recover dead letters and verify alert delivery from one queue."
         actions={
           <button type="button" className="button secondary" onClick={() => void load()}>
@@ -221,14 +220,12 @@ export function OperationsPage() {
         }
       />
 
-      <WorkspaceJourney />
-
       {error && data ? (
         <ProductState
           compact
           tone="danger"
           eyebrow="Refresh failed"
-          title="The last known operations evidence is still visible."
+          title="The last known recovery evidence is still visible."
           description={error}
           action={
             <button className="button secondary compact" type="button" onClick={() => void load()}>
@@ -241,7 +238,7 @@ export function OperationsPage() {
         <ProductState
           tone="danger"
           eyebrow="Request failed"
-          title="Operations could not load."
+          title="Incidents & recovery could not load."
           description={error}
           action={
             <button
@@ -263,7 +260,7 @@ export function OperationsPage() {
         <div className="ht-skeleton tall" />
       ) : (
         <>
-          <section className="ht-operation-summary" aria-label="Operations summary">
+          <section className="ht-operation-summary" aria-label="Incidents and recovery summary">
             <article className={data.summary.openIncidents ? 'danger' : 'healthy'}>
               <span>Open incidents</span>
               <strong>{data.summary.openIncidents}</strong>
@@ -292,7 +289,7 @@ export function OperationsPage() {
           >
             <header>
               <div>
-                <p className="ht-kicker">LIVE OPERATIONS</p>
+                <p className="ht-kicker">LIVE RECOVERY</p>
                 <h2 id="operations-timeline-title">What changed recently</h2>
                 <p className="ht-operation-panel-description">
                   Incidents, delivery recovery and alert evidence in one chronological view.
@@ -318,7 +315,7 @@ export function OperationsPage() {
                 compact
                 tone="positive"
                 eyebrow="No recent activity"
-                title="Operations are quiet."
+                title="No incidents need attention."
                 description="New incidents, recovery attempts and alert deliveries will appear here as they happen."
               />
             ) : (

@@ -33,6 +33,7 @@ import {
   updateEndpointInputSchema,
   apiKeyInputSchema,
   reliabilityQuerySchema,
+  resourceScopeQuerySchema,
   workspaceInviteAcceptSchema,
   workspaceInviteInputSchema,
   workspaceRoleUpdateSchema,
@@ -120,6 +121,14 @@ const mailer = createMailer(config, logger);
 const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: null });
 const deliveryQueue = new Queue('destination-deliveries', { connection: redis });
 const monitorQueue = new Queue('monitor-checks', { connection: redis });
+
+function resourceScopeCondition(scope: 'all' | 'product' | 'demo') {
+  if (scope === 'demo') return sql<boolean>`${integrationResources.metadata} ? 'demoRunId'`;
+  if (scope === 'product') {
+    return sql<boolean>`not coalesce(${integrationResources.metadata} ? 'demoRunId', false)`;
+  }
+  return undefined;
+}
 
 const builtInScenarioIds = {
   inspection: '00000000-0000-4000-8000-000000000001',
@@ -1467,6 +1476,8 @@ app.get('/v1/evidence', async (request, reply) => {
   if (!user) return;
   const query = evidenceListQuerySchema.parse(request.query);
   const filters = [inArray(endpoints.userId, user.workspaceUserIds)];
+  const scopeFilter = resourceScopeCondition(query.scope);
+  if (scopeFilter) filters.push(scopeFilter);
   if (query.endpointId) filters.push(eq(events.endpointId, query.endpointId));
   if (query.before) filters.push(lt(events.lastSeenAt, new Date(query.before)));
   if (query.status !== 'all') {
@@ -1499,6 +1510,7 @@ app.get('/v1/evidence', async (request, reply) => {
     })
     .from(events)
     .innerJoin(endpoints, eq(events.endpointId, endpoints.id))
+    .leftJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
     .leftJoin(reports, eq(reports.eventId, events.id))
     .where(and(...filters))
     .orderBy(desc(events.lastSeenAt))
@@ -1623,7 +1635,12 @@ app.get('/v1/reliability/summary', async (request, reply) => {
     })
     .from(monitors)
     .innerJoin(integrationResources, eq(monitors.resourceId, integrationResources.id))
-    .where(inArray(integrationResources.userId, user.workspaceUserIds));
+    .where(
+      and(
+        inArray(integrationResources.userId, user.workspaceUserIds),
+        resourceScopeCondition(query.scope),
+      ),
+    );
   const monitorIds = monitorRows.map((row) => row.monitor.id);
   const checks =
     monitorIds.length === 0
@@ -1852,17 +1869,35 @@ app.patch('/v1/me/onboarding', async (request, reply) => {
 app.get('/v1/scenarios', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
-  const items = await database.db
-    .select({
-      id: scenarios.id,
-      name: scenarios.name,
-      definition: scenarios.definition,
-      builtIn: scenarios.builtIn,
-    })
-    .from(scenarios)
-    .where(or(eq(scenarios.builtIn, true), inArray(scenarios.userId, user.workspaceUserIds)))
-    .orderBy(desc(scenarios.builtIn), scenarios.name);
-  return { scenarios: items };
+  const [items, demoScenarioRows] = await Promise.all([
+    database.db
+      .select({
+        id: scenarios.id,
+        name: scenarios.name,
+        definition: scenarios.definition,
+        builtIn: scenarios.builtIn,
+      })
+      .from(scenarios)
+      .where(or(eq(scenarios.builtIn, true), inArray(scenarios.userId, user.workspaceUserIds)))
+      .orderBy(desc(scenarios.builtIn), scenarios.name),
+    database.db
+      .select({ scenarioId: endpoints.scenarioId })
+      .from(endpoints)
+      .innerJoin(integrationResources, eq(endpoints.resourceId, integrationResources.id))
+      .where(
+        and(
+          inArray(endpoints.userId, user.workspaceUserIds),
+          sql`${integrationResources.metadata} ? 'demoRunId'`,
+        ),
+      ),
+  ]);
+  const demoScenarioIds = new Set(demoScenarioRows.flatMap((row) => row.scenarioId ?? []));
+  return {
+    scenarios: items.map((item) => ({
+      ...item,
+      demoOwned: !item.builtIn && demoScenarioIds.has(item.id),
+    })),
+  };
 });
 
 app.get('/v1/status/:token', async (request, reply) => {
@@ -2251,11 +2286,17 @@ app.delete('/v1/scenarios/:id', async (request, reply) => {
 app.get('/v1/monitors', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
+  const query = resourceScopeQuerySchema.parse(request.query);
   const rows = await database.db
     .select({ resource: integrationResources, monitor: monitors })
     .from(integrationResources)
     .innerJoin(monitors, eq(monitors.resourceId, integrationResources.id))
-    .where(inArray(integrationResources.userId, user.workspaceUserIds))
+    .where(
+      and(
+        inArray(integrationResources.userId, user.workspaceUserIds),
+        resourceScopeCondition(query.scope),
+      ),
+    )
     .orderBy(integrationResources.name);
   if (rows.length === 0) return { monitors: [] };
 
@@ -2778,6 +2819,7 @@ app.patch('/v1/incidents/:id', async (request, reply) => {
 app.get('/v1/operations', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
+  const query = resourceScopeQuerySchema.parse(request.query);
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1_000);
   const [incidentRows, deadLetterRows, recoveryRows, alertRows] = await Promise.all([
     database.db
@@ -2789,7 +2831,12 @@ app.get('/v1/operations', async (request, reply) => {
       })
       .from(incidents)
       .innerJoin(integrationResources, eq(incidents.resourceId, integrationResources.id))
-      .where(inArray(integrationResources.userId, user.workspaceUserIds))
+      .where(
+        and(
+          inArray(integrationResources.userId, user.workspaceUserIds),
+          resourceScopeCondition(query.scope),
+        ),
+      )
       .orderBy(desc(incidents.openedAt))
       .limit(100),
     database.db
@@ -2812,6 +2859,7 @@ app.get('/v1/operations', async (request, reply) => {
         and(
           inArray(integrationResources.userId, user.workspaceUserIds),
           eq(destinationDeliveries.state, 'dead_letter'),
+          resourceScopeCondition(query.scope),
         ),
       )
       .orderBy(desc(destinationDeliveries.createdAt))
@@ -2829,6 +2877,7 @@ app.get('/v1/operations', async (request, reply) => {
           eq(destinationDeliveries.state, 'succeeded'),
           inArray(destinationDeliveries.kind, ['retry', 'replay']),
           gte(destinationDeliveries.completedAt, since24h),
+          resourceScopeCondition(query.scope),
         ),
       ),
     database.db
@@ -2841,7 +2890,7 @@ app.get('/v1/operations', async (request, reply) => {
       .innerJoin(alertChannels, eq(alertDeliveries.channelId, alertChannels.id))
       .innerJoin(incidents, eq(alertDeliveries.incidentId, incidents.id))
       .innerJoin(integrationResources, eq(incidents.resourceId, integrationResources.id))
-      .where(eq(alertChannels.userId, user.id))
+      .where(and(eq(alertChannels.userId, user.id), resourceScopeCondition(query.scope)))
       .orderBy(desc(alertDeliveries.createdAt))
       .limit(50),
   ]);
@@ -2913,6 +2962,7 @@ app.get('/v1/operations', async (request, reply) => {
 app.get('/v1/integrations', async (request, reply) => {
   const user = await requireUser(request, reply);
   if (!user) return;
+  const query = resourceScopeQuerySchema.parse(request.query);
   const routes = await database.db
     .select({ resource: integrationResources, endpoint: endpoints })
     .from(integrationResources)
@@ -2921,6 +2971,7 @@ app.get('/v1/integrations', async (request, reply) => {
       and(
         inArray(integrationResources.userId, user.workspaceUserIds),
         eq(integrationResources.type, 'webhook_route'),
+        resourceScopeCondition(query.scope),
       ),
     )
     .orderBy(integrationResources.name);

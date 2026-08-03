@@ -24,7 +24,7 @@ The budget is expressed in check outcomes, not guessed uptime. A failed HTTP con
 
 ## Alerts
 
-Configure a Discord or generic HTTPS alert channel from **Operations → Configure alerts**. When a monitor exhausts its budget, HookTrials opens a reliability incident with the monitor, target, window, check count and failures as evidence. The existing alert channel receives the same opened/recovered events as availability incidents. No URLs, headers or response bodies are included in the alert payload.
+Configure a Discord or generic HTTPS alert channel from **Incidents & recovery → Configure alerts**. When a monitor exhausts its budget, HookTrials opens a reliability incident with the monitor, target, window, check count and failures as evidence. The existing alert channel receives the same opened/recovered events as availability incidents. No URLs, headers or response bodies are included in the alert payload.
 
 SLO incidents are independent from an endpoint being temporarily down. This keeps a short outage visible while preserving the longer rolling objective. When the rolling window recovers, HookTrials closes the SLO incident and sends the recovery notification.
 

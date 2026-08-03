@@ -19,7 +19,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { WorkspaceJourney } from '../../components/app/WorkspaceJourney';
 import { useI18n } from '../../i18n/I18nContext';
 import { useDashboard } from '../../layouts/AppLayout';
 import { apiRequest, readableError } from '../../lib/api';
@@ -204,10 +203,9 @@ export function LiveWebhooksPage() {
   );
 
   const liveRoutes = useMemo(
-    () => endpoints.filter((endpoint) => endpoint.mode !== 'trial'),
+    () => endpoints.filter((endpoint) => endpoint.mode !== 'trial' && !endpoint.demoOwned),
     [endpoints],
   );
-  const syntheticRoutes = liveRoutes.filter((endpoint) => endpoint.demoOwned);
   const limit = limits?.endpoints ?? 0;
   const usage = limits?.endpointUsage ?? endpoints.filter((endpoint) => !endpoint.demoOwned).length;
   const atLimit = limit > 0 && usage >= limit;
@@ -219,7 +217,9 @@ export function LiveWebhooksPage() {
 
   const refreshIntegrations = useCallback(async () => {
     try {
-      const result = await apiRequest<{ integrations: IntegrationSummary[] }>('/v1/integrations');
+      const result = await apiRequest<{ integrations: IntegrationSummary[] }>(
+        '/v1/integrations?scope=product',
+      );
       setIntegrationRows(result.integrations);
       setIntegrationError('');
     } catch (requestError) {
@@ -399,35 +399,27 @@ export function LiveWebhooksPage() {
   return (
     <section
       className="ht-page ht-live-webhooks"
-      data-product-area="product"
+      data-product-area="build"
       data-tour-section="live-webhooks"
     >
       <PageHeader
         className="ht-live-head"
-        eyebrow="PRODUCT / WEBHOOK HUB"
-        title="Webhook Hub"
+        eyebrow="BUILD / INTEGRATIONS"
+        title="Integrations"
         description="Put HookTrials between every provider and your backend. Inspect the complete request, validate it and forward it with an auditable delivery trail."
         actions={
           <div className="ht-live-summary" aria-label="Live webhook summary">
             <div className="ht-live-stat">
               <strong>{liveRoutes.length}</strong>
-              <span>live routes</span>
+              <span>connected routes</span>
             </div>
             <div className="ht-live-stat">
               <strong>{liveRoutes.filter((route) => route.mode === 'protect').length}</strong>
               <span>protected</span>
             </div>
-            {syntheticRoutes.length > 0 ? (
-              <div className="ht-live-stat">
-                <strong>{syntheticRoutes.length}</strong>
-                <span>synthetic</span>
-              </div>
-            ) : null}
           </div>
         }
       />
-
-      <WorkspaceJourney />
 
       <section className="ht-live-flow" aria-label="Webhook traffic flow">
         <article>
@@ -967,7 +959,7 @@ export function LiveWebhooksPage() {
           <ProductState
             compact
             title="No live routes yet."
-            description="Connect a provider to a real backend when you are ready. Trial endpoints remain separate and safe."
+            description="Connect a provider to a real backend when you are ready. Test Lab remains separate and safe."
             action={
               <button
                 className="button secondary compact"
@@ -986,7 +978,7 @@ export function LiveWebhooksPage() {
           <ProductState
             compact
             title="No connections match this filter."
-            description="Try another view or change the route state from Control Center."
+            description="Try another view or change the route state from its delivery timeline."
             action={
               <button
                 className="button secondary compact"
@@ -1017,9 +1009,6 @@ export function LiveWebhooksPage() {
                     <small>
                       {PROVIDERS.find((item) => item.id === endpoint.provider)?.name ?? 'Generic'} ·{' '}
                       {endpoint.environment}
-                      {endpoint.demoOwned ? (
-                        <span className="ht-demo-data-badge">DEMO DATA</span>
-                      ) : null}
                     </small>
                   </div>
                   <div className="ht-route-mini-flow">
