@@ -19,13 +19,13 @@
     "@hooktrials/integration-engine": "workspace:*",
     "@hooktrials/monitor-engine": "workspace:*",
     "@hooktrials/network-policy": "workspace:*",
-    "bullmq": "5.80.2",
+    "bullmq": "6.0.9",
     "drizzle-orm": "0.45.2",
-    "ioredis": "5.10.1"
+    "ioredis": "6.0.0"
   },
   "devDependencies": {
-    "@types/node": "26.1.1",
-    "tsx": "4.20.6",
-    "typescript": "6.0.3"
+    "@types/node": "26.1.2",
+    "tsx": "4.23.10",
+    "typescript": "7.0.2"
   }
 }
