@@ -15,10 +15,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "zod": "4.4.3"
+    "zod": "4.6.5"
   },
   "devDependencies": {
-    "@types/node": "26.1.1",
-    "typescript": "6.0.3"
+    "@types/node": "26.6.1",
+    "typescript": "7.0.2"
   }
 }
