@@ -10,22 +10,22 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@fontsource/inter": "^5.2.8",
-    "@fontsource/jetbrains-mono": "5.2.8",
-    "@fontsource/space-mono": "5.2.8",
-    "@vitejs/plugin-react": "6.0.3",
-    "lucide-react": "^1.24.0",
-    "motion": "^12.43.0",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "react-router-dom": "7.18.1",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "@fontsource/space-mono": "5.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "lucide-react": "^1.48.0",
+    "motion": "^13.4.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router-dom": "7.18.4",
     "recharts": "^3.10.1",
-    "vite": "8.1.5",
-    "yaml": "2.9.0"
+    "vite": "8.3.1",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
-    "typescript": "6.0.3"
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "7.0.2"
   }
 }
