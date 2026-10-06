@@ -18,6 +18,7 @@ import { ApiKeysPage } from './pages/app/ApiKeysPage';
 import { ReliabilityPage } from './pages/app/ReliabilityPage';
 import { WorkspacePage } from './pages/app/WorkspacePage';
 import { AccountSettingsPage } from './pages/app/AccountSettingsPage';
+import { IntegrationDetailPage } from './pages/app/IntegrationDetailPage';
 import { useAuth } from './context/AuthContext';
 import { ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/EmailActionPage';
 
@@ -50,6 +51,7 @@ export function App() {
         <Route path="control-center" element={<Navigate to="/app" replace />} />
         <Route path="control-center/:endpointId" element={<OverviewPage />} />
         <Route path="live-webhooks" element={<LiveWebhooksPage />} />
+        <Route path="integrations/:endpointId" element={<IntegrationDetailPage />} />
         <Route path="endpoints" element={<EndpointsPage />} />
         <Route path="scenarios" element={<ScenariosPage />} />
         <Route path="monitor" element={<MonitorPage />} />

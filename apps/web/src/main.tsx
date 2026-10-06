@@ -20,6 +20,7 @@ import './styles/buttons.css';
 import './styles/visual-system.css';
 // Final cross-module polish: shared metric, surface and responsive contracts.
 import './styles/ui-polish.css';
+import './styles/integration-cockpit.css';
 
 const storedTheme = localStorage.getItem('ht.theme');
 const initialTheme =

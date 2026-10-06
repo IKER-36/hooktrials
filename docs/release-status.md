@@ -2,6 +2,30 @@
 
 Updated: 3 August 2026.
 
+## Release `v0.35.0` — Integration Activation & Reliability Cockpit
+
+Prepared for the first post-competition product update. Live integrations now have a focused
+cockpit that combines route state, provider flow, readiness, recent traffic and recovery work.
+
+### Added
+
+- Dedicated `/app/integrations/:endpointId` views for live Observe and Protect routes.
+- Safe synthetic testing directly from an integration cockpit.
+- Provider setup kits with expected headers and copy-ready test commands for eight providers.
+- Contextual incident and dead-letter summaries linked to Operations.
+
+### Improved
+
+- Webhook Hub route actions now distinguish live integration cockpits from Test Lab timelines.
+- The first-event path is visible from provider setup through delivery evidence.
+- Responsive layouts preserve the route flow, test action and evidence access on narrow screens.
+
+### Validation
+
+- No database migration or runtime-secret change is required.
+- Existing accounts, routes, monitors, events and credentials remain compatible.
+- The release gate includes formatting, lint, typecheck, tests, self-host build and Cloud smoke.
+
 ## Release `v0.34.0` — Clear workflows, isolated demo
 
 Released 3 August 2026. HookTrials is now organized around the outcome a user wants to achieve,

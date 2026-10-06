@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CopyButton } from '../../components/ui/CopyButton';
+import { ProviderKit } from '../../components/app/ProviderKit';
 import { ProductState } from '../../components/ui/ProductState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { useI18n } from '../../i18n/I18nContext';
@@ -393,7 +394,11 @@ export function LiveWebhooksPage() {
 
   function openRoute(endpoint: Endpoint) {
     selectEndpoint(endpoint.id);
-    navigate(`/app/control-center/${endpoint.id}`);
+    navigate(
+      endpoint.mode === 'trial'
+        ? `/app/control-center/${endpoint.id}`
+        : `/app/integrations/${endpoint.id}`,
+    );
   }
 
   return (
@@ -504,6 +509,8 @@ export function LiveWebhooksPage() {
               ) : null}
             </div>
           </section>
+
+          <ProviderKit provider={provider} />
 
           <div className="ht-monitor-form-grid">
             <label className="ht-field">
@@ -888,7 +895,7 @@ export function LiveWebhooksPage() {
                 ) : null}
               </div>
               <button className="button secondary" type="button" onClick={() => openRoute(created)}>
-                Open live inspector
+                Open integration cockpit
               </button>
             </>
           ) : (

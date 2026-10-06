@@ -34,6 +34,7 @@ used by the desktop sidebar, collapsed rail, mobile More menu and command palett
 
 - `/app` — Home and its three starting actions.
 - `/app/live-webhooks` — real Observe and Protect integrations.
+- `/app/integrations/:endpointId` — one integration cockpit with setup, traffic, readiness and recovery evidence.
 - `/app/endpoints` — isolated Test Lab endpoints.
 - `/app/scenarios` — deterministic response sequences.
 - `/app/control-center/:endpointId` — the delivery timeline for one exact route.
@@ -55,12 +56,19 @@ only, never payloads, credentials or destination URLs.
 
 Use **Build → Integrations** for real provider traffic. Creation keeps the provider preset, inbound
 contract, encrypted destination and Observe or Protect delivery mode in one workflow. After saving,
-copy the generated ingestion URL and run the safe smoke test.
+copy the generated ingestion URL and run the safe smoke test. The provider kit below the form gives
+you the expected headers, a provider-specific setup hint and a copy-ready synthetic `curl` command.
 
-Opening a connection leads to its **Delivery timeline**. This is a detail view, not a separate
-product module. It contains the selected route's state, URL, correlated attempts, destination
-deliveries, Production Readiness and configuration. Links from Home, Monitoring, Incidents &
-recovery and Evidence preserve the exact route whenever one is known.
+The starter kits cover Generic webhook, Stripe, GitHub, Shopify, Slack, GitLab, Linear and HubSpot.
+They do not send data to a provider or create external configuration for you: they make the
+provider's own webhook settings easier to complete while keeping secrets write-only.
+
+Opening a live connection leads to its **Integration cockpit** at
+`/app/integrations/:endpointId`. It contains the route state, provider → HookTrials → backend
+flow, public URL, readiness controls, recent events, recovery work and the provider kit. The
+existing **Delivery timeline** remains the deeper event-by-event view and is one click away from
+the cockpit. Links from Home, Monitoring, Incidents & recovery and Evidence preserve the exact
+route whenever one is known.
 
 **Observe** forwards once and records both sides. **Protect** persists the event first, retries with
 bounded backoff and moves exhausted deliveries to the recovery queue. Protect supports one
