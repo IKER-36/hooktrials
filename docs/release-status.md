@@ -1,10 +1,10 @@
 # Current release status
 
-Updated: 3 August 2026.
+Updated: 7 October 2026.
 
 ## Release `v0.35.0` — Integration Activation & Reliability Cockpit
 
-Prepared for the first post-competition product update. Live integrations now have a focused
+Released 7 October 2026. Live integrations now have a focused
 cockpit that combines route state, provider flow, readiness, recent traffic and recovery work.
 
 ### Added
