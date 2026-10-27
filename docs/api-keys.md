@@ -19,7 +19,7 @@ never the raw key, and the dashboard displays only its prefix after creation.
 Store these secrets in your pipeline:
 
 ```bash
-export HOOKTRIALS_API_ORIGIN='https://api.hooktrials.com'
+export HOOKTRIALS_API_ORIGIN='https://trials.example.com'
 export HOOKTRIALS_API_KEY='htk_...'
 ```
 

@@ -4,8 +4,7 @@ Public repository supports self-hosted deployment. Run `./hooktrials configure` 
 existing-proxy or direct-domain mode, then `./hooktrials up`. It builds images, runs migrations and
 exposes one configured origin.
 
-Managed HookTrials Cloud is deployed separately using immutable application images. Managed
-hosting details and production secrets are not part of this repository.
+The former managed Cloud service has been discontinued. Run HookTrials on infrastructure you control.
 
 Tagged releases publish versioned multi-architecture images:
 
@@ -15,8 +14,7 @@ ghcr.io/<owner>/<repo>-server:<version>
 ```
 
 The current tagged release is `v0.35.0`. Self-hosted Compose intentionally builds the checked-out
-source so local modifications remain auditable. Managed deployments pin immutable registry or
-preloaded images without changing persisted database/Redis volumes.
+source so local modifications remain auditable. PostgreSQL and Redis data remain in named volumes.
 
 ## Versioning
 

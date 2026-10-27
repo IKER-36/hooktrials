@@ -18,7 +18,7 @@ for these account emails.
 
 ## Maileroo setup
 
-1. Verify `hooktrials.com` (or the sending subdomain you choose) in Maileroo and keep its DNS
+1. Verify your own sending domain in Maileroo and keep its DNS
    records active.
 2. Create a sending key for the verified domain in Maileroo. Treat it like a password.
 3. Configure the API service with the following values. Never put them in Git or a frontend `.env`:
@@ -26,18 +26,17 @@ for these account emails.
    ```dotenv
    MAILEROO_API_KEY=replace-with-a-sending-key
    MAILEROO_BASE_URL=https://smtp.maileroo.com/api/v2
-   MAIL_FROM_ADDRESS=noreply@hooktrials.com
+   MAIL_FROM_ADDRESS=noreply@example.com
    MAIL_FROM_NAME=HookTrials
-   MAIL_REPLY_TO=support@hooktrials.com
+   MAIL_REPLY_TO=support@example.com
    AUTH_EMAIL_VERIFICATION_REQUIRED=true
    AUTH_EMAIL_VERIFICATION_TTL_HOURS=24
    AUTH_PASSWORD_RESET_TTL_MINUTES=60
    ```
 
-Cloud enables verification for new registrations while existing accounts remain usable through the
-compatibility flag stored on each user. Self-host installations keep email optional unless the
-operator supplies the variables. With no Maileroo key, self-hosted registration and login continue
-to work without email checks.
+Self-host installations keep email optional unless the operator supplies the variables. With no
+Maileroo key, self-hosted registration and login continue to work without email checks. Existing
+accounts remain usable through the compatibility flag stored on each user.
 
 ## Security behaviour
 

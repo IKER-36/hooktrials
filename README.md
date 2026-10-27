@@ -1,7 +1,6 @@
 # HookTrials
 
-[![Hosted on CubePath](https://img.shields.io/badge/Hosted%20on-CubePath-22c55e?style=flat-square)](https://cubepath.com/)
-[![Release](https://img.shields.io/badge/release-v0.34.0-6366f1?style=flat-square)](docs/release-status.md)
+[![Release](https://img.shields.io/badge/release-v0.35.0-6366f1?style=flat-square)](docs/release-status.md)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0--only-334155?style=flat-square)](LICENSE)
 
 Open-source integration reliability control plane. HookTrials tests failure behavior, safely
@@ -9,8 +8,8 @@ operates webhook delivery and monitors APIs, HTTP routes and destinations from o
 
 > Your webhook works when everything goes right. HookTrials tests everything else.
 
-Current public release: **v0.34.0** (3 August 2026). The managed sandbox is available at
-[app.hooktrials.com](https://app.hooktrials.com); use synthetic payloads whenever possible.
+Current public release: **v0.35.0**. HookTrials is available as a self-hosted, open-source
+application. The former managed Cloud service has been discontinued.
 
 ## Run locally
 
@@ -29,8 +28,8 @@ then closes. Self-hosted mode has no endpoint or daily-event quota by default.
 ./hooktrials status
 ./hooktrials logs
 ./hooktrials backup
-./hooktrials update --release v0.34.0 --check
-./hooktrials update --release v0.34.0
+./hooktrials update --release v0.35.0 --check
+./hooktrials update --release v0.35.0
 ```
 
 Updates back up PostgreSQL, rebuild the selected checkout and wait for migrations and health checks.
@@ -140,11 +139,10 @@ conclusion or hides a grading formula.
 
 ### See the product, not a mock-up
 
-The current `v0.34.0` interface organizes work by outcome and keeps the optional Demo Lab outside
-normal production navigation and metrics. These captures come from the deployed Cloud application;
-the same dashboard is included in the self-hosted distribution.
+The interface organizes work by outcome and keeps the optional Demo Lab outside normal production
+navigation and metrics. These captures illustrate the dashboard included in the self-hosted distribution.
 
-![HookTrials Cloud product tour](docs/assets/hooktrials-demo.gif)
+![HookTrials product tour](docs/assets/hooktrials-demo.gif)
 
 ![Webhook Hub connecting providers, HookTrials and a backend](docs/assets/webhook-hub.jpg)
 
@@ -154,8 +152,8 @@ the same dashboard is included in the self-hosted distribution.
 
 ## Repository model
 
-This public repository contains the complete self-hosted product. Managed hosting operations and
-the marketing website are outside its scope and are not required to run HookTrials locally.
+This repository contains the complete self-hosted product. A marketing website or managed service
+is not required to run HookTrials.
 
 ## Documentation
 

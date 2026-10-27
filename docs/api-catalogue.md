@@ -6,8 +6,7 @@ Every HookTrials installation exposes a redacted OpenAPI 3.1 document at:
 https://your-api-origin.example/openapi.json
 ```
 
-Cloud uses `https://api.hooktrials.com/openapi.json`. Self-hosted installations use the API origin
-chosen during setup. The document is safe to publish: it describes routes, parameters, response
+Use the API origin chosen for your self-hosted installation. The document is safe to publish: it describes routes, parameters, response
 shapes and authentication scopes, but never contains credentials, payload examples or destination
 URLs.
 

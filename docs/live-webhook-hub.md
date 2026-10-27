@@ -127,10 +127,7 @@ Create separate routes for billing, source control, commerce and internal automa
 its own private URL, destination, validation and environment while Incidents & recovery provides one incident,
 dead-letter and alert queue for the account.
 
-## Cloud and self-hosted operation
-
-HookTrials Cloud issues URLs under `https://hooks.hooktrials.com/i/...` and only permits public
-destinations. Private, loopback, metadata and special-use networks are blocked.
+## Self-hosted operation
 
 Self-hosted installations can receive Internet providers after configuring a public HTTPS domain or
 reverse proxy. Explicit private CIDR access is available only in self-hosted mode. Follow

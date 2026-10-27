@@ -1,6 +1,10 @@
 # Current release status
 
-Updated: 7 October 2026.
+Updated: 27 October 2026.
+
+**Service notice:** The managed HookTrials Cloud service has been discontinued. HookTrials remains
+available as an open-source, self-hosted application. Historical release notes below describe the
+service as it existed when those releases were published; Cloud URLs are no longer available.
 
 ## Release `v0.35.0` — Integration Activation & Reliability Cockpit
 
@@ -1374,21 +1378,9 @@ Keep `data` internal and never publish PostgreSQL or Redis ports. The Cloud depl
 this dual-network topology. Release `v0.3.6` was promoted to the managed sandbox through a
 backup-first deployment and passed its authenticated post-deploy journey on 14 July 2026.
 
-## Cloud availability
+## Former Cloud availability
 
-- Landing: <https://hooktrials.com>
-- Dashboard: <https://app.hooktrials.com>
-- API health: <https://api.hooktrials.com/healthz>
-- Ingestion health: <https://hooks.hooktrials.com/healthz>
-
-The hosted sandbox uses quotas and 72-hour payload retention. It is a testing service, not a vault;
-prefer synthetic data.
-
-Managed Cloud runs server and dashboard `v0.11.0` with landing `v0.7.0`. Immutable image
-references and rollback copies are recorded only in the private Cloud repository. Backup-first
-promotion, four-origin smoke, real Observe forwarding, authenticated desktop/mobile validation,
-zero restarts, restricted ingestion CORS and the authenticated eight-step jury journey passed on
-21 July 2026.
+The managed service described in this historical release entry has been discontinued.
 
 Patch `v0.3.6` also accepts authenticated empty payload ciphertext during report analysis. Empty
 webhook bodies now produce normal deterministic evidence instead of a failed background job.

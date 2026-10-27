@@ -81,7 +81,7 @@ export function ProviderKit({
   className?: string;
 }) {
   const kit = KITS[(provider as ProviderKitId) ?? 'generic'] ?? KITS.generic;
-  const url = ingestUrl ?? 'https://hooks.hooktrials.com/ht_your_route';
+  const url = ingestUrl ?? 'https://your-hooktrials.example/i/your-route';
   const curl = `curl -X POST '${url}' -H 'content-type: application/json' -d '{"event":"${kit.event}","source":"manual-test"}'`;
 
   return (

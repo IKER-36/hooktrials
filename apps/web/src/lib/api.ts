@@ -1,11 +1,7 @@
 import { translatePhrase } from '../i18n/I18nContext';
 
-const productionApiOrigin =
-  window.location.hostname === 'app.hooktrials.com' ? 'https://api.hooktrials.com' : '/api';
-
 export const API_ORIGIN =
-  import.meta.env.VITE_API_ORIGIN ||
-  (import.meta.env.DEV ? 'http://localhost:3001' : productionApiOrigin);
+  import.meta.env.VITE_API_ORIGIN || (import.meta.env.DEV ? 'http://localhost:3001' : '/api');
 
 export class ApiError extends Error {
   constructor(
